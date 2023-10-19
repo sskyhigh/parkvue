@@ -13,7 +13,6 @@ function SearchMenu() {
         <div class="input-box">
           <span>Check-In</span>
           <input type="date" name="" id=""/>
-
           </div>
 
                 <div class="input-box">

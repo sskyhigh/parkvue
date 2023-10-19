@@ -1,4 +1,5 @@
 import '../../../src/App.css';
+import BookNow from '../BookNow';
 
 function MapSelect() {
   return (
@@ -16,7 +17,7 @@ function MapSelect() {
               <h2>Secured, Indoor Covered Remote Parking Space</h2>
               <p>Gates Ave Bedford</p>
               <h4><i className="bx bx-time-five" /> $1.62 <span>/hourly</span></h4>|<h4><i className="bx bx-calendar" /> $443.75 <span>/monthly</span></h4>
-              <a href= "#" className="btn">Book Now</a>
+              <BookNow/>
               </div>
               <div className="box">
                 <div className="box-img">
@@ -25,7 +26,7 @@ function MapSelect() {
                   <h2>COVERED AND SECURE PARKING IN RIDGEWOOD/BUSHWICK</h2>
                   <p>16-71 Summerfield St Ridgewood</p>
                   <h4><i className="bx bx-time-five" /> $1.70 <span>/hourly</span></h4>|<h4><i className="bx bx-calendar" /> $500.00 <span>/monthly</span></h4>
-                  <a href="#" className="btn">Book Now</a>
+                  <BookNow/>
                   </div>
                   </div>
                   </section>
