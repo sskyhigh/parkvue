@@ -1,24 +1,24 @@
 import '../../src/App.css';
+import appstore from '../../src/images/ios.png';
+import playstore from '../../src/images/play.png';
 
 function HomeBanner() {
-  return (
-    <div>
- <section className="home" id="home">
-          <div className="text">
-            {/* <span> Color text </span> */}
-            <h1><span>Discover, <br />Earn, and Share. </span></h1>
-            <p>Tell us your parking needs <br /> - where and when - <br /> and we'll locate the ideal spot for you.</p>
-            return(
-            <div className="app-stores">
-              <img src="public\img\ios.png" alt="Download App for Android Phones" />
-              <img src="public\img\play.png" alt="Download App for Apple phones" />
-            </div>
-            );
-          </div>
-          </section>
-    </div>
-  );
+    return (
+        <div>
+            <section className="home" id="home">
+                <div className="text">
+                    {/* <span> Color text </span> */}
+                    <h1><span>Discover, <br/>Earn, and Share. </span></h1>
+                    <p>Tell us your parking needs <br/> - where and when - <br/> and we'll locate the ideal spot for
+                        you.</p>
+                    <div className="app-stores">
+                        <img src={appstore} alt="Download App for Android Phones"/>
+                        <img src={playstore} alt="Download App for Apple phones"/>
+                    </div>
+                </div>
+            </section>
+        </div>
+    );
 }
-
 
 export default HomeBanner;

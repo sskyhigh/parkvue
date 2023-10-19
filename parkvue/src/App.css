@@ -11,6 +11,9 @@
     text-decoration: none;
     font-family: "Poppins", sans-serif;
 }
+
+
+
 :root {
     --main-color: #2B74A8;
     --second-color: #3FA9F5;
@@ -45,7 +48,7 @@ header {
     padding: 15px 100px;
 }
 /* Shrink logo size */
-.logo img {
+.logo_img {
     width: 150px;
 }
 /* Shrinking the navbar strip */
