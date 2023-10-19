@@ -1,8 +1,10 @@
-import './App.css';
+import '../../src/App.css';
 
 function HelpButton() {
   return (
-    <button>Help Me</button>
+    <div>
+      <button>Help Me</button>
+    </div>
   );
 }
 

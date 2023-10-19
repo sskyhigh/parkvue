@@ -1,24 +1,24 @@
-import './App.css';
+import '../../src/App.css';
 
 function SearchMenu() {
   return (
-  <header>
+  <div>
     {/* <!-- Search Menu --> */}
     <div class="form-container">
       <div class="input-box">
         <span>Location</span>
-        <input type="search" name="" id="" placeholder="Search Places">
+        <input type="search" name="" id="" placeholder="Search Places"/>
 
         </div>
         <div class="input-box">
           <span>Check-In</span>
-          <input type="date" name="" id="">
+          <input type="date" name="" id=""/>
 
           </div>
 
                 <div class="input-box">
                     <span>Check-Out</span>
-                    <input type="date" name="" id="">
+                    <input type="date" name="" id=""/>
                 </div>
                  {/* <!-- Filter Add on --> */}
                     <form action="">
@@ -42,19 +42,20 @@ function SearchMenu() {
     
                     <div class="input-box">
                         <span>Time-In</span>
-                        <input type="time" name="" id="">
+                        <input type="time" name="" id=""/>
                     </div>
     
                     <div class="input-box">
                         <span>Time-Out</span>
-                        <input type="time" name="" id="">
+                        <input type="time" name="" id=""/>
                     </div>
                     <div class="form-container">
                 </div>
                 <button> Submit </button>
                 </form>
             </div>
-            <header/>
-            );
-            }
+        </div>
+  );
+}
 export default SearchMenu;
+
