@@ -17,8 +17,8 @@ function NavBar() {
             </ul>
 
             <div class="header-btn">
-                <a href="#" className="sign_up">Sign Up</a>
-                <a href="#" class="sign_in">Sign In</a>
+                <SignUp/>
+                <SignIn/>
             </div>
         </header>
     );

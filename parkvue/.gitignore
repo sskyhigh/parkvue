@@ -25,10 +25,10 @@
 *.httr-oauth*
 
 # testing
-/coverage
+# /coverage
 
 # production
-/build
+# /build
 
 # misc
 .DS_Store
@@ -42,4 +42,4 @@ yarn-debug.log*
 yarn-error.log*
 
 # Read Me
-**/README.md
+# **/README.md
