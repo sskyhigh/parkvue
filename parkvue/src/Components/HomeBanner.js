@@ -1,6 +1,6 @@
 import '../../src/App.css';
-import appstore from '../../src/images/ios.png';
-import playstore from '../../src/images/play.png';
+import appstore from '../img/ios.png';
+import playstore from '../img/play.png';
 
 function HomeBanner() {
     return (

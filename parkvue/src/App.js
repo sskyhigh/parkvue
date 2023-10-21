@@ -17,7 +17,7 @@ function App() {
         {/* Home Banner*/}
        <HomeBanner/>
           {/* Search Menu */}
-          <SearchMenu/>
+        <SearchMenu/>
         {/* Home Ad: Reserve a Spot Service*/}
         <Reserve/>
         {/* Home Ad: Upload Listing Service */}

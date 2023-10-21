@@ -1,11 +1,13 @@
 import '../../src/App.css';
-import logo from '../../src/images/new_parkvue_logo.png';
+// import logo from '../img/new_parkvue_logo.png';
+import SignUp from '../Components/SignUp'
+import SignIn from '../Components/SignIn'
 
 function NavBar() {
     return (
         <header>
             <a href="#" class="logo_img">
-                {/*<img src={logo} alt={'test'}/>*/}
+                {/* <img src={logo} alt={'test'}/> */}
             </a>
 
             <div class="bx_bx-menu" id="menu-icon"></div>
