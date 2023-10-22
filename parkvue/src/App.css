@@ -12,8 +12,6 @@
     font-family: "Poppins", sans-serif;
 }
 
-
-
 :root {
     --main-color: #2B74A8;
     --second-color: #3FA9F5;
@@ -34,75 +32,8 @@ html::-webkit-scrollbar-thumb {
 section {
     padding: 50px 100px;
 }
-/* Positioning the nav bar */
-header {
-    position: fixed;
-    width: 100%;
-    top: 0;
-    right: 0;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #eeeff1;
-    padding: 15px 100px;
-}
-/* Shrink logo size */
-.logo_img {
-    width: 150px;
-}
-/* Shrinking the navbar strip */
-.navbar {
-    display: flex;
-}
-.navbar li {
-    position: relative;
-}
-/* Edit navbar */
-.navbar a {
-    font-size: 1rem;
-    padding: 10px 20px;
-    color: var(--text-color);
-    font-weight: 500;
-}
-.navbar a::after {
-    content: "";
-    width: 0;
-    height: 3px;
-    background: var(--gradient);
-    position: absolute;
-    bottom: -4px;
-    left: 0;
-    transition: 0.5s;
-}
-/* navbar hovering animation */
-.navbar a:hover::after{
-    width: 100%;
-}
-#menu-icon{
-    font-size: 24px;
-/* navbar animation when hovering on buttons */
-    cursor: pointer;
-    z-index: 10001;
-/* Hide list tab icon */
-    display: none;
-}
-/* editing navbar sign-in/up buttons padding and fonts */
-.header-btn a{
-    padding: 10px 20px;
-    color: var(--text-color);
-    font-weight: 500;
-}
-/* sign-in button box */
-.header-btn .sign-in{
-    background: #474fa8;
-    color: #fff;
-    border-radius: 0.5rem;
-}
-/* sign-in button box animation */
-.header-btn .sign-in:hover{
-    background: var(--main-color);
-}
+
+  
 /* -- <span> Color selected for text </span> -- */
 .text span {
     color: #3FA9F5;
@@ -110,6 +41,10 @@ header {
 .text p{
     margin: 00.5rem 0 1rem;
 }
+
+
+
+
 .app-stores {
     display: flex;
 }
@@ -147,6 +82,9 @@ header {
     border-radius: 0.5rem;
     font-size: 1rem;
 }
+
+
+/* applied to the button within your form container */
 .form-container form .btn {
     flex: 1 1 7rem;
     padding: 10px 34px ;
@@ -157,9 +95,11 @@ header {
     font-size: 1rem;
     font-weight: 500
 }
+/* hover effect for the button */
 .form-container form .btn:hover {
     background: var(--main-color);
 }
+
 .heading {
     text-align: center;
 }

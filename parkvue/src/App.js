@@ -1,6 +1,6 @@
 import './App.css';
 import SearchMenu from './Components/SearchMenu';
-import NavBar from './Components/NavBar';
+import NavBar from './Components/NavBar/NavBar';
 import HomeBanner from './Components/HomeBanner';
 import MapSelect from './Components/HomeAd/MapSelect';
 import Reserve from './Components/HomeAd/Reserve';
@@ -16,14 +16,14 @@ function App() {
         <NavBar/>
         {/* Home Banner*/}
        <HomeBanner/>
-          {/* Search Menu */}
-          <SearchMenu/>
+       {/* Search Menu */}
+       <SearchMenu/>
         {/* Home Ad: Reserve a Spot Service*/}
         <Reserve/>
         {/* Home Ad: Upload Listing Service */}
         <UploadListing/>
         {/*Home Ad:  Map Selection Services */}
-       <MapSelect/>
+        <MapSelect/>
         {/* Link To JS */}
       </div>
     );
