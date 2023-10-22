@@ -16,8 +16,13 @@ function App() {
         <NavBar/>
         {/* Home Banner*/}
        <HomeBanner/>
+<<<<<<< HEAD
        {/* Search Menu */}
        <SearchMenu/>
+=======
+          {/* Search Menu */}
+        <SearchMenu/>
+>>>>>>> main
         {/* Home Ad: Reserve a Spot Service*/}
         <Reserve/>
         {/* Home Ad: Upload Listing Service */}
