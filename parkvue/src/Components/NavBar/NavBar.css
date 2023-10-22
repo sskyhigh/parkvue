@@ -1,0 +1,105 @@
+/* arranging items within a container */
+.navbar {
+    display: flex; 
+}
+/* selects the list items within the navbar */
+.navbar li {
+    position: relative;
+}
+/* Edit navbar design style */
+.navbar a {
+    font-size: 1rem;
+    /* adds spacing around the text within the links. */
+    padding: 10px 20px;
+    color: var(--text-color);
+    font-weight: 500;
+}
+/* create an underline animation effect when hovering over the links */
+.navbar a::after {
+    content: ""; 
+    width: 0; /* creating the initial underline effect starting point */
+    height: 3px;  /* height of the underline */ 
+    background: var(--gradient); /* background color of the underline  */
+    position: absolute; /* position of the underline relative to text */
+    bottom: -4px; /* positions below text */
+    left: 0;/* aligns the underline to the left edge */
+    transition: 0.5s; /* smoothens the width change over 0.5 seconds, creating the animation effect */
+}
+/* navbar hovering animation */
+.navbar a:hover::after{
+    width: 100%; /* hover over a link, it causes the underline (pseudo-element) to expand to 100% width */
+}
+
+/* ID selector for an element with the ID "menu-icon."  */
+#menu-icon{
+    font-size: 24px;
+/* navbar animation when hovering on buttons */
+    cursor: pointer;
+    z-index: 10001;
+/* Hide list tab icon */
+    display: none;
+}
+
+/* Positioning the nav bar */
+header {
+    position: fixed;
+    width: 100%;
+    top: 0;
+    right: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #eeeff1;
+    padding: 15px 100px;
+}
+
+/* Sign-in and Sign-up button styles */
+.header-btn {
+    display: flex;
+    gap: 1rem;
+  }
+  
+  .header-btn a {
+    text-decoration: none;
+    padding: 10px 20px;
+    font-weight: 500;
+    border: 2px solid var(--main-color);
+    border-radius: 15px;
+    color: var(--main-color);
+    transition: background-color 0.3s, color 0.3s;
+  }
+  
+  .header-btn a:hover {
+    background-color: var(--main-color);
+    color: white;
+  }
+  
+  /* Sign-in and Sign-up button animation */
+  .header-btn a::after {
+    content: "";
+    position: absolute;
+    width: 0;
+    height: 2px;
+    background: var(--main-color);
+    bottom: -5px;
+    left: 0;
+    transition: width 0.3s;
+  }
+  
+  .header-btn a:hover::after {
+    width: 100%;
+  }
+  
+/* sign-in button box */
+.header-btn .sign-up{
+    background: #474fa8;
+    color: #fff;
+}
+
+/* sign-in button box animation */
+.header-btn .sign-up:hover{
+    background: var(--main-color);
+}
+
+
