@@ -36,7 +36,6 @@ function SearchMenu() {
                         
                     </div>
 
-
                     </div>
     
                     <div class="input-box">
