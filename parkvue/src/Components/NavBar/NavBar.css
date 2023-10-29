@@ -70,6 +70,7 @@ header {
     transition: background-color 0.3s, color 0.3s;
   }
   
+   /* Sign-in and Sign-up button animation */
   .header-btn a:hover {
     background-color: var(--main-color);
     color: white;

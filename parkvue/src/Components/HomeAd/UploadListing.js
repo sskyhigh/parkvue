@@ -1,4 +1,4 @@
-import '../../../src/App.css';
+import '../HomeAd/HomeAd.css';
 
 function UploadListing() {
   return (
