@@ -14,8 +14,9 @@ function App() {
   return (
     <div className="App">
       <Routes>
-        <Route path="/" element={<Home />}/>
+        <Route path="/home" element={<Home />}/>
         <Route path="/register" element={<Register />}/>
+        <Route path="/login" element={<Login />}/>
       </Routes>
       <title>parkvue</title>
         {/* Box Icons */}
