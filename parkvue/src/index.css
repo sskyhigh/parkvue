@@ -3,7 +3,22 @@ body {
   margin: 0;
 }
 
+<<<<<<< HEAD
 
+=======
+.home {
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+  background-image: url("../src/img/new_home.png"); /* -- Banner image -- */
+  background-repeat: no-repeat;
+  background-position: center right;
+  background-size: cover;
+  display: grid;
+  align-items: center;
+  grid-template-columns: repeat(2, 1fr);
+}
+>>>>>>> 9144078601f69e7465b90163c2c6c458344424ac
 .text h1 {
   font-size: 3.5rem;
   letter-spacing: 2px;
