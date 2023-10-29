@@ -10,9 +10,11 @@ import Home from './Pages/Home';
 import Login from './Pages/Login';
 import Register from './Pages/Register';
 
+
 function App() {
   return (
     <div className="App">
+      <NavBar/>
       <Routes>
         <Route path="/home" element={<Home />}/>
         <Route path="/register" element={<Register />}/>
@@ -21,9 +23,6 @@ function App() {
       <title>parkvue</title>
         {/* Box Icons */}
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css" />
-        {/* NavBar */}
-        <NavBar/>
-        {/* Home Banner*/}
        <HomeBanner/>
        {/* Search Menu */}
        <SearchMenu/>
