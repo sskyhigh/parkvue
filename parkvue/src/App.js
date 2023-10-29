@@ -20,7 +20,6 @@ function App() {
         <Route path="/register" element={<Register />}/>
         <Route path="/login" element={<Login />}/>
       </Routes>
-      <title>parkvue</title>
         {/* Box Icons */}
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css" />
        <HomeBanner/>
