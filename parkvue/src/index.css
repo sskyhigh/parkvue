@@ -3,6 +3,9 @@ body {
   margin: 0;
 }
 
+<<<<<<< HEAD
+
+=======
 .home {
   width: 100%;
   min-height: 100vh;
@@ -15,6 +18,7 @@ body {
   align-items: center;
   grid-template-columns: repeat(2, 1fr);
 }
+>>>>>>> 9144078601f69e7465b90163c2c6c458344424ac
 .text h1 {
   font-size: 3.5rem;
   letter-spacing: 2px;
