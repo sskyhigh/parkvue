@@ -17,7 +17,7 @@ function App() {
             <Routes>
                 <Route path="/home" element={
                     <>
-                        <Home />
+                        <Home />git
                         <HomeBanner/>
                         <SearchMenu/>
                         <Reserve/>
