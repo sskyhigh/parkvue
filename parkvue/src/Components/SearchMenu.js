@@ -39,7 +39,7 @@ function SearchMenu() {
                         <span>Time-In</span>
                         <input type="time" name="" id=""/>
                     </div>
-                    <div classNamegit ="input-box">
+                    <div className ="input-box">
                         <span>Time-Out</span>
                         <input type="time" name="" id=""/>
                     </div>
