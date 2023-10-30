@@ -6,7 +6,7 @@ import Register from "../../Pages/Register";
 function SignIn() {
   return (
     <div>
-      <Link to="/register">Sign In</Link>
+      <Link to="/login">Sign In</Link>
       {/* <a href="/register" className="sign-up">Sign Up</a> */}
     </div>
   );

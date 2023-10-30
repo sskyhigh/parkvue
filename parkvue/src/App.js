@@ -13,7 +13,7 @@ import Register from './Pages/Register';
 function App() {
     return (
         <div className="App">
-            {/*<NavBar/>*/}
+            <NavBar/>
             <Routes>
                 <Route path="/home" element={
                     <>

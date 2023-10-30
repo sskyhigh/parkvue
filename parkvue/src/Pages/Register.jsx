@@ -37,6 +37,7 @@ export default function Register() {
                     value={data.password}
                     onChange={(event) => setData({...data, password: event.target.value})}
                 />
+                <button type="submit">Register</button>
             </form>
         </div>
     )
