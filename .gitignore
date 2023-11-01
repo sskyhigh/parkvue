@@ -44,3 +44,4 @@ yarn-error.log*
 # Read Me
 # **/README.md
 /.idea/
+.env
