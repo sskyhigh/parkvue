@@ -23,8 +23,8 @@ function SearchMenu() {
                     <div className="input-box">
                         <span>Refine Your Search</span>
                         {/* <!--  <input type="" name="" id="" placeholder="Search Places"> --> */}
-                        <div class="search-container">
-                            <div class="filter-dropdown">
+                        <div className="search-container">
+                            <div className="filter-dropdown">
                                 <select id="filter">
                                     <option value="parking type">Parking Type</option>
                                     <option value="handicap">Handicap Access</option>
@@ -35,7 +35,7 @@ function SearchMenu() {
                         </div>
                     </div>
 
-                    <div class="input-box">
+                    <div className="input-box">
                         <span>Time-In</span>
                         <input type="time" name="" id=""/>
                     </div>
@@ -43,7 +43,7 @@ function SearchMenu() {
                         <span>Time-Out</span>
                         <input type="time" name="" id=""/>
                     </div>
-                    <div class="form-container">
+                    <div className="form-container">
                     </div>
                     <button> Submit</button>
                 </form>
