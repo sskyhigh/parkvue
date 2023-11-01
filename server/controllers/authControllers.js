@@ -1,5 +1,5 @@
 const test = (req, res) => {
-    res.json('test is working')
+    res.json('(From authControllers) test is working')
 }
 
 module.exports = {

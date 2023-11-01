@@ -1,13 +1,16 @@
 import React, {useState} from 'react'
 import '../../src/Components/SignLogin/Design.css'
+import axios from "axios";
+
 export default function Login() {
     const [data, setData] = useState({
         email: "",
         password: ""
     })
 
-    const login = async (event) => {
+    const login = (event) => {
         event.preventDefault();
+        axios.get('/')
     }
 
     return (
