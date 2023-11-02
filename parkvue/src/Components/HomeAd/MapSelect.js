@@ -27,7 +27,7 @@ function MapSelect() {
                                 src="public\img\Car-Park-summerfield-street-ridgewood,-655745,-77781_1690979739.2012.jpeg"
                                 alt="Car-Park-summerfield-street-ridgewood"/>
                         </div>
-                        <h2>COVERED AND SECURE PARKING IN RIDGEWOOD/BUSHWICK</h2>
+                        <h2>COVERAGE AND SECURE PARKING IN RIDGEWOOD/BUSHWICK</h2>
                         <p>16-71 Summerfield St Ridgewood</p>
                         <h4><i className="bx bx-time-five"/> $1.70 <span>/hourly</span></h4>|<h4><i
                         className="bx bx-calendar"/> $500.00 <span>/monthly</span></h4>

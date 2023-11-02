@@ -6,3 +6,83 @@ body {
   font-size: 3.5rem;
   letter-spacing: 2px;
 }
+
+:root {
+  --background: #f2f5f7;
+  --text-primary: #2f4770;
+  --text-secondary: #647780;
+  --white: #ffffff;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  padding: 60px;
+  background-color: var(--background)
+}
+
+.container{
+  max-width: 1140px;
+  margin: auto;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+/* accordion styles */
+
+h1 {
+  font-size: 42px;
+  color: var(--text-primary);
+  margin: 0px;
+  margin-bottom: 30px;
+}
+
+.accordion-simple > .active {
+  display: block;
+}
+
+.accordion__faq .inactive{
+  display: none;
+}
+
+.accordion__faq > div{
+  background-color: var(--white);
+  margin-bottom: 20px;
+  padding: 0px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.accordion__title{
+  color: var(--text-secondary);
+  padding-bottom: 20px;
+  font-weight: 500;
+}
+
+.accordion__faq-heading{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.accordion__faq-heading .active{
+  color: var(--text-primary);
+}
+
+.accordion__faq-heading h3{
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.accordion__faq p {
+  margin: 0px;
+  padding-bottom: 30px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
