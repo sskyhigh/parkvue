@@ -9,7 +9,10 @@ mongoose.connect(process.env.MONGO_URL)
     .catch((error) => console.log("Database is not connected", error))
 
 const app = express();
+//Middleware, recognizes as JSON object. 
+app.use(express.json());
 app.use('/', require('./routes/authRoutes'))
+
 
 const port = 8000;
 app.listen(port, () => console.log(`Server is running on port ${port}`))
