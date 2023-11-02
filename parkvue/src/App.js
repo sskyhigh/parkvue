@@ -5,6 +5,7 @@ import HomeBanner from './Components/HomeBanner';
 import MapSelect from './Components/HomeAd/MapSelect';
 import Reserve from './Components/HomeAd/Reserve';
 import UploadListing from './Components/HomeAd/UploadListing';
+import FAQ from './Components/FAQ';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         {/*Home Ad:  Map Selection Services */}
        <MapSelect/>
         {/* Link To JS */}
+       <FAQ /> 
       </div>
     );
   }
