@@ -1,5 +1,7 @@
 import '../HomeAd/HomeAd.css';
-import BookNow from '../BookNow';
+import BookNow from './BookNow';
+import Park_Gates from '../../img/car_park_gates.jpg'
+import Park_SummerField from '../../img/car_park_summerfield_street_ridgewood.jpeg'
 
 function MapSelect() {
     return (
@@ -12,8 +14,8 @@ function MapSelect() {
                 <div className="services-container">
                     <div className="box">
                         <div className="box-img">
-                            <img src="public\img\Car-Park-gates-ave-brooklyn,-654444,-73024_1682971378.2875_648x400.jpg"
-                                 alt="Car-Park-gates-ave-brooklyn"/>
+                            <img src={Park_Gates}
+                                 alt="Car Park gates ave brooklyn"/>
                         </div>
                         <h2>Secured, Indoor Covered Remote Parking Space</h2>
                         <p>Gates Ave Bedford</p>
@@ -24,8 +26,8 @@ function MapSelect() {
                     <div className="box">
                         <div className="box-img">
                             <img
-                                src="public\img\Car-Park-summerfield-street-ridgewood,-655745,-77781_1690979739.2012.jpeg"
-                                alt="Car-Park-summerfield-street-ridgewood"/>
+                                src={Park_SummerField}
+                                alt="Car Park summerfield street ridgewood"/>
                         </div>
                         <h2>COVERAGE AND SECURE PARKING IN RIDGEWOOD/BUSHWICK</h2>
                         <p>16-71 Summerfield St Ridgewood</p>

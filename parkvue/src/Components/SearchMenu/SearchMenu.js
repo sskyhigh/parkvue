@@ -50,8 +50,7 @@ function SearchMenu() {
                         <span>Time-Out</span>
                         <input type="time" name="" id=""/>
                     </div>
-                    <div class="form-container">
-                </div>
+                    
                 <button> Submit </button>
                 </form>
             </div>
