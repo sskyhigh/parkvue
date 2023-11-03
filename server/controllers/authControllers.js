@@ -1,8 +1,10 @@
 const UserInformation = require('../models/userModels')
+const {hashPassword, comparePassword} = require('../helpers/auth')
 const test = (req, res) => {
     res.json('(From authControllers) test is working')
 }
 
+// registering endpoint
 const registerUser = async (req, res) => {
     try {
         const {name, email, password} = req.body;
@@ -25,11 +27,13 @@ const registerUser = async (req, res) => {
                 error: "email has been taken. Please use another one"
             })
         }
+        const hashedPassword = await hashPassword(password)
+
         // creates an object
         const createUser = await UserInformation.create({
             name,
             email,
-            password,
+            password: hashedPassword,
         })
         // returns back 
         return res.json(createUser)
@@ -38,7 +42,29 @@ const registerUser = async (req, res) => {
     }
 }
 
+//login
+const loginUser = async (res, req) => {
+    try {
+        const {email, password} = req.body;
+        /*This tries to find the user inside the mongoDB database*/
+        const user = await UserInformation.findOne({email})
+        if (!user) {
+            return res.json({
+                error: 'Email does not exist'
+            })
+        }
+        // checks if the passwords match
+        const matchPassword = await comparePassword(password, user.password)
+        if (matchPassword) {
+            res.json('passwords match')
+        }
+    } catch (error) {
+        console.log('login error in backend: ' + error)
+    }
+}
+
 module.exports = {
     test,
     registerUser,
+    loginUser,
 }
