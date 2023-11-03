@@ -1,9 +1,9 @@
-import '../../src/App.css';
+import '../App.css';
 
 function BookNow() {
   return (
     <div>
-      <button>Book Now</button>
+      
     </div>
   );
 }
