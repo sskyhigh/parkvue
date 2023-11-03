@@ -19,15 +19,14 @@ export default function Login() {
                 email,
                 password,
             })
+            if (data.error) {
+                toast.error(data.error)
+            } else {
+                setData({});
+                navigate('/home')
+            }
         } catch (e) {
-            console.error(e)
-        }
-        if(data.error){
-            toast.error(data.error)
-        }
-        else{
-            setData({});
-            navigate('/home')
+            console.error("login error: " + e)
         }
     }
 
@@ -44,7 +43,7 @@ export default function Login() {
                 <br/>
                 <label htmlFor="">Password: </label>
                 <input
-                    type="text"
+                    type="password"
                     placeholder={"****"}
                     value={data.password}
                     onChange={(event) => setData({...data, password: event.target.value})}

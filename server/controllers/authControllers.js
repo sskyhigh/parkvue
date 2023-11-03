@@ -43,11 +43,17 @@ const registerUser = async (req, res) => {
 }
 
 //login
-const loginUser = async (res, req) => {
+/*
+req, res. not the other way around
+req gets data from client, res sends back data to client
+*/
+
+
+const loginUser = async (req, res) => {
     try {
         const {email, password} = req.body;
         /*This tries to find the user inside the mongoDB database*/
-        const user = await UserInformation.findOne({email})
+        const user = await UserInformation.findOne({email});
         if (!user) {
             return res.json({
                 error: 'Email does not exist'
@@ -57,6 +63,9 @@ const loginUser = async (res, req) => {
         const matchPassword = await comparePassword(password, user.password)
         if (matchPassword) {
             res.json('passwords match')
+        }
+        if(!matchPassword){
+            res.json("passwords don't match");
         }
     } catch (error) {
         console.log('login error in backend: ' + error)
