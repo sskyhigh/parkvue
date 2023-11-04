@@ -32,7 +32,6 @@ const dataCollection = [
 
 function FAQ() {
     const [accordion, setActiveAccordion] = useState(-1);
-
     function toggleAccordion(index) {
         if (index === accordion) {
             setActiveAccordion(-1);

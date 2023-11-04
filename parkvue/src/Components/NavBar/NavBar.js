@@ -17,7 +17,6 @@ function NavBar() {
                 <li><Link to="/rewards">Rewards</Link></li>
                 <li><Link to="/about">About</Link></li>
             </ul>
-
             <div className="header-btn">
                 <SignUp/>
                 <SignIn/>
