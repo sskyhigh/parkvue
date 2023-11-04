@@ -1,7 +1,7 @@
 /* Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap'); /* @import */
 /* CSS rules to specify families */
-*{
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -18,42 +18,45 @@
     --text-color: #444;
     --gradient: linear-gradient(#2B74A8, #3FA9F5);
 }
+
 /* Custom Scroll Bar */
 html::-webkit-scrollbar {
     width: 0.5rem;
 }
+
 html::-webkit-scrollbar-track {
     background: transparent;
 }
+
 html::-webkit-scrollbar-thumb {
     background: var(--main-color);
     border-radius: 5rem;
 }
+
 section {
     padding: 50px 100px;
 }
 
-  
+
 /* -- <span> Color selected for text </span> -- */
 .text span {
     color: #3FA9F5;
 }
-.text p{
+
+.text p {
     margin: 00.5rem 0 1rem;
-<<<<<<< HEAD
 }
-
-
-
 
 .app-stores {
     display: flex;
 }
+
 .app-stores img {
     width: 135px; /* -- market place icons size -- */
     margin-right: 1rem;
     cursor: pointer;
 }
+
 /* -- Positioning Calendar -- */
 .form-container form {
     display: flex;
@@ -67,14 +70,17 @@ section {
     padding: 20px;
     border-radius: 0.5rem;
 }
+
 .input-box {
     flex: 1 1 7rem;
     display: flex;
     flex-direction: column;
 }
+
 .input-box span {
     font-weight: 500;
 }
+
 .input-box input {
     padding: 7px;
     outline: none;
@@ -88,7 +94,7 @@ section {
 /* applied to the button within your form container */
 .form-container form .btn {
     flex: 1 1 7rem;
-    padding: 10px 34px ;
+    padding: 10px 34px;
     border: none;
     border-radius: 0.5rem;
     background: #474fa0;
@@ -96,6 +102,7 @@ section {
     font-size: 1rem;
     font-weight: 500
 }
+
 /* hover effect for the button */
 .form-container form .btn:hover {
     background: var(--main-color);
@@ -104,13 +111,16 @@ section {
 .heading {
     text-align: center;
 }
+
 .heading span {
     font-weight: 500;
     text-transform: uppercase;
 }
+
 .heading h1 {
     font-size: 2rem;
 }
+
 .ride-container {
     display: grid;
     align-items: center;
@@ -118,10 +128,12 @@ section {
     gap: 1rem;
     margin-top: 2rem;
 }
-.ride-container .box { 
+
+.ride-container .box {
     text-align: center;
     padding: 20px;
 }
+
 .ride-container .box .bx {
     font-size: 34px;
     padding: 10px;
@@ -129,12 +141,14 @@ section {
     border-radius: 0.5rem;
     color: var(--main-color);
 }
+
 .ride-container .box h2 {
     font-size: 1.3rem;
     font-weight: 500;
     margin: 1.4rem 0 0.5rem;
 }
-.ride-container .box .bx:hover, 
+
+.ride-container .box .bx:hover,
 .ride-container .bx .bxs-calendar-check {
     background: var(--gradient);
     color: #fff;
@@ -155,6 +169,4 @@ section {
     font-size: 16px;
     margin-right: 8px;
 }
-=======
-}
->>>>>>> e1fc9d1d657c15933dc8d7f4278cdd47cd419ea1
+

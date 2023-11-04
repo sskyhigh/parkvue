@@ -1,7 +1,6 @@
 import '../SearchMenu/SearchMenu.css';
 
 function SearchMenu() {
-<<<<<<< HEAD:parkvue/src/Components/SearchMenu.js
     return (
         <div>
             {/* <!-- Search Menu --> */}
@@ -22,7 +21,6 @@ function SearchMenu() {
                 {/* <!-- Filter Add on --> */}
                 <form action="">
                     <div className="input-box">
-=======
   return (
   <div>
     {/* <!-- Search Menu --> */}
