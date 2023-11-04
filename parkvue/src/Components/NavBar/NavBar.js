@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom'; // Import Link from react-router-dom
+import {Link} from 'react-router-dom'; // Import Link from react-router-dom
 import '../NavBar/NavBar.css'; // Import NavBar CSS file
 import ParkvueLogo from '../ParkvueLogo/ParkvueLogo';
 import SignUp from './SignUp';
@@ -8,8 +8,7 @@ import SignIn from './SignIn';
 function NavBar() {
     return (
         <header>
-            <ParkvueLogo />
-
+            <ParkvueLogo/>
             <div className="bx_bx-menu" id="menu-icon"></div>
             <ul className="navbar">
                 <li><Link to="/home">Home</Link></li>
@@ -19,8 +18,8 @@ function NavBar() {
             </ul>
 
             <div className="header-btn">
-                <SignUp />
-                <SignIn />
+                <SignUp/>
+                <SignIn/>
             </div>
         </header>
     );

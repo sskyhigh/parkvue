@@ -4,9 +4,9 @@ function SearchMenu() {
     return (
         <div>
             {/* <!-- Search Menu --> */}
-            <div class="form-container">
+            <div className="form-container">
                 <form action="">
-                    <div class="input-box">
+                    <div className="input-box">
                         <span>Location</span>
                         <input type="search" name="" id="" placeholder="Search Places"/>
                     </div>
@@ -44,9 +44,6 @@ function SearchMenu() {
                         <span>Time-Out</span>
                         <input type="time" name="" id=""/>
                     </div>
-                    <div className="form-container">
-                    </div>
-                    <button> Submit</button>
                     <button> Submit</button>
                 </form>
             </div>
