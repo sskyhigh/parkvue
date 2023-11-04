@@ -12,6 +12,7 @@ function NavBar() {
 
             <div className="bx_bx-menu" id="menu-icon"></div>
             <ul className="navbar">
+                {/*TODO: reroute these items. */}
                 <li><a href="#home">Home</a></li>
                 <li><a href="#map">Map</a></li>
                 <li><a href="#rewards">Rewards</a></li>

@@ -32,6 +32,7 @@ function App() {
                         <Reserve/>
                         <UploadListing/>
                         <MapSelect/>
+                        <FAQ/>
                     </UserContextProvider>
                 }/>
 
