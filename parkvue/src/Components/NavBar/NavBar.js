@@ -9,6 +9,7 @@ function NavBar() {
     return (
         <header>
             <ParkvueLogo />
+
             <div className="bx_bx-menu" id="menu-icon"></div>
             <ul className="navbar">
                 <li><Link to="/home">Home</Link></li>
