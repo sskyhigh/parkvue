@@ -1,5 +1,5 @@
 import React from 'react';
-import {Link} from 'react-router-dom'; // Import Link from react-router-dom
+import {Link} from 'react-router-dom';
 import '../NavBar/NavBar.css'; // Import NavBar CSS file
 import ParkvueLogo from '../ParkvueLogo/ParkvueLogo';
 import SignUp from './SignUp';
@@ -11,7 +11,8 @@ function NavBar() {
             <ParkvueLogo/>
             <div className="bx_bx-menu" id="menu-icon"></div>
             <ul className="navbar">
-                <li><Link to="/home">Home</Link></li>
+                {/*home is undecided.*/}
+                <li><Link to="/">Home</Link></li>
                 <li><Link to="/map">Map</Link></li>
                 <li><Link to="/rewards">Rewards</Link></li>
                 <li><Link to="/about">About</Link></li>
