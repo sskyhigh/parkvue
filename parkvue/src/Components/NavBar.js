@@ -20,7 +20,6 @@ function NavBar() {
                 <li>Rewards</li>
                 <li>About</li>
             </ul>
-
             <div className="header-btn">
                 <SignUp/>
                 <SignIn/>
