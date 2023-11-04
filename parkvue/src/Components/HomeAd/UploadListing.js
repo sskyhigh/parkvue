@@ -18,7 +18,7 @@ function UploadListing() {
 
                     <div className="box">
                         <i className="bx bxs-calendar-check"/> {/* boxicons:calendar-checker: font */}
-                        <h2>Avalibilty <br/> Date &amp; Time</h2>
+                        <h2>Availability <br/> Date &amp; Time</h2>
                         <p>....</p>
                     </div>
 
