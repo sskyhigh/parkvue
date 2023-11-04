@@ -1,5 +1,6 @@
 const UserInformation = require('../models/userModels')
 const {hashPassword, comparePassword} = require('../helpers/auth')
+const jwt = require('jsonwebtoken')
 const test = (req, res) => {
     res.json('(From authControllers) test is working')
 }
@@ -62,13 +63,37 @@ const loginUser = async (req, res) => {
         // checks if the passwords match
         const matchPassword = await comparePassword(password, user.password)
         if (matchPassword) {
-            res.json('passwords match')
+            // res.json('passwords match')
+            jwt.sign({
+                email: user.email,
+                id: user._id,
+                password: user.password
+            }, process.env.JWT_SECRET, {}, (err, token) => {
+                res.cookie('token', token).json(user)
+            })
         }
-        if(!matchPassword){
-            res.json("passwords don't match");
+        if (!matchPassword) {
+            res.json({
+                error: "passwords do not match"
+            });
         }
     } catch (error) {
         console.log('login error in backend: ' + error)
+    }
+}
+
+const Profile = (req, res) =>{
+    const token = req.cookies
+    if(token){
+        jwt.verify(token, process.env.JWT_SECRET, {}, (err, user)=>{
+            if(err){
+                throw err;
+            }
+            res.json(user)
+        })
+    }
+    else{
+        res.json(null)
     }
 }
 
@@ -76,4 +101,5 @@ module.exports = {
     test,
     registerUser,
     loginUser,
+    Profile,
 }

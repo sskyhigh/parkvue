@@ -11,7 +11,7 @@ import Login from './Pages/Login';
 import Register from './Pages/Register';
 import {Toaster} from 'react-hot-toast';
 import axios from "axios";
-
+import {UserContextProvider} from "./context/userContext";
 // connects frontend to backend
 axios.defaults.baseURL = "http://localhost:8000";
 axios.defaults.withCredentials = true;
@@ -24,14 +24,15 @@ function App() {
             <Toaster position='bottom-center' toastOptions={{duration: 2000}}/>
             <Routes>
                 <Route path="/" element={
-                    <>
+                    <UserContextProvider>
                         <HomeBanner/>
                         <SearchMenu/>
                         <Reserve/>
                         <UploadListing/>
                         <MapSelect/>
-                    </>
+                    </UserContextProvider>
                 }/>
+
                 {/*
                 Defining the routes
                 website.com/register => registers accounts
