@@ -70,36 +70,20 @@ header {
     transition: background-color 0.3s, color 0.3s;
   }
   
+   /* Sign-in button hover animation color */
   .header-btn a:hover {
     background-color: var(--main-color);
     color: white;
-  }
-  
-  /* Sign-in and Sign-up button animation */
-  .header-btn a::after {
-    content: "";
-    position: absolute;
-    width: 0;
-    height: 2px;
-    background: var(--main-color);
-    bottom: -5px;
-    left: 0;
-    transition: width 0.3s;
-  }
+}
   
   .header-btn a:hover::after {
     width: 100%;
-  }
+}
   
-/* sign-in button box */
+/* sign-in button box color*/
 .header-btn .sign-up{
     background: #474fa8;
     color: #fff;
-}
-
-/* sign-in button box animation */
-.header-btn .sign-up:hover{
-    background: var(--main-color);
 }
 
 
