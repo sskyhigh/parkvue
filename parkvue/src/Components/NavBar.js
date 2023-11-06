@@ -8,23 +8,7 @@ import React from "react";
 
 function NavBar() {
     return (
-        <header>
-            <a href="#" className="logo_img">
-                {/* <img src={logo} alt={'test'}/> */}
-            </a>
-
-            <div className="bx_bx-menu" id="menu-icon"></div>
-            <ul className="navbar">
-                <li>Home</li>
-                <li>Map</li>
-                <li>Rewards</li>
-                <li>About</li>
-            </ul>
-            <div className="header-btn">
-                <SignUp/>
-                <SignIn/>
-            </div>
-        </header>
+        <div>Hello</div>
     );
 }
 

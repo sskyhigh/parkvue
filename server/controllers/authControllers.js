@@ -67,14 +67,14 @@ const loginUser = async (req, res) => {
             jwt.sign({
                 email: user.email,
                 id: user._id,
-                password: user.password
+                name: user.name
             }, process.env.JWT_SECRET, {}, (err, token) => {
                 res.cookie('token', token).json(user)
             })
         }
         if (!matchPassword) {
             res.json({
-                error: "passwords do not match"
+                error: "Incorrect password"
             });
         }
     } catch (error) {
@@ -83,7 +83,7 @@ const loginUser = async (req, res) => {
 }
 
 const Profile = (req, res) =>{
-    const token = req.cookies
+    const {token} = req.cookies
     if(token){
         jwt.verify(token, process.env.JWT_SECRET, {}, (err, user)=>{
             if(err){

@@ -21,19 +21,20 @@ axios.defaults.withCredentials = true;
 function App() {
     return (
         <div className="App">
+            <UserContextProvider>
             <NavBar/>
             {/*defines the position and duration*/}
             <Toaster position='bottom-center' toastOptions={{duration: 2000}}/>
             <Routes>
                 <Route path="/" element={
-                    <UserContextProvider>
+                    <>
                         <HomeBanner/>
                         <SearchMenu/>
                         <Reserve/>
                         <UploadListing/>
                         <MapSelect/>
                         <FAQ/>
-                    </UserContextProvider>
+                    </>
                 }/>
 
                 {/*
@@ -47,6 +48,7 @@ function App() {
                 <Route path="/login" element={<Login/>}/>
                 <Route path="/home" element={<Home/>}/>
             </Routes>
+            </UserContextProvider>
             {/* Box Icons */}
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css"/>
             {/* Link To JS */}

@@ -6,7 +6,10 @@ const {test, registerUser, loginUser, Profile} = require('../controllers/authCon
 // middleware
 router.use(
     cors({
-        credentials: true,
+        /*to pause temp error
+        * Network Error at XMLHttpRequest.handleError
+        * */
+        credentials: false,
         origin: 'http://localhost:3000',
     })
 )
@@ -15,6 +18,6 @@ router.use(
 router.get('/', test);
 router.post("/register", registerUser);
 router.post("/login", loginUser);
-router.get("/profile", Profile)
+router.get("/profile", Profile);
 
 module.exports = router
