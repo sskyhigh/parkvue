@@ -9,7 +9,7 @@ router.use(
         /*to pause temp error
         * Network Error at XMLHttpRequest.handleError
         * */
-        credentials: false,
+        credentials: true,
         origin: 'http://localhost:3000',
     })
 )
