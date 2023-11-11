@@ -7,7 +7,6 @@ function SignIn() {
   return (
     <div>
       <Link to="/login">Sign In</Link>
-      {/* <a href="/register" className="sign-up">Sign Up</a> */}
     </div>
   );
 }

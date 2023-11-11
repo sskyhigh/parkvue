@@ -1,11 +1,15 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {Link} from 'react-router-dom';
 import '../NavBar/NavBar.css'; // Import NavBar CSS file
 import ParkvueLogo from '../ParkvueLogo/ParkvueLogo';
 import SignUp from './SignUp';
 import SignIn from './SignIn';
+import Logout from "./Logout";
+import axios from "axios";
 
 function NavBar() {
+    const [log, setLog] = useState(!!localStorage.access)
+
     return (
         <header>
             <ParkvueLogo/>
@@ -20,6 +24,7 @@ function NavBar() {
             <div className="header-btn">
                 <SignUp/>
                 <SignIn/>
+                <Logout/>
             </div>
         </header>
     );
