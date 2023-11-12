@@ -1,14 +1,20 @@
-import React, {useEffect, useState} from 'react';
-import {Link} from 'react-router-dom';
+import React from 'react';
+import {Link, useNavigate} from 'react-router-dom';
 import '../NavBar/NavBar.css'; // Import NavBar CSS file
 import ParkvueLogo from '../ParkvueLogo/ParkvueLogo';
 import SignUp from './SignUp';
 import SignIn from './SignIn';
 import Logout from "./Logout";
-import axios from "axios";
 
 function NavBar() {
-    const [log, setLog] = useState(!!localStorage.access)
+    /*checks to see if there is a token*/
+    const isSignedIn = !!localStorage.getItem("token");
+    const navigate = useNavigate();
+
+    const SignOut = () => {
+        localStorage.removeItem("token");
+        navigate('/login');
+    }
 
     return (
         <header>
@@ -22,9 +28,16 @@ function NavBar() {
                 <li><Link to="/about">About</Link></li>
             </ul>
             <div className="header-btn">
-                <SignUp/>
-                <SignIn/>
-                <Logout/>
+                {isSignedIn ? (
+                    <>
+                       <button onClick={SignOut}>Sign Out</button>
+                    </>
+                ) : (
+                    <>
+                        <SignUp/>
+                        <SignIn/>
+                    </>
+                )}
             </div>
         </header>
     );

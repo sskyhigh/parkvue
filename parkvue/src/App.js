@@ -17,37 +17,39 @@ import FAQ from './Components/FAQ';
 // connects frontend to backend
 axios.defaults.baseURL = "http://localhost:8000";
 axios.defaults.withCredentials = true;
+const isSignedIn = !!localStorage.getItem('token')
 
 function App() {
     return (
         <div className="App">
             <UserContextProvider>
-            <NavBar/>
-            {/*defines the position and duration*/}
-            <Toaster position='bottom-center' toastOptions={{duration: 2000}}/>
-            <Routes>
-                <Route path="/" element={
-                    <>
-                        <HomeBanner/>
-                        <SearchMenu/>
-                        <Reserve/>
-                        <UploadListing/>
-                        <MapSelect/>
-                        <FAQ/>
-                    </>
-                }/>
+                <NavBar/>
+                {/*defines the position and duration*/}
+                <Toaster position='bottom-center' toastOptions={{duration: 2000}}/>
+                <Routes>
+                    <Route path="/" element={
+                        <>
+                            <HomeBanner/>
+                            <SearchMenu/>
+                            <Reserve/>
+                            <UploadListing/>
+                            <MapSelect/>
+                            <FAQ/>
+                        </>
+                    }/>
 
-                {/*
+                    {/*
                 Defining the routes
                 website.com/register => registers accounts
                 website.com/login => sends to login
                 website.com/home => sends to homepage
                 */}
 
-                <Route path="/register" element={<Register/>}/>
-                <Route path="/login" element={<Login/>}/>
-                <Route path="/home" element={<Home/>}/>
-            </Routes>
+                    <Route path="/register" element={<Register/>}/>
+                    <Route path="/login" element={<Login/>}/>
+                    <Route path="/home" element={<Home/>}/>
+                    {isSignedIn && <Route path='/home' element={<Home/>}/>}
+                </Routes>
             </UserContextProvider>
             {/* Box Icons */}
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css"/>
