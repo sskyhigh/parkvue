@@ -13,11 +13,11 @@ import {Toaster} from 'react-hot-toast';
 import axios from "axios";
 import {UserContextProvider} from "./context/userContext";
 import FAQ from './Components/FAQ';
+import AboutPage from "./Pages/AboutPage";
 
 // connects frontend to backend
 axios.defaults.baseURL = "http://localhost:8000";
 axios.defaults.withCredentials = true;
-const isSignedIn = !!localStorage.getItem('token')
 
 function App() {
     return (
@@ -44,11 +44,10 @@ function App() {
                 website.com/login => sends to login
                 website.com/home => sends to homepage
                 */}
-
                     <Route path="/register" element={<Register/>}/>
                     <Route path="/login" element={<Login/>}/>
                     <Route path="/home" element={<Home/>}/>
-                    {isSignedIn && <Route path='/home' element={<Home/>}/>}
+                    <Route path="/about" element={<AboutPage/>} />
                 </Routes>
             </UserContextProvider>
             {/* Box Icons */}

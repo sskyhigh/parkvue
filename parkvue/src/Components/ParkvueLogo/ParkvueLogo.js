@@ -11,7 +11,7 @@ const Navbar = () => {
             </Link>
 
 
-            {/*<a href="about_us.js" className="logo-link">*/}
+            {/*<a href="aboutPage.js" className="logo-link">*/}
             {/*</a>*/}
 
             {/* Add your navigation links here */}
