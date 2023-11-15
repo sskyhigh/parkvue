@@ -10,14 +10,13 @@ The ongoing parking scarcity in New York City poses a persistent challenge, whil
 
 ## 3. Objectives
 
-- Develop a user-friendly web and mobile platform within an accelerated time frame.
+- Develop a user-friendly web within an accelerated time frame.
 - Enable parking space owners to monetize their assets effectively.
 - Provide a pricing algorithm that adapts to consumer preferences and security features.
 - Create a seamless, secure, and trust-based environment for both parking space owners and renters.
 
 ## 4. Scope
 
-- Development of a responsive web and mobile application (iOS and Android).
 - User registration, profile management, and KYC (Know Your Customer) verification.
 - Listing management for parking space owners.
 - Dynamic pricing algorithm based on consumer preferences, events, and security options.
@@ -33,27 +32,28 @@ The ongoing parking scarcity in New York City poses a persistent challenge, whil
 
 - **Parking Space Owners:** New York City residents who own private parking spaces.
 - **Renters:** Individuals in need of convenient, secure, and flexible parking options in the city.
+- **Ride-Share Drivers:** Individuals seeking passive income.
 
 **Catchy Name:** Our platform's name, "ParkVue," is designed to resonate with our target audience. It conveys modernity, simplicity, and a clear view of the future of parking solutions. Additionally, it seamlessly translates into an app name for both iOS and Android platforms.
 
 ## 6. Project Features
 
-- User-friendly registration and profile creation.
-- Intuitive parking space listing with dynamic pricing.
-- Advanced search filters, including location, price range, and security options.
-- Secure payment processing with various payment methods.
-- Real-time availability calendar.
-- User reviews and ratings for trust-building.
-- In-app messaging for seamless communication between users.
-- 24/7 AI customer support.
+- [ ] User-friendly registration and profile creation.
+- [ ] Intuitive parking space listing with dynamic pricing.
+- [ ] Advanced search filters, including location, price range, and security options.
+- [ ] Secure payment processing with various payment methods.
+- [ ] Real-time availability calendar.
+- [ ] User reviews and ratings for trust-building.
+- [ ] In-app messaging for seamless communication between users.
+- [ ] 24/7 AI customer support.
 
 ## 7. Technology Stack
 
-**Frontend:** React Native for mobile apps, React.js for the web.
+**Frontend:** React.js for the web.
 **Backend:** Node.js with Express.js.
 **Database:** MongoDB.
 **Payment Integration:** Stripe.
-**Geolocation:** Google Maps API.
+**Geolocation:** Google Maps or Mapbox API.
 **Hosting:** AWS for scalability and reliability.
 **Security:** SSL certificates, encryption, and robust authentication protocols.
 
@@ -63,8 +63,8 @@ The ongoing parking scarcity in New York City poses a persistent challenge, whil
 
 ## 9. Project Tasks
 
-- [ ] Requirements Gathering and Planning
-- [ ] Design and Prototyping 
+- [x] Requirements Gathering and Planning
+- [x] Design and Prototyping 
 - [ ] Development
 - [ ] Testing and Quality Assurance
 - [ ] Beta Testing and User Feedback
