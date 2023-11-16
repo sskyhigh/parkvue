@@ -1,7 +1,12 @@
 import {useContext} from 'react';
 import {UserContext} from "../context/userContext";
+import axios from "axios";
 
 export default function Home(){
+    const axiosInstance = axios.create({
+        baseURL: process.env.REACT_APP_API_URL,
+    })
+
     const { user } = useContext(UserContext);
     return(
         <div className="test">

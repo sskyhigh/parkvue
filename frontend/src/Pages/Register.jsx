@@ -5,6 +5,10 @@ import toast from "react-hot-toast";
 import {useNavigate} from "react-router-dom";
 
 export default function Register() {
+    const axiosInstance = axios.create({
+        baseURL: process.env.REACT_APP_API_URL,
+    })
+
     const navigate = useNavigate();
     const [data, setData] = useState({
         name: "",
@@ -16,7 +20,7 @@ export default function Register() {
         event.preventDefault();
         const {name, email, password} = data;
         try {
-            const {data} = await axios.post("/register", {
+            const {data} = await axiosInstance.post("/register", {
                 name,
                 email,
                 password,
