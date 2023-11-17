@@ -1,6 +1,7 @@
 const UserInformation = require('../models/userModels')
 const {hashPassword, comparePassword} = require('../helpers/auth')
 const jwt = require('jsonwebtoken')
+const BookingInfo = require('../models/Booking')
 const test = (req, res) => {
     res.json('(From authControllers) test is working')
 }
@@ -43,13 +44,9 @@ const registerUser = async (req, res) => {
     }
 }
 
-//login
 /*
 req, res. not the other way around
-req gets data from client, res sends back data to client
 */
-
-
 const loginUser = async (req, res) => {
     try {
         const {email, password} = req.body;
@@ -96,9 +93,31 @@ const Profile = (req, res) => {
     }
 }
 
+const BookingDates = async (req, res) => {
+    try {
+        const booking = new BookingInfo({
+            user: req.body.user,
+            startDate: req.body.startDate,
+            endDate: new Date(req.body.startDate),
+            address: new Date(req.body.endDate),
+        })
+        await booking.save();
+        res.status(201).send(booking);
+        res.json({
+            message: "saved success"
+        })
+    } catch (e) {
+        res.status(500).send(e);
+        res.json({
+            error: "authControllers booking dates have an error"
+        })
+    }
+}
+
 module.exports = {
     test,
     registerUser,
     loginUser,
     Profile,
+    BookingDates,
 }

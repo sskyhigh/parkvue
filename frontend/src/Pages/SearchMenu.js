@@ -1,14 +1,7 @@
-import {useContext} from 'react';
-import {UserContext} from "../context/userContext";
-import axios from "axios";
+import '../SearchMenu/SearchMenu.css';
 
-export default function Home(){
-    const axiosInstance = axios.create({
-        baseURL: process.env.REACT_APP_API_URL,
-    })
-
-    const { user } = useContext(UserContext);
-    return(
+function SearchMenu() {
+    return (
         <div>
             {/* <!-- Search Menu --> */}
             <div className="form-container">
@@ -55,5 +48,8 @@ export default function Home(){
                 </form>
             </div>
         </div>
-    )
+    );
 }
+
+export default SearchMenu;
+
