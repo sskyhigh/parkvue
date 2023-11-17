@@ -20,7 +20,7 @@ export default function Register() {
         event.preventDefault();
         const {name, email, password} = data;
         try {
-            const {data} = await axiosInstance.post("/register", {
+            const {data} = await axios.post("/register", {
                 name,
                 email,
                 password,

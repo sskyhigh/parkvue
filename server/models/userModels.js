@@ -8,6 +8,9 @@ const userSchema = new Schema({
         unique: true,
     },
     password: String,
+    address: String,
+    startDate: Date,
+    endDate: Date,
 })
 // putting userSchema into user collection
 const userModel = mongoose.model('User', userSchema)
