@@ -16,7 +16,7 @@ import FAQ from './Components/FAQ';
 import AboutPage from "./Pages/AboutPage";
 
 // connects frontend to backend
- axios.defaults.baseURL = "http://localhost:8000";
+ axios.defaults.baseURL = process.env.REACT_APP_API_URL;
 axios.defaults.withCredentials = true;
 
 function App() {
