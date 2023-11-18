@@ -15,7 +15,7 @@ try {
     //Middleware, recognizes as JSON object.
     //app.use(bodyparser.json());
     app.use(cors({
-        origin: "https://parkvue.onrender.com/",
+        origin: "https://parkvue.onrender.com",
         optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
         credentials: true,
     }));
