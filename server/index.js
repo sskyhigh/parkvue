@@ -16,8 +16,9 @@ try {
     //app.use(bodyparser.json());
     app.use(cors({
         origin: "https://parkvue.onrender.com/",
-        optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
-      }));
+        optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
+        credentials: true,
+    }));
     app.use(express.json());
     app.use(cookieParser())
     app.use(express.urlencoded({extended: false}))
