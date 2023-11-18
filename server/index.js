@@ -14,7 +14,7 @@ mongoose.connect(process.env.MONGO_URL)
 try {
     //Middleware, recognizes as JSON object.
     //app.use(bodyparser.json());
-    //app.use(cors());
+    app.use(cors());
     app.use(express.json());
     app.use(cookieParser())
     app.use(express.urlencoded({extended: false}))
