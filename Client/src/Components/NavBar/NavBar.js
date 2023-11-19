@@ -3,8 +3,8 @@ import {Link, useNavigate} from 'react-router-dom';
 
 import '../NavBar/NavBar.css'; // Import NavBar CSS file
 import ParkvueLogo from '../ParkvueLogo/ParkvueLogo';
-import SignUp from './SignUp';
-import SignIn from './SignIn';
+import SignUp from "../Login_Sign_out/SignUp";
+import SignIn from "../Login_Sign_out/SignIn";
 // import Logout from "./Logout";
 
 import{AppBar, Box, Container, IconButton, Toolbar, Typography} from '@mui/material';
@@ -24,7 +24,6 @@ return (
         <AppBar>  {/*Fills page 100%*/}
             <Container maxWidth='lg'>
                 <Toolbar disableGutters>  {/*Removes padding from sides*/}
-
                     <Typography
                         variant='h6'
                         compnent='h1'
@@ -42,7 +41,6 @@ return (
                     </Typography>
                     <SignUp/>
                     <SignIn/>
-
                     {/*small screen view*/}
                     <Typography
                         variant='h6'
@@ -70,9 +68,10 @@ return (
                     {/*        <SignIn/>*/}
                     {/*        <SignUp/>*/}
                     {/*</Toolbar>*/}
+                    </Toolbar>
             </Container>
         </AppBar>
-);
+ );
 }
 
 export default NavBar;
