@@ -15,7 +15,7 @@ import {UserContextProvider} from "./context/userContext";
 import FAQ from './Components/FAQ/FAQ';
 import AboutPage from "./Pages/AboutPage";
 
-// connects frontend to backend
+// connects client to backend
 axios.defaults.baseURL = "http://localhost:8000";
 axios.defaults.withCredentials = true;
 
