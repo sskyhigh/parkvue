@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import {Link, useNavigate} from 'react-router-dom';
+
 import '../NavBar/NavBar.css'; // Import NavBar CSS file
 import ParkvueLogo from '../ParkvueLogo/ParkvueLogo';
-// import SignUp from './SignUp';
-// import SignIn from './SignIn';
+import SignUp from './SignUp';
+import SignIn from './SignIn';
 // import Logout from "./Logout";
 
 import{AppBar, Box, Container, IconButton, Toolbar, Typography} from '@mui/material';
@@ -39,6 +40,8 @@ return (
                             <li><Link to="/about">About</Link></li>
                         </ul>
                     </Typography>
+                    <SignUp/>
+                    <SignIn/>
 
                     {/*small screen view*/}
                     <Typography
@@ -54,7 +57,9 @@ return (
                             </IconButton>
                         </Box>
                     </Typography>
-                    {/*show current user; if none than show login button*/}
+
+                    {/*<Typography>*/}
+                    {/*/!*show current user; if none than show login button*!/*/}
                     {/*<div className="header-btn">*/}
                     {/*    {isSignedIn ? (*/}
                     {/*        <>*/}
@@ -62,9 +67,9 @@ return (
                     {/*        </>*/}
                     {/*    ) : (*/}
                     {/*        <>*/}
-                    {/*<SignIn/>*/}
-                    {/*<SignUp/>*/}
-                </Toolbar>
+                    {/*        <SignIn/>*/}
+                    {/*        <SignUp/>*/}
+                    {/*</Toolbar>*/}
             </Container>
         </AppBar>
 );
