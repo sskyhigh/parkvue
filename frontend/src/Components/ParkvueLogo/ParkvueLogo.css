@@ -10,7 +10,12 @@
   
   /* Shrink logo size */
   .logo-img {
-    width: 150px; /* Adjust the size as needed */
+    width: 240px; /* Adjust the size as needed */
     height: auto;
   }
-  
+
+/* Shrink logo size */
+.p_logo-img {
+  width: 65px; /* Adjust the size as needed */
+  height: auto;
+}

@@ -56,115 +56,21 @@ section {
     cursor: pointer;
 }
 
-/* -- Positioning Calendar -- */
-.form-container form {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 1rem;
-    position: absolute;
-    bottom: 4rem;
-    left: 100px;
-    background: #fff;
-    padding: 20px;
-    border-radius: 0.5rem;
-}
-
-.input-box {
-    flex: 1 1 7rem;
-    display: flex;
-    flex-direction: column;
-}
-
-.input-box span {
-    font-weight: 500;
-}
-
-.input-box input {
-    padding: 7px;
-    outline: none;
-    border: none;
-    background: #eeeff1;
-    border-radius: 0.5rem;
-    font-size: 1rem;
-}
 
 
-/* applied to the button within your form container */
-.form-container form .btn {
-    flex: 1 1 7rem;
-    padding: 10px 34px;
-    border: none;
-    border-radius: 0.5rem;
-    background: #474fa0;
-    color: #fff;
-    font-size: 1rem;
-    font-weight: 500
-}
 
-/* hover effect for the button */
-.form-container form .btn:hover {
-    background: var(--main-color);
-}
+/*!* Style for the Refine search filter dropdown container *!*/
+/*.search-container {*/
+/*    display: flex;*/
+/*    align-items: center;*/
+/*}*/
 
-.heading {
-    text-align: center;
-}
-
-.heading span {
-    font-weight: 500;
-    text-transform: uppercase;
-}
-
-.heading h1 {
-    font-size: 2rem;
-}
-
-.ride-container {
-    display: grid;
-    align-items: center;
-    grid-template-columns: repeat(auto-fit, minmax(250px, auto));
-    gap: 1rem;
-    margin-top: 2rem;
-}
-
-.ride-container .box {
-    text-align: center;
-    padding: 20px;
-}
-
-.ride-container .box .bx {
-    font-size: 34px;
-    padding: 10px;
-    background: #eeeff1;
-    border-radius: 0.5rem;
-    color: var(--main-color);
-}
-
-.ride-container .box h2 {
-    font-size: 1.3rem;
-    font-weight: 500;
-    margin: 1.4rem 0 0.5rem;
-}
-
-.ride-container .box .bx:hover,
-.ride-container .bx .bxs-calendar-check {
-    background: var(--gradient);
-    color: #fff;
-}
-
-/* Style for the Refine search filter dropdown container */
-.search-container {
-    display: flex;
-    align-items: center;
-}
-
-/* Style for the filter dropdown */
-.filter-dropdown select {
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background-color: #fff;
-    font-size: 16px;
-    margin-right: 8px;
-}
+/*!* Style for the filter dropdown *!*/
+/*.filter-dropdown select {*/
+/*    padding: 8px;*/
+/*    border: 1px solid #ccc;*/
+/*    border-radius: 4px;*/
+/*    background-color: #fff;*/
+/*    font-size: 16px;*/
+/*    margin-right: 8px;*/
+/*}*/
