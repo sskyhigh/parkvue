@@ -1,11 +1,11 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+../client/.vscode/*
+!../client/.vscode/settings.json
+!../client/.vscode/tasks.json
+!../client/.vscode/launch.json
+!../client/.vscode/extensions.json
 *.code-workspace
 # Local History for Visual Studio Code
 .history/
@@ -44,3 +44,4 @@ yarn-error.log*
 # Read Me
 # **/README.md
 /.idea/
+

@@ -2,15 +2,14 @@ import React, { useState } from 'react';
 import {Link, useNavigate} from 'react-router-dom';
 import '../NavBar/NavBar.css'; // Import NavBar CSS file
 import ParkvueLogo from '../ParkvueLogo/ParkvueLogo';
-import SignUp from './SignUp';
-import SignIn from './SignIn';
-import Logout from "./Logout";
+// import SignUp from './SignUp';
+// import SignIn from './SignIn';
+// import Logout from "./Logout";
 
 import{AppBar, Box, Container, IconButton, Toolbar, Typography} from '@mui/material';
 import {Menu} from '@mui/icons-material';
 import P_Logo from '../ParkvueLogo/P_Logo';
 // import Sidebar from './sidebar/Sidebar';
-
 
 // const NavBar = () => {
 //
@@ -22,9 +21,8 @@ import P_Logo from '../ParkvueLogo/P_Logo';
 function NavBar() {
 return (
         <AppBar>  {/*Fills page 100%*/}
-            {/*Large Device UX/UI*/}
             <Container maxWidth='lg'>
-                <Toolbar disableGutters>  {/*Removes side padding*/}
+                <Toolbar disableGutters>  {/*Removes padding from sides*/}
 
                     <Typography
                         variant='h6'
@@ -40,14 +38,9 @@ return (
                             <li><Link to="/rewards">Rewards</Link></li>
                             <li><Link to="/about">About</Link></li>
                         </ul>
-
-                        <div className="header-btn">
-                        <SignIn/>
-                        {/*<SignUp/>*/}
-                        </div>
                     </Typography>
 
-                    {/*Small Device UX/UI*/}
+                    {/*small screen view*/}
                     <Typography
                         variant='h6'
                         compnent='h1'
@@ -56,15 +49,21 @@ return (
                     >
                         <P_Logo/>
                         <Box sx={{mr:1}}>
-                            <IconButton size='large'>
+                            <IconButton size='large' color='inherit'>
                                 <Menu />  {/*Drawer icon*/}
                             </IconButton>
                         </Box>
                     </Typography>
-                    <div className="header-btn">
-                        <SignIn/>
-                        {/*<SignUp/>*/}
-                    </div>
+                    {/*show current user; if none than show login button*/}
+                    {/*<div className="header-btn">*/}
+                    {/*    {isSignedIn ? (*/}
+                    {/*        <>*/}
+                    {/*            <button onClick={SignOut}>Sign Out</button>*/}
+                    {/*        </>*/}
+                    {/*    ) : (*/}
+                    {/*        <>*/}
+                    {/*<SignIn/>*/}
+                    {/*<SignUp/>*/}
                 </Toolbar>
             </Container>
         </AppBar>

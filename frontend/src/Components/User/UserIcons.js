@@ -5,7 +5,7 @@ import { useValue } from '../../context/ContextProvider';
 // import useCheckToken from '../../hooks/useCheckToken';
 // import UserMenu from '../UserMenu';
 
-const UserIcons = () => { //imports current user; extracts name & photo URL within our state
+const UserIcons = () => {
     const{ state:{currentUser},}=useValue();
     return (
         <Box>
@@ -24,8 +24,8 @@ const UserIcons = () => { //imports current user; extracts name & photo URL with
                     <Notifications />
                 </Badge>
             </IconButton>
-            {/*Avatar wrapped with Tooltip: Appears when hovering on avatar*/}
-            <Tooltip title="Open User Settings">
+
+      <Tooltip title="Open User Settings">
             {/*Icon*/}
             <IconButton>
                 {/*Avatar= source is the current user to photo URL*/}

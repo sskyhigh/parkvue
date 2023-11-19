@@ -12,7 +12,7 @@ import Register from './Pages/Register';
 import {Toaster} from 'react-hot-toast';
 import axios from "axios";
 import {UserContextProvider} from "./context/userContext";
-import FAQ from './Components/FAQ';
+import FAQ from './Components/FAQ/FAQ';
 import AboutPage from "./Pages/AboutPage";
 
 // connects frontend to backend

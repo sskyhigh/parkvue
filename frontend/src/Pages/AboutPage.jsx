@@ -1,4 +1,4 @@
-import '../../src/Components/SignLogin/Design.css'
+import '../Components/Login_Sign_out/Design.css'
 export default function AboutPage() {
     return(
         <div className="test">

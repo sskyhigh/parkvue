@@ -29,8 +29,8 @@ export const useValue = () => {
 const ContextProvider = ({ children }) => {
     //extract state and then dispatch from use reducer
     const [state, dispatch] = useReducer(reducer, initialState); //dispatch reducer created and set it to the initial state
-    // const mapRef = useRef();
-    // const containerRef = useRef();
+    const mapRef = useRef();
+    const containerRef = useRef();
 
     useEffect(() => {
         const currentUser = JSON.parse(localStorage.getItem('currentUser'));

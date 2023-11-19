@@ -6,7 +6,7 @@ import{Button} from '@mui/material';
 function SignUp() {
     return (
         <div>
-            <Button startIcon>
+            <Button color="inherit" startIcon>
             <Link to="/register">Sign Up</Link>
             </Button>
         </div>
