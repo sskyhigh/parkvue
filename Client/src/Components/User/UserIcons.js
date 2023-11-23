@@ -1,12 +1,18 @@
 import { Mail, Notifications } from '@mui/icons-material';
 import { Avatar, Badge, Box, IconButton, Tooltip } from '@mui/material';
-import React from 'react';
+import React, { useState } from 'react';
 import { useValue } from '../../context/ContextProvider';
 // import useCheckToken from '../../hooks/useCheckToken';
-// import UserMenu from '../UserMenu';
+import UserMenu from '../UserMenu';
 
 const UserIcons = () => {
-    const{ state:{currentUser},}=useValue();
+    // useCheckToken();
+    const{
+        state:{currentUser},
+    }=useValue();
+
+    const [anchorUserMenu, setAnchorUserMenu] = useState(null);
+
     return (
         <Box>
             <IconButton size="large" color="inherit">
@@ -27,17 +33,18 @@ const UserIcons = () => {
 
       <Tooltip title="Open User Settings">
             {/*Icon*/}
-            <IconButton>
-                {/*Avatar= source is the current user to photo URL*/}
+            <IconButton onClic={(e) => setAnchorUserMenu(e.currentTarget)}>
+                {/*Avatar = source is the current user to photo URL*/}
                 {/*Question not to trigger*/}
                 <Avatar src={ currentUser?.photoURL} alt={currentUser?.name}>
-                    {/*If no photo url attached then will display the users first name initial extracted by char at*/}
-                    {currentUser?.name?.chartAt(0).toUpperCase()}
+                    {/*charAt function: If no photo url attached then will display the users first name initial extracted by char at*/}
+                    {currentUser?.name?.charAt(0).toUpperCase()}
                 </Avatar>
             </IconButton>
-            </Tooltip>
+      </Tooltip>
+            <UserMenu {...{anchorUserMenu, setAnchorUserMenu}} />
         </Box>
-    )
-}
+    );
+};
 
 export default UserIcons;

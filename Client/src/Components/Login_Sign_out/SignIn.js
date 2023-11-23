@@ -1,17 +1,14 @@
 import React from 'react';
 import '../NavBar/NavBar.css'; // Import your CSS file
 import { Link } from 'react-router-dom';
-import Register from "../../Pages/Register";
 
 
 import{
     Button,
-    AppBar,
-    Box,
-    IconButton,
+    Typography,
 } from '@mui/material';
 
-import {Lock, Menu} from '@mui/icons-material';
+import {Lock} from '@mui/icons-material';
 import photoURL from '../../img/profile.jpeg';
 import { useValue } from '../../context/ContextProvider';
 import UserIcons from '../User/UserIcons';
@@ -21,23 +18,22 @@ import UserIcons from '../User/UserIcons';
 const user = { name: 'test', photoURL };
 
 const SignIn = () =>{
-    const {state: {currentUser}, dispatch} = useValue();
+    const {state: {currentUser},
+        dispatch
+    } = useValue();
 
         return (
-            <AppBar>
-                <Box sx={{ mr: 1 }}>
-                    <IconButton size="large" color="inherit">
-                        <Menu/>
-                    </IconButton>
-                </Box>
+            <Typography>
                 {!currentUser ? (
-                    <Button color="inherit" startIcon={<Lock />} onClick={()=> dispatch({type: 'UPDATE_USER', payload:user })}>
-                        {/*<Link to="/login" style={{textDecoration: 'none', color: 'inherit'}}>*/}
+                    <Button color="inherit" startIcon={<Lock />}
+                            //dispatch action to update user state inside the reducer 'UPDATE_USER'
+                    > onClick={()=> dispatch({type: 'UPDATE_USER', payload:user })}>
+                        <Link to="/login">
                             Login
-                        {/*</Link>*/}
-                    </Button> ) : ( <UserIcons/>
+                        </Link>
+                    </Button>) : (<UserIcons/>
                 )}
-            </AppBar>
+            </Typography>
         );
 };
 

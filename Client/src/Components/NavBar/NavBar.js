@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import {Link, useNavigate} from 'react-router-dom';
-
+import {Link} from 'react-router-dom';
 import '../NavBar/NavBar.css'; // Import NavBar CSS file
-import ParkvueLogo from '../ParkvueLogo/ParkvueLogo';
+import Parkvue from '../ParkvueLogo/ParkvueLogo';
 import SignUp from "../Login_Sign_out/SignUp";
 import SignIn from "../Login_Sign_out/SignIn";
 // import Logout from "./Logout";
@@ -12,15 +11,8 @@ import {Menu} from '@mui/icons-material';
 import P_Logo from '../ParkvueLogo/P_Logo';
 // import Sidebar from './sidebar/Sidebar';
 
-// const NavBar = () => {
-//
-//     const SignOut = () => {
-//         localStorage.removeItem("token");
-//         navigate('/login');
-//     }
-
-function NavBar() {
-return (
+const NavBar = () => {
+    return (
         <AppBar>  {/*Fills page 100%*/}
             <Container maxWidth='lg'>
                 <Toolbar disableGutters>  {/*Removes padding from sides*/}
@@ -30,8 +22,8 @@ return (
                         noWrap
                         sx={{flexGrow:1, display:{xs:'none', md:'flex'}}}
                         >
-                        <ParkvueLogo/>
-                        <div className="bx_bx-menu" id="menu-icon"></div>
+                        <Parkvue/>
+                        {/*<div className="bx_bx-menu" id="menu-icon"></div>*/}
                         <ul className="navbar">
                             <li><Link to="/">Home</Link></li>
                             <li><Link to="/map">Map</Link></li>
@@ -55,23 +47,11 @@ return (
                             </IconButton>
                         </Box>
                     </Typography>
-
-                    {/*<Typography>*/}
-                    {/*/!*show current user; if none than show login button*!/*/}
-                    {/*<div className="header-btn">*/}
-                    {/*    {isSignedIn ? (*/}
-                    {/*        <>*/}
-                    {/*            <button onClick={SignOut}>Sign Out</button>*/}
-                    {/*        </>*/}
-                    {/*    ) : (*/}
-                    {/*        <>*/}
-                    {/*        <SignIn/>*/}
-                    {/*        <SignUp/>*/}
-                    {/*</Toolbar>*/}
-                    </Toolbar>
+                    <SignIn/>
+                    <SignUp/>
+                </Toolbar>
             </Container>
         </AppBar>
- );
-}
-
-export default NavBar;
+      )
+    }
+    export default NavBar

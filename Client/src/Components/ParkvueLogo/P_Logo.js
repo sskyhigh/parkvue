@@ -9,12 +9,6 @@ const Navbar = () => {
             <Link to="/">
                 <img src={P_Logo} alt="parkvue" className="p_logo-img"/>
             </Link>
-
-
-            {/*<a href="aboutPage.js" className="logo-link">*/}
-            {/*</a>*/}
-
-            {/* Add your navigation links here */}
         </nav>
     );
 };

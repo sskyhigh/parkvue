@@ -1,9 +1,9 @@
 import React from "react";
 import App from "./App";
 import ReactDOM from "react-dom/client";
-import "./index.css";
-import {BrowserRouter as Router} from "react-router-dom";
-import { createRoot } from 'react-dom/client'; //New way to hook into div with root id; when using react 18
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import "./index.css"; import {BrowserRouter as Router} from "react-router-dom";
+import { createRoot } from 'react-dom/Client'; //New way to hook into div with root id; when using react 18
 import ContextProvider from './context/ContextProvider'
 
 //wrap our app with this provider
