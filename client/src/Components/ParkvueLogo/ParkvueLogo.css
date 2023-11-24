@@ -1,0 +1,21 @@
+.navbar {
+    position: relative;
+  }
+  
+  .logo-link {
+    /* position: absolute; */
+    top: 0px; /* Adjust the top position as needed */
+    left: 10px; /* Adjust the left position as needed */
+  }
+  
+  /* Shrink logo size */
+  .logo-img {
+    width: 240px; /* Adjust the size as needed */
+    height: auto;
+  }
+
+/* Shrink logo size */
+.p_logo-img {
+  width: 65px; /* Adjust the size as needed */
+  height: auto;
+}

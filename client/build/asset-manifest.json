@@ -1,0 +1,17 @@
+{
+  "files": {
+    "main.css": "/static/css/main.fef12b6b.css",
+    "main.js": "/static/js/main.fbda023f.js",
+    "static/media/HomeBanner.png": "/static/media/HomeBanner.da4f13b47f49d30f1495.png",
+    "static/media/parkvue_logo.png": "/static/media/parkvue_logo.afa4766fa29b3b3a8514.png",
+    "static/media/p_logo.png": "/static/media/p_logo.34ce70388932d787a8c7.png",
+    "static/media/play.png": "/static/media/play.5f4aa93cec8cb9067643.png",
+    "index.html": "/index.html",
+    "main.fef12b6b.css.map": "/static/css/main.fef12b6b.css.map",
+    "main.fbda023f.js.map": "/static/js/main.fbda023f.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.fef12b6b.css",
+    "static/js/main.fbda023f.js"
+  ]
+}
