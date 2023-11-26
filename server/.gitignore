@@ -1,11 +1,11 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # VSCode
-client/.vscode/*
-!client/.vscode/settings.json
-!client/.vscode/tasks.json
-!client/.vscode/launch.json
-!client/.vscode/extensions.json
+frontend/.vscode/*
+!frontend/.vscode/settings.json
+!frontend/.vscode/tasks.json
+!frontend/.vscode/launch.json
+!frontend/.vscode/extensions.json
 *.code-workspace
 # Local History for Visual Studio Code
 .history/
@@ -16,9 +16,9 @@ client/.vscode/*
 .pnp.js
 
 # Common credential files
-#**/credentials.json
-#**/client_secrets.json
-#**/client_secret.json
+**/credentials.json
+**/client_secrets.json
+**/client_secret.json
 *creds*
 *.dat
 *password*
@@ -45,4 +45,3 @@ yarn-error.log*
 # **/README.md
 /.idea/
 .env
-/frontend/build/

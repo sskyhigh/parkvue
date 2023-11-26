@@ -1,0 +1,47 @@
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap'); /* @import */
+/* CSS rules to specify families */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    scroll-padding-top: 2rem;
+    scroll-behavior: smooth;
+    list-style: none;
+    text-decoration: none;
+    font-family: "Poppins", sans-serif;
+}
+
+:root {
+    --main-color: #2B74A8;
+    --second-color: #3FA9F5;
+    --text-color: #444;
+    --gradient: linear-gradient(#2B74A8, #3FA9F5);
+}
+
+/* Custom Scroll Bar */
+html::-webkit-scrollbar {
+    width: 0.5rem;
+}
+
+html::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+html::-webkit-scrollbar-thumb {
+    background: var(--main-color);
+    border-radius: 5rem;
+}
+
+section {
+    padding: 50px 100px;
+}
+
+/* -- <span> Color selected for text </span> -- */
+.text span {
+    color: #3FA9F5;
+}
+
+.text p {
+    margin: 0.5rem 0 1rem;
+}

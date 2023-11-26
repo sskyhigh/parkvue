@@ -16,9 +16,9 @@ client/.vscode/*
 .pnp.js
 
 # Common credential files
-#**/credentials.json
-#**/client_secrets.json
-#**/client_secret.json
+**/credentials.json
+**/client_secrets.json
+**/client_secret.json
 *creds*
 *.dat
 *password*
@@ -45,4 +45,3 @@ yarn-error.log*
 # **/README.md
 /.idea/
 .env
-/frontend/build/

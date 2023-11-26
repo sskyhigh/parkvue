@@ -1,0 +1,104 @@
+/* NavBar.css */
+
+/* Navbar container */
+.navbar {
+    display: flex;
+}
+
+/* Navbar list items */
+.navbar li {
+    position: relative;
+}
+
+/* Navbar links */
+.navbar a {
+    font-size: 1rem;
+    padding: 10px 20px;
+    color: var(--text-color);
+    font-weight: 500;
+    text-decoration: none;
+    position: relative;
+}
+
+/* Navbar link underline animation */
+.navbar a::after {
+    content: "";
+    width: 0;
+    height: 3px;
+    background: var(--gradient);
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    transition: width 0.3s;
+}
+
+.navbar a:hover::after {
+    width: 100%;
+}
+
+/* Menu icon */
+#menu-icon {
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 10001;
+    display: none;
+}
+
+/* Header positioning */
+header {
+    position: fixed;
+    width: 100%;
+    top: 0;
+    right: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #eeeff1;
+    padding: 15px 100px;
+}
+
+/* Sign-in and Sign-up buttons */
+.header-btn {
+    display: flex;
+    gap: 1rem;
+}
+
+.header-btn a {
+    text-decoration: none;
+    padding: 10px 20px;
+    font-weight: 500;
+    border: 2px solid var(--main-color);
+    border-radius: 15px;
+    color: var(--main-color);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.header-btn a:hover {
+    background-color: var(--main-color);
+    color: white;
+}
+
+.header-btn a:hover::after {
+    width: 100%;
+}
+
+/* Sign-up button color */
+.header-btn .sign-up {
+    background: #474fa8;
+    color: #fff;
+}
+
+/* Mobile view */
+@media (max-width: 600px) {
+    /* Add your mobile styles here */
+    /* Example: Hiding the navbar and showing the menu icon */
+    .navbar {
+        display: none;
+    }
+
+    #menu-icon {
+        display: block;
+    }
+}
+

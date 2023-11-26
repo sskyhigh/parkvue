@@ -1,0 +1,15 @@
+.navbar {
+    position: relative;
+  }
+
+  /* Shrink logo size */
+  .logo-img {
+    width: 240px; /* Adjust the size as needed */
+    height: auto;
+  }
+
+/* Shrink logo size */
+.p_logo-img {
+  width: 65px; /* Adjust the size as needed */
+  height: auto;
+}

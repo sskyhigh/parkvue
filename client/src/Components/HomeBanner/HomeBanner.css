@@ -1,0 +1,62 @@
+
+.home {
+    width: 100%;
+    min-height: 100vh;
+    position: relative;
+    background-image: url("../../img/HomeBanner.png"); /* -- Banner image -- */
+    background-repeat: no-repeat;
+    background-position: center right;
+    background-size: cover;
+    display: grid;
+    align-items: center;
+    grid-template-columns: repeat(2, 1fr);
+}
+.app-stores {
+    display: flex;
+    align-items: center; /* Center app stores vertically */
+}
+
+.app-stores img {
+    width: 150px; /* -- market place icons size -- */
+    margin-right: 1rem;
+    cursor: pointer;
+}
+
+/*Small device Iphone display*/
+/* App.css or the stylesheet for your higher-level component */
+
+/*.app-container {*/
+/*    position: relative;*/
+/*}*/
+
+/*!*Small device Iphone display*!*/
+/*.home-banner-container {*/
+/*    position: relative;*/
+/*    background: url("../../img/iphone_big.png") center center no-repeat;*/
+/*    background-size: contain;*/
+/*}*/
+
+.home .iphone img {
+    width: 100%;
+    height: auto;
+    max-width: 1150px;
+    display: block;
+    margin: 0 auto;
+    cursor: pointer;
+}
+
+/* Styles for SearchMenu */
+.form-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    position: absolute;
+    bottom: 4rem;
+    left: 100px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 0.5rem;
+}
+
+/* Adjust other styles for SearchMenu as needed */
