@@ -1,55 +1,66 @@
+import React from 'react';
 import './SearchMenu.css';
 
 function SearchMenu() {
     return (
         <div>
-            {/* <!-- Search Menu --> */}
+            {/* Search Menu */}
             <div className="form-container">
                 <form action="">
-                    <div className="input-box">
-                        <span>Location</span>
-                        <input type="search" name="" id="" placeholder="Search Places"/>
-                    </div>
+                    {/* Input Boxes */}
+                    {renderInputBox('Location', 'search', 'Search Places')}
+                    {renderInputBox('Check-In', 'date')}
+                    {renderInputBox('Check-Out', 'date')}
 
-                    <div className="input-box">
-                        <span>Check-In</span>
-                        <input type="date" name="" id=""/>
-                    </div>
+                    {/* Filter Add-on */}
+                    {renderInputBox('Refine Your Search', 'dropdown', 'Select a Filter', [
+                        'Parking Type',
+                        'Handicap Access',
+                        'Security Level',
+                        'EV Charging',
+                    ])}
 
-                    <div className="input-box">
-                        <span>Check-Out</span>
-                        <input type="date" name="" id=""/>
-                    </div>
-                    {/* <!-- Filter Add on --> */}
+                    {renderInputBox('Time-In', 'time')}
+                    {renderInputBox('Time-Out', 'time')}
 
-                    <div className="input-box">
-                        <span>Refine Your Search</span>
-                        {/* <!--  <input type="" name="" id="" placeholder="Search Places"> --> */}
-                        <div className="search-container">
-                            <div className="filter-dropdown">
-                                <select id="filter">
-                                    <option value="parking type">Parking Type</option>
-                                    <option value="handicap">Handicap Access</option>
-                                    <option value="security">Security Level</option>
-                                    <option value="ev">EV Charging</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="input-box">
-                        <span>Time-In</span>
-                        <input type="time" name="" id=""/>
-                    </div>
-                    <div className="input-box">
-                        <span>Time-Out</span>
-                        <input type="time" name="" id=""/>
-                    </div>
-                    <button> Submit</button>
+                    <button type="submit">Submit</button>
                 </form>
             </div>
         </div>
     );
 }
 
-export default SearchMenu;
+// Helper function to render input boxes
+function renderInputBox(label, type, placeholder, options) {
+    return (
+        <div className="input-box" key={label}>
+            <span>{label}</span>
+            {type === 'dropdown' ? (
+                <div className="search-container">
+                    <div className="filter-dropdown">
+                        <select id="filter">
+                            <option value="" disabled hidden>
+                                {placeholder}
+                            </option>
+                            {options.map((option) => (
+                                <option key={option} value={option}>
+                                    {option}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+            ) : (
+                <input
+                    type={type}
+                    placeholder={placeholder}
+                    name=""
+                    id=""
+                    {...(type === 'date' || type === 'time' ? { required: true } : {})}
+                />
+            )}
+        </div>
+    );
+}
 
+export default SearchMenu;

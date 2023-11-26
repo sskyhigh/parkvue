@@ -1,6 +1,6 @@
 import './App.css';
 import React from 'react';
-import SearchMenu from './Components/SearchMenu/SearchMenu';
+// import SearchMenu from './Components/SearchMenu/SearchMenu';
 import NavBar from './Components/NavBar/NavBar';
 import HomeBanner from './Components/HomeBanner/HomeBanner';
 // import MapSelect from './Components/HomeAd/MapSelect';
@@ -17,6 +17,7 @@ import axios from "axios";
 import FAQ from './Components/FAQ/FAQ';
 import AboutPage from "./Pages/AboutPage";
 import Login from './Components/user/Login';
+import Notification from './Components/Notification';
 
 // connects client to backend
 axios.defaults.baseURL = "http://localhost:8000";
@@ -26,6 +27,7 @@ const App = () => {
     return (
         <div className="App">
         <>
+            <Notification />
             <Login />
             <NavBar/>
         </>
@@ -34,11 +36,8 @@ const App = () => {
             <Routes>
                 <Route path="/" element={
                     <>
-                        <div className="app-container">
-                            <div className="home-banner-container">
-                                <HomeBanner />
-                            </div>
-                        </div>
+                        <HomeBanner />
+
                         <Reserve/>
                         <UploadListing/>
                         {/*<MapSelect/>*/}

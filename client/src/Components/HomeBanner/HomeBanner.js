@@ -23,11 +23,27 @@ function HomeBanner() {
                         <div className="app-stores">
                             <img src={appstore} alt="Download App for Android Phones" />
                             <img src={playstore} alt="Download App for Apple phones" />
-                            {/*<SearchMenu/>*/}
+
+                            {/* changes search menu text to blue */}
+                            {/*<div className="text">*/}
+                            {/*    <SearchMenu/>*/}
+                            {/*</div>*/}
                         </div>
                     </div>
                 </Typography>
             </section>
+
+                <Typography
+                    variant='h6'
+                    component='h1'  // Corrected the typo here
+                    noWrap
+                    sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}
+                >
+                        <SearchMenu/>
+
+                </Typography>
+
+
         </div>
 );
 }

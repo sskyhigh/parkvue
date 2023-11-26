@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import './NavBar.css'; // Import NavBar CSS file
 import Parkvue from '../ParkvueLogo/ParkvueLogo';
-import SignUp from "../NavBar/Sign_In_Up/SignUp";
+// import SignUp from "../NavBar/Sign_In_Up/SignUp";
 import SignIn from "../NavBar/Sign_In_Up/SignIn";
 import { AppBar, Box, Container, IconButton, Toolbar, Typography, Button } from '@mui/material';
 import { Menu } from '@mui/icons-material';
@@ -29,7 +29,7 @@ const NavBar = () => {
                             <li><Link to="/rewards">Rewards</Link></li>
                             <li><Link to="/about">About</Link></li>
                         </ul>
-                        <SignUp />
+                        {/*<SignUp />*/}
                         <SignIn />
                     </Typography>
                 </Toolbar>
@@ -45,7 +45,7 @@ const NavBar = () => {
                     <Box sx={{ mr: 1 }}>
                         <IconButton size='large' color='inherit'>
                             <Menu />
-                            <SignUp />
+                            {/*<SignUp />*/}
                             <SignIn />
                         </IconButton>
 

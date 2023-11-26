@@ -1,6 +1,6 @@
 import React from 'react';
 import '../NavBar.css'; // Import your CSS file
-import { Link } from 'react-router-dom';
+// import { Link } from 'react-router-dom';
 
 
 import{
@@ -33,9 +33,9 @@ const SignIn = () => {
                         // dispatch action to update user state (inside the reducer file) 'UPDATE_USER'
                      onClick={()=> dispatch({type: 'OPEN_LOGIN' })}
                     >
-                        <Link to="/login">
+                        {/*<Link to="/login">*/}
                             Login
-                        </Link>
+                        {/*</Link>*/}
                     </Button>) : (<UserIcons/>
                 )}
             </Typography>

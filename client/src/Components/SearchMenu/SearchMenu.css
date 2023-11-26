@@ -1,18 +1,5 @@
-/* SearchMenu.css */
 
-.form-container {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 1rem;
-  position: absolute;
-  bottom: 4rem;
-  left: 100px;
-  background: #fff;
-  padding: 20px;
-  border-radius: 0.5rem;
-}
-
+/* SearchMenu x-axis length*/
 .input-box {
   flex: 1 1 100%;
   display: flex;
@@ -23,23 +10,25 @@
   font-weight: 500;
 }
 
+/* y-axis length */
 .input-box input,
 .filter-dropdown select {
   width: 100%;
   padding: 10px;
   outline: none;
   border: none;
-  background: #eeeff1;
   border-radius: 0.5rem;
   font-size: 1rem;
+
+  /* Set background color or image */
+  background: #eeeff1;
+  background-size: cover; /* or 'contain' based on your preference */
 }
 
-.filter-dropdown select {
-  margin-right: 8px;
-}
-
+/* button stylesheet */
 .form-container form button {
   flex: 1 1 100%;
+  width: 100%; /* Make the button stretch to the full width */
   padding: 10px 20px;
   border: none;
   border-radius: 0.5rem;
@@ -54,28 +43,19 @@
   background: var(--main-color);
 }
 
-/* Style for the Refine search filter dropdown container */
-.search-container {
+.form-container {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-}
-
-/* Media Query for Small Devices */
-@media (max-width: 767px) {
-  .form-container {
-    flex-direction: column; /* Change to vertical layout for small devices */
-    left: 10px; /* Adjust position as needed */
-    width: calc(100% - 20px); /* Adjust width as needed */
-  }
-
-  .input-box,
-  .filter-dropdown select,
-  .form-container form button {
-    width: 100%; /* Take full width for small devices */
-  }
-
-  .filter-dropdown select {
-    margin-right: 0; /* Remove margin-right for small devices */
-    margin-bottom: 1rem; /* Add some space between items */
-  }
+  justify-content: center;
+  gap: 1rem;
+  position: absolute;
+  bottom: 1.5rem; /* moves image & container down -1 */
+  left: 100px;
+  background: url('../../img/iphone_small.png') no-repeat center center; /* Set the background color and opacity as needed */
+  background-size: cover; /* or 'contain' based on your preference */
+  padding: 60px; /* text padding */
+  border-radius: 0.5rem;
+  max-width: 500px; /* Set the maximum width of your form container */
+  color: white; /* Set text color to white */
 }
