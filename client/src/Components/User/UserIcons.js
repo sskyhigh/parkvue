@@ -3,13 +3,15 @@ import { Avatar, Badge, Box, IconButton, Tooltip } from '@mui/material';
 import React, { useState } from 'react';
 import { useValue } from '../../context/ContextProvider';
 // import useCheckToken from '../../hooks/useCheckToken';
-import UserMenu from '../UserMenu';
+import UserMenu from './UserMenu';
+
+
 
 const UserIcons = () => {
     // useCheckToken();
     const{
-        state:{currentUser},
-    }=useValue();
+        state:{currentUser}
+    } = useValue();
 
     const [anchorUserMenu, setAnchorUserMenu] = useState(null);
 
@@ -34,7 +36,7 @@ const UserIcons = () => {
       <Tooltip title="Open User Settings">
             {/*Icon*/}
             <IconButton onClick={(e) => setAnchorUserMenu(e.currentTarget)}>
-                {/*Avatar = source is the current user to photo URL*/}
+                {/*Avatar = current elements attach in button menu*/}
                 {/*Question not to trigger*/}
                 <Avatar src={ currentUser?.photoURL} alt={currentUser?.name}>
                     {/*charAt function: If no photo url attached then will display the users first name initial extracted by char at*/}
@@ -42,6 +44,7 @@ const UserIcons = () => {
                 </Avatar>
             </IconButton>
       </Tooltip>
+            {/*User menu components*/}
             <UserMenu {...{anchorUserMenu, setAnchorUserMenu}} />
         </Box>
     );

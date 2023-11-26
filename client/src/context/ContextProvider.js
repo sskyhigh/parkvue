@@ -5,6 +5,7 @@ import reducer from './reducer';
 //Engine state: Initial state contains all our public values
 const initialState = {
     currentUser: null,
+    openLogin:false,
 };
 
 //when initial state is passed
@@ -25,6 +26,6 @@ const ContextProvider = ({ children }) => { //extract state and then dispatch fr
             {children}
         </Context.Provider>
     );
-}
+};
 
 export default ContextProvider;

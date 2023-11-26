@@ -30,8 +30,12 @@ const App = () => {
                 <Routes>
                     <Route path="/" element={
                         <>
-                            <HomeBanner/>
-                            <SearchMenu/>
+                        <div className="app-container">
+                            <div className="home-banner-container">
+                                <HomeBanner />
+                            </div>
+                        </div>
+
                             <Reserve/>
                             <UploadListing/>
                             {/*<MapSelect/>*/}
@@ -39,12 +43,12 @@ const App = () => {
                         </>
                     }/>
 
-                    {/*
-                Defining the routes
-                website.com/register => registers accounts
-                website.com/login => sends to login
-                website.com/home => sends to homepage
-                */}
+
+                {/*Defining the routes*/}
+                {/*website.com/register => registers accounts*/}
+                {/*website.com/login => sends to login*/}
+                {/*website.com/home => sends to homepage*/}
+
                     <Route path="/register" element={<Register/>}/>
                     <Route path="/login" element={<Login/>}/>
                     <Route path="/home" element={<Home/>}/>

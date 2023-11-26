@@ -1,22 +1,21 @@
 import { Logout, Settings } from '@mui/icons-material';
 import { ListItemIcon, Menu, MenuItem } from '@mui/material';
 import React from 'react';
-import { useValue } from '../context/ContextProvider';
+import { useValue } from '../../context/ContextProvider';
 
-//Associating which items are related to the menu; elements that appear
+//items related to menu; appear
 const UserMenu = ({ anchorUserMenu, setAnchorUserMenu }) => {
-    const { dispatch } = useValue();
-    //function
+    const { dispatch } = useValue()
     const handleCloseUserMenu = () => {
-        //set the anchor user to menu: if no element related to menu then open receive a false
+        //not menu option (open = false)
         setAnchorUserMenu(null);
     };
 
     return (
         <Menu
-            //anchor EL means anchor element is related to element to trigger display
+            //trigger display
             anchorEl={anchorUserMenu}
-            //Boolean parameter: changes element into a boolean if it exist = True or Null = False
+            //exist = True or Null = False
             open={Boolean(anchorUserMenu)}
             //Trigger if you click outside the menu
             onClose={handleCloseUserMenu}
@@ -27,13 +26,12 @@ const UserMenu = ({ anchorUserMenu, setAnchorUserMenu }) => {
             <MenuItem>
                 {/*inside the icon*/}
                 <ListItemIcon>
-                    {/*settings for profile*/}
                     <Settings fontSize="small" />
                 </ListItemIcon>
                 Profile
             </MenuItem>
 
-            {/*same update but pass the null value as payload to change the state to represent user*/}
+            {/*State: (Null = payload) */}
             <MenuItem
                 onClick={() => dispatch({ type: 'UPDATE_USER', payload: null })}
             >

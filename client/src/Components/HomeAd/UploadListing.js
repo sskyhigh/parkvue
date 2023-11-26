@@ -12,20 +12,20 @@ function UploadListing() {
                 <div className="ride-container">
                     <div className="box">
                         <i className="bx bxs-map"/> {/* boxicons:map: font */}
-                        <h2>Location Address</h2>
-                        <p>....</p>
+                        <h2>List Spot Location</h2>
+                        <p>SignIn to begin sharing your spot location(s)</p>
                     </div>
 
                     <div className="box">
                         <i className="bx bxs-calendar-check"/> {/* boxicons:calendar-checker: font */}
-                        <h2>Availability <br/> Date &amp; Time</h2>
-                        <p>....</p>
+                        <h2> Availability <br/> Date &amp; Time</h2>
+                        <p>Promote the (Date/Time) when spot is available.</p>
                     </div>
 
                     <div className="box">
                         <i className="bx bxs-calendar-star"/> {/* boxicons:calendar-star: font */}
-                        <h2>Parking Space Type</h2>
-                        <p>....</p>
+                        <h2>Promote A Spot</h2>
+                        <p>Showcase spot amenities and location convenience. </p>
                     </div>
                 </div>
             </section>

@@ -1,46 +1,50 @@
-/* arranging items within a container */
+/* NavBar.css */
+
+/* Navbar container */
 .navbar {
-    display: flex; 
+    display: flex;
 }
-/* selects the list items within the navbar */
+
+/* Navbar list items */
 .navbar li {
     position: relative;
 }
-/* Edit navbar design style */
+
+/* Navbar links */
 .navbar a {
     font-size: 1rem;
-    /* adds spacing around the text within the links. */
     padding: 10px 20px;
     color: var(--text-color);
     font-weight: 500;
-}
-/* create an underline animation effect when hovering over the links */
-.navbar a::after {
-    content: ""; 
-    width: 0; /* creating the initial underline effect starting point */
-    height: 3px;  /* height of the underline */ 
-    background: var(--gradient); /* background color of the underline  */
-    position: absolute; /* position of the underline relative to text */
-    bottom: -4px; /* positions below text */
-    left: 0;/* aligns the underline to the left edge */
-    transition: 0.5s; /* smoothens the width change over 0.5 seconds, creating the animation effect */
-}
-/* navbar hovering animation */
-.navbar a:hover::after{
-    width: 100%; /* hover over a link, it causes the underline (pseudo-element) to expand to 100% width */
+    text-decoration: none;
+    position: relative;
 }
 
-/* ID selector for an element with the ID "menu-icon."  */
-#menu-icon{
+/* Navbar link underline animation */
+.navbar a::after {
+    content: "";
+    width: 0;
+    height: 3px;
+    background: var(--gradient);
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    transition: width 0.3s;
+}
+
+.navbar a:hover::after {
+    width: 100%;
+}
+
+/* Menu icon */
+#menu-icon {
     font-size: 24px;
-/* navbar animation when hovering on buttons */
     cursor: pointer;
     z-index: 10001;
-/* Hide list tab icon */
     display: none;
 }
 
-/* Positioning the nav bar */
+/* Header positioning */
 header {
     position: fixed;
     width: 100%;
@@ -54,13 +58,13 @@ header {
     padding: 15px 100px;
 }
 
-/* Sign-in and Sign-up button styles */
+/* Sign-in and Sign-up buttons */
 .header-btn {
     display: flex;
     gap: 1rem;
-  }
-  
-  .header-btn a {
+}
+
+.header-btn a {
     text-decoration: none;
     padding: 10px 20px;
     font-weight: 500;
@@ -68,22 +72,33 @@ header {
     border-radius: 15px;
     color: var(--main-color);
     transition: background-color 0.3s, color 0.3s;
-  }
-  
-   /* Sign-in button hover animation color */
-  .header-btn a:hover {
+}
+
+.header-btn a:hover {
     background-color: var(--main-color);
     color: white;
 }
-  
-  .header-btn a:hover::after {
+
+.header-btn a:hover::after {
     width: 100%;
 }
-  
-/* sign-in button box color*/
-.header-btn .sign-up{
+
+/* Sign-up button color */
+.header-btn .sign-up {
     background: #474fa8;
     color: #fff;
 }
 
+/* Mobile view */
+@media (max-width: 600px) {
+    /* Add your mobile styles here */
+    /* Example: Hiding the navbar and showing the menu icon */
+    .navbar {
+        display: none;
+    }
+
+    #menu-icon {
+        display: block;
+    }
+}
 

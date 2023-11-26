@@ -13,55 +13,69 @@
   border-radius: 0.5rem;
 }
 
-  
-  .input-box {
-    flex: 1 1 7rem;
-    display: flex;
-    flex-direction: column;
+.input-box {
+  flex: 1 1 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.input-box span {
+  font-weight: 500;
+}
+
+.input-box input,
+.filter-dropdown select {
+  width: 100%;
+  padding: 10px;
+  outline: none;
+  border: none;
+  background: #eeeff1;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+}
+
+.filter-dropdown select {
+  margin-right: 8px;
+}
+
+.form-container form button {
+  flex: 1 1 100%;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 0.5rem;
+  background: #474fa0;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Hover effect for the button */
+.form-container form button:hover {
+  background: var(--main-color);
+}
+
+/* Style for the Refine search filter dropdown container */
+.search-container {
+  display: flex;
+  align-items: center;
+}
+
+/* Media Query for Small Devices */
+@media (max-width: 767px) {
+  .form-container {
+    flex-direction: column; /* Change to vertical layout for small devices */
+    left: 10px; /* Adjust position as needed */
+    width: calc(100% - 20px); /* Adjust width as needed */
   }
-  
-  .input-box span {
-    font-weight: 500;
-  }
-  
-  .input-box input {
-    padding: 7px;
-    outline: none;
-    border: none;
-    background: #eeeff1;
-    border-radius: 0.5rem;
-    font-size: 1rem;
-  }
-  
-  .filter-dropdown select {
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background-color: #fff;
-    font-size: 16px;
-    margin-right: 8px;
-  }
-  
-  /* applied to the button within your form container */
+
+  .input-box,
+  .filter-dropdown select,
   .form-container form button {
-    flex: 1 1 7rem;
-    padding: 10px 34px;
-    border: none;
-    border-radius: 0.5rem;
-    background: #474fa0;
-    color: #fff;
-    font-size: 1rem;
-    font-weight: 500;
+    width: 100%; /* Take full width for small devices */
   }
-  
-  /* hover effect for the button */
-  .form-container form button:hover {
-    background: var(--main-color); /* Define --main-color in your CSS variables */
+
+  .filter-dropdown select {
+    margin-right: 0; /* Remove margin-right for small devices */
+    margin-bottom: 1rem; /* Add some space between items */
   }
-  
-  /* Style for the Refine search filter dropdown container */
-  .search-container {
-    display: flex;
-    align-items: center;
-  }
-  
+}
