@@ -45,9 +45,10 @@ const NavBar = () => {
                     <Box sx={{ mr: 1 }}>
                         <IconButton size='large' color='inherit'>
                             <Menu />
+                            <SignUp />
+                            <SignIn />
                         </IconButton>
-                        <SignIn />
-                        <SignUp />
+
                     </Box>
                 </Typography>
             </Container>

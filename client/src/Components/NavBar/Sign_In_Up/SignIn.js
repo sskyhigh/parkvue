@@ -11,7 +11,7 @@ import{
 import {Lock} from '@mui/icons-material';
 import photoURL from '../../../img/profile.jpeg';
 import { useValue } from '../../../context/ContextProvider';
-import UserIcons from '../../User/UserIcons';
+import UserIcons from '../../user/UserIcons';
 import { Dialog } from '@mui/material';
 
 
@@ -28,9 +28,11 @@ const SignIn = () => {
         return (
             <Typography>
                 {!currentUser ? (
-                    <Button color="inherit" startIcon={<Lock />} //white lock
+                    <Button color="inherit"
+                            startIcon={<Lock />} //white lock
                         // dispatch action to update user state (inside the reducer file) 'UPDATE_USER'
-                     onClick={()=> dispatch({type: 'UPDATE_USER', payload:user })}>
+                     onClick={()=> dispatch({type: 'OPEN_LOGIN' })}
+                    >
                         <Link to="/login">
                             Login
                         </Link>
