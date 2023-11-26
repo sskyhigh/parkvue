@@ -5,6 +5,10 @@ import toast from "react-hot-toast";
 import {useNavigate} from "react-router-dom";
 
 export default function Login() {
+/*    const axiosInstance = axios.create({
+        baseURL: process.env.REACT_APP_API_URL,
+    })*/
+
     const navigate = useNavigate()
     const [data, setData] = useState({
         email: "",

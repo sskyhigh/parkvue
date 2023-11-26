@@ -47,3 +47,4 @@ yarn-error.log*
 # **/README.md
 /.idea/
 .env
+/frontend/build/

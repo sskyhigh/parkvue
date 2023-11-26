@@ -5,6 +5,7 @@ const {mongoose} = require('mongoose')
 const app = express();
 const cookieParser = require('cookie-parser')
 const jwt = require('jsonwebtoken')
+const bodyparser = require('body-parser')
 //connecting to database3
 mongoose.connect(process.env.MONGO_URL)
     .then(() => console.log("Database has been connected"))
@@ -12,6 +13,8 @@ mongoose.connect(process.env.MONGO_URL)
 
 try {
     //Middleware, recognizes as JSON object.
+    //app.use(bodyparser.json());
+    //app.use(cors());
     app.use(express.json());
     app.use(cookieParser())
     app.use(express.urlencoded({extended: false}))
