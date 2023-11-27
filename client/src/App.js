@@ -38,7 +38,6 @@ const App = () => {
             <Routes>
                 <Route path="/" element={
                     <>
-                        <HomeBanner/>
                         <div className="app-container">
                             <div className="home-banner-container">
                                 <HomeBanner/>
