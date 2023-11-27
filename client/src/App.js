@@ -6,7 +6,7 @@ import HomeBanner from './Components/HomeBanner/HomeBanner';
 // import MapSelect from './Components/HomeAd/MapSelect';
 import Reserve from './Components/HomeAd/Reserve';
 import UploadListing from './Components/HomeAd/UploadListing';
-import {BrowserRouter, Routes, Route} from "react-router-dom";
+import {Route, Routes} from "react-router-dom";
 
 import Home from './Pages/Home';
 // import Login from './Pages/Login';
@@ -18,7 +18,6 @@ import FAQ from './Components/FAQ/FAQ';
 import AboutPage from "./Pages/AboutPage";
 import Login from './Components/user/Login';
 import Notification from './Components/Notification';
-
 
 // connects client to backend
 axios.defaults.baseURL = "http://localhost:8000";
@@ -35,6 +34,7 @@ const App = () => {
             <NavBar/>
             {/*defines the position and duration*/}
             <Toaster position='bottom-center' toastOptions={{duration: 2000}}/>
+
             <Routes>
                 <Route path="/" element={
                     <>
@@ -58,7 +58,6 @@ const App = () => {
                 <Route path="/home" element={<Home/>}/>
                 <Route path="/about" element={<AboutPage/>}/>
             </Routes>
-            {/* Box Icons */}
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css"/>
             {/* Link To JS */}
         </div>
