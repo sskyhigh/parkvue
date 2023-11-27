@@ -21,7 +21,7 @@ client/.vscode/*
 **/client_secret.json
 *creds*
 *.dat
-*password*
+#*password*
 *.httr-oauth*
 
 # testing

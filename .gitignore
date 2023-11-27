@@ -23,7 +23,7 @@ server/node_modules
 **/client_secret.json
 *creds*
 *.dat
-*password*
+#*password*
 *.httr-oauth*
 
 # testing
