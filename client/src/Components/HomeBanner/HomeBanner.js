@@ -41,10 +41,7 @@ function HomeBanner() {
                 sx={{flexGrow: 1, display: {xs: 'flex', md: 'none'}}}
             >
                 <SearchMenu/>
-
             </Typography>
-
-
         </div>
     );
 }
