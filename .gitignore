@@ -14,14 +14,16 @@ client/.vscode/*
 /node_modules
 /.pnp
 .pnp.js
+client/node_modules
+server/node_modules
 
 # Common credential files
-#**/credentials.json
-#**/client_secrets.json
-#**/client_secret.json
+**/credentials.json
+**/client_secrets.json
+**/client_secret.json
 *creds*
 *.dat
-*password*
+#*password*
 *.httr-oauth*
 
 # testing

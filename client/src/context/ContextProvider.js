@@ -5,7 +5,8 @@ import reducer from './reducer';
 //Engine state: Initial state contains all our public values
 const initialState = {
     currentUser: null,
-    openLogin:false,
+    openLogin: false,
+    alert: {open:false, severity:'info', message:' '},
 };
 
 //when initial state is passed

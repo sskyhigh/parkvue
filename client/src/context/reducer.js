@@ -1,4 +1,6 @@
 //The reducer is a function that receives the state & action needed to perform on the state
+//Need payload when it isn't just a false and true response and many fields need to be filled
+
 const reducer =(state, action) =>{
     //2 situation switch toggle : test state type to determine action object
     switch(action.type) { //type = payload
@@ -8,6 +10,8 @@ const reducer =(state, action) =>{
         case 'CLOSE_LOGIN': //login False
             return{ ...state, openLogin:false };
 
+        case 'UPDATE_ALERT':
+            return {...state, alert: action.payload};
 
         case 'UPDATE_USER': //updates the user with login information
             //retain the same values inside the state => switch account user
