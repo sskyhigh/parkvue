@@ -3,7 +3,7 @@ import {useValue} from '../../context/ContextProvider' //import user value
 import { Button, Dialog, DialogActions, DialogTitle, DialogContent, DialogContentText, TextField, IconButton } from '@mui/material';
 import { Close, Send } from '@mui/icons-material';
 import "../NavBar/NavBar.css";
-import PasswordField from './passwordField';
+import PasswordField from './PasswordField';
 import { useEffect, useRef, useState } from 'react';
 import GoogleOneTapLogin from './GoogleOneTapLogin';
 // import { login, register } from '../../actions/user';

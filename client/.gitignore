@@ -16,6 +16,7 @@ client/.vscode/*
 .pnp.js
 
 # Common credential files
+<<<<<<< Updated upstream
 **/credentials.json
 **/client_secrets.json
 **/client_secret.json
@@ -23,12 +24,21 @@ client/.vscode/*
 *.dat
 #*password*
 *.httr-oauth*
+=======
+#**/credentials.json
+#**/client_secrets.json
+#**/client_secret.json
+#*creds*
+#*.dat
+#*password*
+#*.httr-oauth*
+>>>>>>> Stashed changes
 
 # testing
 # /coverage
 
 # production
-# /build
+ /build
 
 # misc
 .DS_Store
