@@ -15,20 +15,20 @@ frontend/.vscode/*
 /.pnp
 .pnp.js
 
-# Common credential files
-**/credentials.json
-**/client_secrets.json
-**/client_secret.json
-*creds*
-*.dat
-*password*
-*.httr-oauth*
+## Common credential files
+#**/credentials.json
+#**/client_secrets.json
+#**/client_secret.json
+#*creds*
+#*.dat
+#*password*
+#*.httr-oauth*
 
 # testing
 # /coverage
 
 # production
-# /build
+ /build
 
 # misc
 .DS_Store

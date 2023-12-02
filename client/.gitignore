@@ -28,7 +28,7 @@ client/.vscode/*
 # /coverage
 
 # production
-# /build
+ /build
 
 # misc
 .DS_Store
