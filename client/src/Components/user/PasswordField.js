@@ -2,7 +2,7 @@ import { IconButton, InputAdornment, TextField } from '@mui/material'
 import { Visibility, VisibilityOff } from '@mui/icons-material'
 import React, {useState} from 'react'
 
-const PasswordField = ({passwordRef, id='paasword', label='Password', }) => {
+const PasswordField = ({passwordRef, id='password', label='Password', }) => {
     //new state = false means hidden
     const [showPassword, setShowPassword] = useState(false);
 
