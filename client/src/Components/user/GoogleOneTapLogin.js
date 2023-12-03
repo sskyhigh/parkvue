@@ -19,19 +19,20 @@ const GoogleOneTapLogin = () => {
                 callback:handleResponse, //handle response from google
             });
         //    prompt pop up window to receive notification
-            window.google.accounts.id.prompt((notification) =>{
-                if(notification.isNotDisplayed){ //No display if prompt isn't working (2hr. reset) to not annoy user
-                    throw new Error('Try to clear the cookies or try again later!')
+            window.google.accounts.id.prompt((notification) => {
+                if(notification.isNotDisplayed()) { //No display if prompt isn't working (2hr. reset) to not annoy user
+                    throw new Error('Try to clear the cookies or try again later!');
                 }
                 //close when user clicks outside prompt then re-enables button
-                if(notification.isSkippedMoment() || notification.isDismissedMoment()){
-                    setDisabled(false)
+                if(notification.isSkippedMoment() || notification.isDismissedMoment()
+                ) {
+                    setDisabled(false);
                 }
-            })
+            });
         } catch (error) { //update user
             dispatch({
                 type: 'UPDATE_ALERT',
-                payload: { open:true, severity:'error', message:error.message},
+                payload: { open: true, severity: 'error', message: error.message},
         });
             console.log(error);
         }
@@ -42,7 +43,8 @@ const GoogleOneTapLogin = () => {
             variant = "outlined" //Box around google button
             startIcon= {<Google />}
             //control the state of button
-            disabled = { disabled } onClick={handleGoogleLogin}//control the state of the button
+            disabled = { disabled }
+            onClick={handleGoogleLogin}//control the state of the button
        >
             Login with Google
         </Button>

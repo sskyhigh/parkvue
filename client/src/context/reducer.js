@@ -8,7 +8,7 @@ const reducer =(state, action) =>{ //Action taken by the current user states
             return{ ...state, openLogin:true };
 
         case 'CLOSE_LOGIN': //login False
-            return{ ...state, loading:false };
+            return{ ...state, openLogin:false };
 
         case 'START_LOADING':
             return{ ...state, loading:true };
