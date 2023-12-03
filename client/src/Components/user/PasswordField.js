@@ -17,7 +17,6 @@ const PasswordField = ({passwordRef, id='password', label='Password', }) => {
     return (
         //change properties to the user information
         <TextField
-            autoFocus
             margin ='normal'
             variant = 'standard'
             id = {id}

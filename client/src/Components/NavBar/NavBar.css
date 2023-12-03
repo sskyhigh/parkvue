@@ -8,6 +8,10 @@
 /* Navbar list items */
 .navbar li {
     position: relative;
+    padding-top: 20px; /* buttons vertical spacing from the top */
+    display: inline-block; /* Ensure list items are displayed horizontally */
+    margin-right: 5px; /*  horizontal spacing between items */
+    margin-left: 10px;
 }
 
 /* Navbar links */

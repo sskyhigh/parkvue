@@ -24,8 +24,6 @@ const Login = () => {
     const passwordRef = useRef();
     const confirmPasswordRef = useRef();
 
-
-
 //action to close the login
     const handleClose = () => {
         dispatch({ type: 'CLOSE_LOGIN' });
@@ -33,6 +31,13 @@ const Login = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        // testing loading; set to be true
+        dispatch({ type: 'START_LOADING' });
+
+        //used inside a timer; set to be false
+        setTimeout(() => {
+            dispatch({ type: 'END_LOADING' });
+        }, 6000); //simulate loading for 6 sec.
 
         //testing Notification
         const password = passwordRef.current.value;
@@ -97,14 +102,14 @@ const Login = () => {
                         )}
                         {/*email*/}
                         <TextField
-                        autoFocus = {!isRegister}
+                        autoFocus = {!isRegister} //outer focus on the name
                         margin="normal"
                         variant="standard"
                         id="email"
                         label="Email"
                         type="email"
                         fullWidth
-                        inputRef={nameRef}
+                        inputRef={emailRef}
                         required
                         />
                     <PasswordField {...{ passwordRef }} />
@@ -116,7 +121,7 @@ const Login = () => {
                         />
                         )}
                 </DialogContent>
-                <DialogActions>
+                <DialogActions sx={{ px: '19px' }}>
                     <Button type="submit" variant="contained" endIcon={<Send />}>
                         Submit
                     </Button>

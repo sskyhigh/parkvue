@@ -3,10 +3,13 @@ import React from 'react';
 import { useValue } from '../context/ContextProvider';
 
 const Notification = () => {
-    const {state:{ alert }, dispatch} = useValue()
+    const {
+        state: { alert },
+        dispatch,
+    } = useValue();
 
     const handleClose = (event, reason) => {
-        if (reason === 'clickaway') return; //user choice to close alert
+        if (reason === 'clickaway') return; //user chooses to close alert
         dispatch({ type: 'UPDATE_ALERT', payload: {...alert, open: false } });
     };
     return (
@@ -16,13 +19,13 @@ const Notification = () => {
             onClose={handleClose}
             anchorOrigin={{ vertical: 'top', horizontal: 'center' }} //position
         >
-            {/*alert message*/}
+            {/* Alert message properties */}
             <Alert
                 onClose={handleClose}
                 severity={alert.severity}
                 sx={{ width: '100%' }}
                 variant="filled"
-                elevation={6} //shadow
+                elevation={6} //shadow design
             >
                 {alert.message}
             </Alert>
