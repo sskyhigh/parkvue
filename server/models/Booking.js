@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const {Schema} = mongoose;
-const User = require('/userModels')
+const User = require('./userModels')
 
 const Booking = new Schema({
     user: {
