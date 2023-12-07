@@ -1,12 +1,18 @@
-import { ImageList } from '@mui/material';
+import {ImageList} from '@mui/material';
 import React from 'react';
 import ProgressItem from './ProgressItem';
 
-const ProgressList = ({ files }) => {
+const ProgressList = ({files}) => {
     return (
-        <ImageList rowHeight={200} cols={4}>
+        <ImageList rowHeight={200}
+                   sx={{
+                       '&.MuiImageList-root': {
+                           gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))!important',
+                       }
+                   }}
+        >
             {files.map((file, index) => (
-                <ProgressItem file={file} key={index} />
+                <ProgressItem file={file} key={index}/>
             ))}
         </ImageList>
     );

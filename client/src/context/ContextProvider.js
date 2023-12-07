@@ -8,6 +8,7 @@ const initialState = {
     openLogin: false,
     loading: false,
     alert: { open: false, severity: 'info', message: '' },
+    images: [],
 };
 
 //when initial state is passed

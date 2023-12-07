@@ -1,6 +1,7 @@
 import React, {useCallback, useState} from 'react';
 import {Paper} from "@mui/material";
 import {useDropzone} from "react-dropzone";
+import ProgressList from "./progressList/ProgressList";
 
 const AddImages = () => {
     const [files, setFiles] = useState([]);
@@ -10,10 +11,10 @@ const AddImages = () => {
     }, [])
     const {getRootProps, getInputProps, isDragActive} = useDropzone({
         onDrop,
-        accept: {'image/*':[]}
+        accept: {'image/*': []}
     })
     return (
-        <div>
+        <>
             <Paper
                 sx={{
                     cursor: 'pointer',
@@ -33,7 +34,8 @@ const AddImages = () => {
                     <em>(Images with jpeg png are accepted)</em>
                 </div>
             </Paper>
-        </div>
+            <ProgressList {...{files}} />
+        </>
     );
 };
 
