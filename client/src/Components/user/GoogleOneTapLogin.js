@@ -2,14 +2,17 @@ import { Google } from '@mui/icons-material';
 import { Button } from '@mui/material';
 import React, { useState } from 'react';
 import { useValue } from '../../context/ContextProvider';
+import {jwtDecode} from "jwt-decode";
 
 const GoogleOneTapLogin = () => {
     const { dispatch } = useValue(); //show error to user; false = enabled button
     const [disabled, setDisabled] = useState(false);
 
     const handleResponse = (response) => { //handle to receive googles response
-        console.log(response)
-    }
+        const token = response.credential //extract token response from google credential
+        const decodedToken = jwtDecode(token) //jwt function use to decode
+        console.log(decodedToken); //see information received
+    };
 
     const handleGoogleLogin = () => {
         setDisabled(true); //disabled button avoids multiple login attempts when clicked
