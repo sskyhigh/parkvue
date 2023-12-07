@@ -19,6 +19,7 @@ import AboutPage from "./Pages/AboutPage";
 import Login from './Components/user/Login';
 import Notification from './Components/Notification';
 import Loading from './Components/Loading';
+import BottomNav from './Components/user/BottomNav'
 
 // connects client to backend
 axios.defaults.baseURL = "http://localhost:8000";
@@ -59,6 +60,7 @@ const App = () => {
                 <Route path="/login" element={<Login/>}/>
                 <Route path="/home" element={<Home/>}/>
                 <Route path="/about" element={<AboutPage/>}/>
+                <Route path="/upload" element={<BottomNav/>}/>
             </Routes>
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css"/>
             {/* Link To JS */}

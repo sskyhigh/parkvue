@@ -2,7 +2,6 @@ import React from 'react';
 import '../NavBar.css'; // Import your CSS file
 // import { Link } from 'react-router-dom';
 
-
 import{
     Button,
     Typography,
@@ -11,9 +10,6 @@ import{
 import {Lock} from '@mui/icons-material';
 import { useValue } from '../../../context/ContextProvider';
 import UserIcons from '../../user/UserIcons';
-
-
-
 
 const SignIn = () => {
 
