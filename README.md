@@ -1,7 +1,7 @@
 # ParkVue - Monetize Your NYC Parking Space
 
 ## 1. Executive Summary
-
+URL: https://parkvue.runcat.live/ 
 **ParkVue** is a cutting-edge web and mobile platform designed to empower New Yorkers to turn their underused parking spaces into a lucrative source of passive income. Through a sophisticated pricing algorithm, ParkVue allows users to set their parking rates based on consumer preferences and security features. This project proposal outlines our vision, objectives, and strategy for bringing this innovative concept to life.
 
 ## 2. Project Introduction
@@ -73,3 +73,10 @@ The ongoing parking scarcity in New York City poses a persistent challenge, whil
 ## 10. Risks and Mitigation
 
 Potential risks include competition, legal and regulatory challenges, and security vulnerabilities. Mitigation strategies involve thorough market research, legal compliance, and robust security measures.
+
+## Packages to install 
+npx create-react-app .
+npm install
+npm install @mui/material @emotion/react @emotion/styled
+npm install @mui/icons-material
+npm i jwt-decode
