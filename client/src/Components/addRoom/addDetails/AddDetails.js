@@ -30,7 +30,7 @@ const AddDetails = () => {
         <Stack
             sx={{
                 alignItems: 'center',
-                "&.MuiTextField-root": {width: '100%', maxWidth: 500, m: 1}
+                "& .MuiTextField-root": {width: '100%', maxWidth: 500, m: 1}
             }}
         >
             <FormControl>

@@ -31,6 +31,8 @@ const reducer = (state, action) => { //Action taken by the current user states
 
         case 'UPDATE_DETAILS':
             return {...state, details: {...state.details, ...action.payload}};
+        case 'UPDATE_LOCATION':
+            return {...state, location: action.payload}
 
         default:
             //In case someone misspelled the action or forgets to add it here; throws a new error indicating no action available

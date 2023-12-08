@@ -6,7 +6,9 @@ import AddImages from "./addImages/AddImages";
 import {useValue} from "../../context/ContextProvider";
 
 const AddRoom = () => {
-    const {state: {images}} = useValue();
+    const {
+        state: {images, details}
+    } = useValue();
     const [activeStep, setActiveStep] = useState(0)
     const [steps, setSteps] = useState([
         {label: 'Location', completed: true},
@@ -41,6 +43,18 @@ const AddRoom = () => {
             }
         }
     }, [images]);
+    useEffect(() => {
+        if (details.title.length > 4 && details.description.length > 9) {
+            if (!steps[1].completed) {
+                setComplete(1, true);
+            } else {
+                if (steps[1].completed) {
+                    setComplete(1, false);
+                }
+            }
+        }
+    }, [details]);
+
     const setComplete = (index, status) => {
         setSteps(steps => {
             steps[index].completed = status;
