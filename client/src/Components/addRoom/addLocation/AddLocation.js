@@ -3,6 +3,7 @@ import {Box} from '@mui/material'
 import ReactMapGL, {GeolocateControl, Marker, NavigationControl} from 'react-map-gl'
 import {useValue} from "../../../context/ContextProvider";
 import 'mapbox-gl/dist/mapbox-gl.css';
+import Geocoder from "./Geocoder";
 
 const AddLocation = () => {
     const {state: {location: {lng, lat}}, dispatch} = useValue();
@@ -37,7 +38,7 @@ const AddLocation = () => {
                         mapStyle='mapbox://styles/mapbox/streets-v11'
             >
                 <Marker
-                    {/*23, 232*/}
+                    // /*23, 232*/
                     latitude={lat}
                     longitude={lng}
                     draggable
@@ -55,6 +56,7 @@ const AddLocation = () => {
                         payload: {lng: e.coords.longitude, lat: e.coords.latitude}
                     })}
                 />
+                <Geocoder />
             </ReactMapGL>
         </Box>
     );
