@@ -25,6 +25,13 @@ const reducer = (state, action) => { //Action taken by the current user states
         //returns the state by changing the current user to the action to payload sent
         case 'UPDATE_IMAGES':
             return {...state, images: [...state.images, action.payload]};
+
+        case 'DELETE_IMAGE':
+            return {...state, images: state.images.filter(image => image !== action.payload)};
+
+        case 'UPDATE_DETAILS':
+            return {...state, details: {...state.details, ...action.payload}};
+
         default:
             //In case someone misspelled the action or forgets to add it here; throws a new error indicating no action available
             throw new Error('No match action!');
