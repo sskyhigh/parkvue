@@ -1,6 +1,6 @@
 import React from "react";
 import MapBoxGeocoder from "@mapbox/mapbox-gl-geocoder";
-import { useValue } from "../../../context/ContextProvider";
+import { useValue } from "../../context/ContextProvider";
 import { useControl } from "react-map-gl";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 
