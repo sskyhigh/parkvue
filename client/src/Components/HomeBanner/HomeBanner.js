@@ -2,7 +2,8 @@ import './HomeBanner.css';
 import appstore from '../../img/ios.png';
 import playstore from '../../img/play.png';
 import {Typography} from '@mui/material';
-import SearchMenu from "../SearchMenu/SearchMenu";
+import SearchMenu from '../SearchMenu/SearchMenu';
+
 
 
 function HomeBanner() {
@@ -25,10 +26,8 @@ function HomeBanner() {
                             <img src={appstore} alt="Download App for Android Phones"/>
                             <img src={playstore} alt="Download App for Apple phones"/>
 
-                            {/* changes search menu text to blue */}
-                            {/*<div className="text">*/}
-                            {/*    <SearchMenu/>*/}
-                            {/*</div>*/}
+
+
                         </div>
                     </div>
                 </Typography>
