@@ -1,5 +1,5 @@
-import tryCatch from "./utils/tryCatch";
-import Room from "../models/Room";
+import tryCatch from "./utils/tryCatch.js";
+import Room from "../models/Room.js";
 
 export const createRoom = tryCatch(async (req, res) => {
   const { id: uid, name: uName, photoURL: uPhoto } = req.user;
