@@ -1,5 +1,5 @@
-import tryCatch from "./utils/tryCatch";
-import Room from "../models/Room";
+import tryCatch from "./utils/tryCatch.js";
+import Room from "../models/Room.js";
 
 export const createRoom = tryCatch(async (req, res) => {
   const { id: uid, name: uName, photoURL: uPhoto } = req.user;
@@ -7,3 +7,9 @@ export const createRoom = tryCatch(async (req, res) => {
   await newRoom.save();
   res.status(201).json({ success: true, result: newRoom });
 });
+
+// export const createRoom = async (req, res) => {
+//   //testing resource access
+//   res.status(201)
+//       .json({ success: true, result: { id: 123, title: 'test room'}} );
+// };

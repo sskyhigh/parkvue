@@ -5,11 +5,37 @@ import { useValue } from '../../context/ContextProvider';
 
 //items related to menu; appear
 const UserMenu = ({ anchorUserMenu, setAnchorUserMenu }) => {
-    const { dispatch } = useValue()
+    const {
+        dispatch,
+        state: { currentUser },
+    } = useValue();
     const handleCloseUserMenu = () => {
         //not menu option (open = false)
         setAnchorUserMenu(null);
     };
+
+    const testAuthorization = async() =>{
+        const url = process.env.REACT_APP_SERVER_URL + '/room'
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    //pass token to server
+                    authorization: 'Bearer ${currentUser.token}',
+                },
+            });
+            const data = await response.json();
+            console.log(data);
+            if(!data.success){
+                throw new Error(data.message);
+            }
+        } catch (error) {
+            dispatch({type:'UPDATE_ALERT', payload: { open:true, severity:'error', message:error.message } })
+            console.log(error);
+
+        }
+    }
 
     return (
         <Menu
@@ -23,7 +49,7 @@ const UserMenu = ({ anchorUserMenu, setAnchorUserMenu }) => {
             onClick={handleCloseUserMenu}
         >
             {/*Menu items displayed*/}
-            <MenuItem>
+            <MenuItem onClick={ testAuthorization}>
                 {/*inside the icon*/}
                 <ListItemIcon>
                     <Settings fontSize="small" />
