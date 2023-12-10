@@ -14,8 +14,8 @@
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.6.0",
     "firebase": "^10.7.1",
-    "mapbox-gl": "^3.0.1",
-
+    "jwt-decode": "^4.0.0",
+    "mapbox-gl": "^2.8.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-dropzone": "^14.2.3",
