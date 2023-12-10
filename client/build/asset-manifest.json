@@ -1,0 +1,22 @@
+{
+  "files": {
+    "main.css": "./static/css/main.9fcea3f2.css",
+    "main.js": "./static/js/main.7f3e74ed.js",
+    "static/js/483.5ed4c4cc.chunk.js": "./static/js/483.5ed4c4cc.chunk.js",
+    "static/media/HomeBanner.png": "./static/media/HomeBanner.da4f13b47f49d30f1495.png",
+    "static/media/Banner.png": "./static/media/Banner.3c6a53fa82b4a56d871a.png",
+    "static/media/iphone_small.png": "./static/media/iphone_small.1d24c4f99adfb7bc390e.png",
+    "static/media/parkvue_logo.png": "./static/media/parkvue_logo.afa4766fa29b3b3a8514.png",
+    "static/media/p_logo.png": "./static/media/p_logo.34ce70388932d787a8c7.png",
+    "static/media/play.png": "./static/media/play.5f4aa93cec8cb9067643.png",
+    "static/media/progress1.svg": "./static/media/progress1.454ab3c8851c0a2ceae562f6b1c296fc.svg",
+    "index.html": "./index.html",
+    "main.9fcea3f2.css.map": "./static/css/main.9fcea3f2.css.map",
+    "main.7f3e74ed.js.map": "./static/js/main.7f3e74ed.js.map",
+    "483.5ed4c4cc.chunk.js.map": "./static/js/483.5ed4c4cc.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.9fcea3f2.css",
+    "static/js/main.7f3e74ed.js"
+  ]
+}
