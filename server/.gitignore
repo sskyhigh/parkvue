@@ -1,12 +1,12 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# VSCode
-frontend/.vscode/*
-!frontend/.vscode/settings.json
-!frontend/.vscode/tasks.json
-!frontend/.vscode/launch.json
-!frontend/.vscode/extensions.json
-*.code-workspace
+## VSCode
+#frontend/.vscode/*
+#!frontend/.vscode/settings.json
+#!frontend/.vscode/tasks.json
+#!frontend/.vscode/launch.json
+#!frontend/.vscode/extensions.json
+#*.code-workspace
 # Local History for Visual Studio Code
 .history/
 
@@ -30,12 +30,12 @@ frontend/.vscode/*
 # production
  /build
 
-# misc
-.DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+## misc
+#.DS_Store
+#.env.local
+#.env.development.local
+#.env.test.local
+#.env.production.local
 
 npm-debug.log*
 yarn-debug.log*
