@@ -9,9 +9,14 @@ const GoogleOneTapLogin = () => {
     const [disabled, setDisabled] = useState(false);
 
     const handleResponse = (response) => { //handle to receive googles response
-        const token = response.credential //extract token response from google credential
-        const decodedToken = jwtDecode(token) //jwt function use to decode
-        console.log(decodedToken); //see information received
+        const token = response.credential; //extract token response from google credential
+        const decodedToken = jwtDecode(token); //jwt function use to decode
+        const {sub:id, email, name, picture:photoURL} = decodedToken;
+        dispatch({
+            type: 'UPDATE_USER',
+            payload: {id, email, name, photoURL, token, google:true},
+        });
+        dispatch({type: 'CLOSE_LOGIN'});
     };
 
     const handleGoogleLogin = () => {
@@ -21,7 +26,7 @@ const GoogleOneTapLogin = () => {
                 client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID, //bring client id from environment variable
                 callback:handleResponse, //handle response from google
             });
-        //    prompt pop up window to receive notification
+        //prompt pop up window to receive notification
             window.google.accounts.id.prompt((notification) => {
                 if(notification.isNotDisplayed()) { //No display if prompt isn't working (2hr. reset) to not annoy user
                     throw new Error('Try to clear the cookies or try again later!');
