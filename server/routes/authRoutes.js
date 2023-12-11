@@ -1,8 +1,8 @@
-const express = require('express')
-const router = express.Router()
-const cors = require('cors')
-const {test, registerUser, loginUser, Profile, BookingDates} = require('../controllers/authControllers')
-const UserInformation = require('../models/userModels')
+const express = require('express');
+const router = express.Router();
+const cors = require('cors');
+const {test, registerUser, loginUser, Profile, BookingDates} = require('../controllers/authControllers');
+const UserInformation = require('../models/userModels');
 
 // middleware
 router.use(

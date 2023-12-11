@@ -17,9 +17,10 @@ const app = express();
 
 // Middleware to allow access from across multi-site (Uses: server & client link)
 app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', process.env.Client_URL);
+    res.setHeader('Access-Control-Allow-Origin', process.env.CLIENT_URL);
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE');
     res.setHeader('Access-Control-Allow-Headers', 'X-Requested-Width, Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', true);
     next();
 });
 
