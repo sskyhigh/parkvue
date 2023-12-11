@@ -44,8 +44,8 @@ const Login = () => {
 
         const email = emailRef.current.value;
         const password = passwordRef.current.value;
-        const name = nameRef.current.value;
-        const confirmPassword = confirmPasswordRef.current.value;
+        const name = nameRef?.current?.value;
+        const confirmPassword = confirmPasswordRef.current?.value;
 
         //console.log(email)
         console.log()

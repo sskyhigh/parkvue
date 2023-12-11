@@ -1,6 +1,6 @@
 import React from 'react';
 import '../NavBar.css'; // Import your CSS file
-// import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 import{
     Button,
@@ -26,9 +26,9 @@ const SignIn = () => {
                      onClick={()=> dispatch({type: 'OPEN_LOGIN' })}
                             sx={{ padding: '25px' }} //button distance from the top of the page
                     >
-                        {/*<Link to="/login">*/}
+                        <Link to="/login">
                             Login
-                        {/*</Link>*/}
+                        </Link>
                     </Button>) : (<UserIcons/>
                 )}
             </Typography>
