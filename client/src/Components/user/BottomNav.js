@@ -36,7 +36,7 @@ const BottomNav = () => {
         >
           <BottomNavigationAction label="Map" icon={<LocationOn />} />
           <BottomNavigationAction label="Space" icon={<Bed />} />
-          <BottomNavigationAction label="Upload" icon={<AddLocationAlt />} />
+          <BottomNavigationAction label="Upload " icon={<AddLocationAlt />} />
         </BottomNavigation>
       </Paper>
     </Box>
