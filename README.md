@@ -1,7 +1,7 @@
 # ParkVue - Monetize Your NYC Parking Space
 
 ## 1. Executive Summary
-URL: https://parkvue.runcat.live/ 
+URL: https://parkvue.runcat.pro/ 
 **ParkVue** is a cutting-edge web and mobile platform designed to empower New Yorkers to turn their underused parking spaces into a lucrative source of passive income. Through a sophisticated pricing algorithm, ParkVue allows users to set their parking rates based on consumer preferences and security features. This project proposal outlines our vision, objectives, and strategy for bringing this innovative concept to life.
 
 ## 2. Project Introduction
