@@ -1,0 +1,13 @@
+
+
+  /* Shrink logo size */
+  .logo-img {
+    width: 200px; /* Adjust the size as needed */
+    height: auto;
+  }
+
+/* Shrink logo size */
+.p_logo-img {
+  width: 40px; /* Adjust the size as needed */
+  height: auto;
+}
