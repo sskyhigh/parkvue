@@ -1,27 +1,25 @@
 import { CheckCircleOutline } from "@mui/icons-material";
 import { Box, ImageListItem } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import CircularProgressWithLabel from "./CircularProgressWithLabel";
 import { v4 as uuidv4 } from "uuid";
 import uploadFileProgress from "../../../../firebase/uploadFileProgress";
-import { useValue } from "../../../../context/ContextProvider";
+import { useValue, Context } from "../../../../context/ContextProvider";
 
 const ProgressItem = ({ file }) => {
   const [progress, setProgress] = useState(0);
   const [imageURL, setImageURL] = useState(null);
-  const {
-    state: { currentUser },
-    dispatch,
-  } = useValue();
+  const { dispatch } = useValue();
+  const { currentUser } = useContext(Context);
   useEffect(() => {
     const uploadImage = async () => {
       const imageName = uuidv4() + "." + file.name.split(".").pop();
       try {
         const url = await uploadFileProgress(
           file,
-          `rooms/${currentUser?.id}`,
+          `rooms/${currentUser.uid}`,
           imageName,
-          setProgress,
+          setProgress
         );
 
         dispatch({ type: "UPDATE_IMAGES", payload: url });

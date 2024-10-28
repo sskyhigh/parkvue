@@ -29,7 +29,14 @@ const ContextProvider = ({ children }) => {
 
   // Return the context provider with state, dispatch, and currentUser-related methods
   return (
-    <Context.Provider value={{ state, dispatch, currentUser, setCurrentUser }}>
+    <Context.Provider
+      value={{
+        state,
+        dispatch,
+        currentUser,
+        setCurrentUser,
+      }}
+    >
       {children}
     </Context.Provider>
   );

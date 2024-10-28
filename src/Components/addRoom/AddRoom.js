@@ -13,8 +13,7 @@ import AddDetails from "./addDetails/AddDetails";
 import AddImages from "./addImages/AddImages";
 import { useValue, Context } from "../../context/ContextProvider";
 import { Send } from "@mui/icons-material";
-import { db, doc, setDoc, storage } from "../../firebase/config";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db, doc, setDoc } from "../../firebase/config";
 import { v4 as uuidv4 } from "uuid"; // For unique IDs
 import { useNavigate } from "react-router-dom";
 
@@ -68,18 +67,6 @@ const AddRoom = () => {
       setUploading(true);
       dispatch({ type: "START_LOADING" });
 
-      // Upload images to Firebase Storage and retrieve download URLs
-      const imageURLs = await Promise.all(
-        images.map(async (image) => {
-          const storageRef = ref(
-            storage,
-            `rooms/${currentUser.uid}/${image.name}`
-          );
-          await uploadBytes(storageRef, image);
-          return getDownloadURL(storageRef);
-        })
-      );
-
       // Define uniqueRoomId for Firestore document
       const uniqueRoomId = uuidv4();
 
@@ -90,8 +77,9 @@ const AddRoom = () => {
         price: details.price,
         title: details.title,
         description: details.description,
-        images: imageURLs, // URLs from Firebase Storage
+        images: images,
         createdBy: currentUser.uid, // User ID
+        ownerName: currentUser.fullName,
         createdAt: new Date().toISOString(), // Optional timestamp for sorting
       };
 
