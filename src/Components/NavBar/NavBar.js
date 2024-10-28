@@ -78,7 +78,7 @@ const NavBar = () => {
                     <Link to="/about">About</Link>
                   </li>
                   <li>
-                    <Link to="/upload">Upload</Link>
+                    <Link to="/space">Space</Link>
                   </li>
                   <li>
                     {currentUser ? (

@@ -9,13 +9,20 @@ import { AddLocationAlt, Bed, LocationOn } from "@mui/icons-material";
 import ClusterMap from "../map/ClusterMap";
 import Rooms from "../rooms/Rooms";
 import AddRoom from "../addRoom/AddRoom";
+import { useNavigate } from "react-router-dom";
 
 const BottomNav = () => {
-  const [value, setValue] = useState(0);
+  const [value, setValue] = useState(1);
+  const navigate = useNavigate();
   const ref = useRef();
   useEffect(() => {
     ref.current.ownerDocument.body.scrollTop = 0;
   }, [value]);
+  useEffect(() => {
+    if (value === 1) navigate(`/space/rooms`);
+    if (value === 2) navigate(`/space/upload`);
+    if (value === 0) navigate(`/space/map`);
+  }, [value, navigate]);
   return (
     <Box ref={ref}>
       {
@@ -35,7 +42,7 @@ const BottomNav = () => {
           onChange={(e, newValue) => setValue(newValue)}
         >
           <BottomNavigationAction label="Map" icon={<LocationOn />} />
-          <BottomNavigationAction label="Space" icon={<Bed />} />
+          <BottomNavigationAction label="Rooms" icon={<Bed />} />
           <BottomNavigationAction label="Upload " icon={<AddLocationAlt />} />
         </BottomNavigation>
       </Paper>
