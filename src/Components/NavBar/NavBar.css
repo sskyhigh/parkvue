@@ -1,0 +1,59 @@
+/* NavBar.css */
+
+/* Navbar container */
+.navbar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  /* Navbar list items */
+  .navbar li {
+    list-style: none;
+    padding: 10px 0;
+  }
+  
+  /* Navbar links */
+  .navbar a {
+    font-size: 1rem;
+    padding: 8px 16px;
+    color: #333;
+    font-weight: 500;
+    text-decoration: none;
+    position: relative;
+  }
+  
+  /* Navbar link underline animation */
+  .navbar a::after {
+    content: "";
+    width: 0;
+    height: 2px;
+    background: var(--gradient, #4caf50);
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    transition: width 0.3s;
+  }
+  
+  .navbar a:hover::after {
+    width: 100%;
+  }
+  
+  /* Header styling */
+  header {
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+    background-color: #fff;
+    padding: 10px 20px;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 600px) {
+    /* Hide navbar on mobile */
+    .navbar {
+      display: none;
+    }
+  }
+  
