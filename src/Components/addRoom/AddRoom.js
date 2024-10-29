@@ -70,15 +70,17 @@ const AddRoom = () => {
       // Define uniqueRoomId for Firestore document
       const uniqueRoomId = uuidv4();
 
-      // Define the room data with only text fields
+      // Define the room data
       const room = {
+        id: uniqueRoomId,
+        available: true,
         lng: location.lng,
         lat: location.lat,
         price: details.price,
         title: details.title,
         description: details.description,
         images: images,
-        createdBy: currentUser.uid, // User ID
+        createdBy: currentUser.uid,
         ownerName: currentUser.fullName,
         createdAt: new Date().toISOString(), // Optional timestamp for sorting
       };

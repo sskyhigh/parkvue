@@ -20,6 +20,8 @@ import Notification from "./Components/Notification";
 import Loading from "./Components/Loading";
 import BottomNav from "./Components/user/BottomNav";
 import ClusterMap from "./Components/map/ClusterMap";
+import Booking from "./Components/rooms/Booking";
+import NotFound from "./NotFound/NotFound";
 
 const App = () => {
   return (
@@ -62,6 +64,8 @@ const App = () => {
         <Route path="/about" element={<AboutPage />} />
         <Route path="/map" element={<ClusterMap />} />
         <Route path="/space/*" element={<BottomNav />} />
+        <Route path="/booking/:roomId" element={<Booking />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
       <link
         rel="stylesheet"
