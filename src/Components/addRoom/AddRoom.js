@@ -99,7 +99,7 @@ const AddRoom = () => {
       });
       navigate("/");
     } catch (error) {
-      console.error("Error in handleSubmit:", error);
+      console.error("Error:", error);
 
       // Dispatch error message if any step fails
       dispatch({
@@ -107,7 +107,7 @@ const AddRoom = () => {
         payload: {
           open: true,
           severity: "error",
-          message: "Failed to add room",
+          message: currentUser.uid ? "Failed to add room" : "You have to be logged in to upload a room",
         },
       });
     } finally {

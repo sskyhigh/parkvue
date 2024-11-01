@@ -118,7 +118,29 @@ const Register = () => {
       setCurrentUser(userData);
       navigate("/");
     } catch (error) {
-      console.error("Error registering user:", error);
+      let errorMessage = "An error occurred:" + error.message;
+      let errorType = "error";
+      if (error.code === "auth/email-already-in-use") {
+        errorMessage = "This email is already in use";
+        errorType = "error";
+      } else if (error.code === "auth/weak-password") {
+        errorMessage = "Password must be at least 6 characters";
+        errorType = "error";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "Please provide a valid email";
+        errorType = "info";
+      } else if (error.code === "auth/missing-password") {
+        errorMessage = "Please provide a password";
+        errorType = "info";
+      }
+      dispatch({
+        type: "UPDATE_ALERT",
+        payload: {
+          open: true,
+          severity: errorType,
+          message: errorMessage,
+        },
+      });
     } finally {
       setLoading(false);
     }
