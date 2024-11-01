@@ -115,13 +115,13 @@ const Register = () => {
       });
       sessionStorage.setItem(
         "userData",
-        JSON.stringify({ email: email, fullName: fullName })
+        JSON.stringify({ email: email, fullName: fullName, uid: user.uid })
       );
       localStorage.setItem(
         "userData",
-        JSON.stringify({ email: email, fullName: fullName })
+        JSON.stringify({ email: email, fullName: fullName, uid: user.uid })
       );
-      setCurrentUser(fullName);
+      setCurrentUser({ email: email, fullName: fullName, uid: user.uid });
       navigate("/");
     } catch (error) {
       let errorMessage = "An error occurred:" + error.message;

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { collection, getDocs, db } from "../../firebase/config";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Button,
@@ -19,6 +20,7 @@ const Rooms = () => {
   const [rooms, setRooms] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
+  const navigate = useNavigate();
 
   // Fetch rooms from Firestore
   useEffect(() => {
@@ -46,19 +48,50 @@ const Rooms = () => {
     setSelectedRoom(null);
   };
 
+  const handleBookClick = () => {
+    if (selectedRoom) {
+      navigate(`/booking/${selectedRoom.id}`, { state: { room: selectedRoom } });
+    }
+  };
+
   return (
     <Box sx={{ padding: 4 }}>
       <Grid container spacing={3}>
         {rooms.map((room) => (
           <Grid item xs={12} sm={6} md={4} key={room.id}>
-            <Card onClick={() => handleOpenDialog(room)}>
-              <CardActionArea>
+            <Card>
+              <CardActionArea 
+                onClick={room.available ? () => handleOpenDialog(room) : undefined}
+                disabled={!room.available} // Disable action if not available
+              >
                 <CardMedia
                   component="img"
                   height="250"
                   image={room.images[0]} // Display the first image in the array
                   alt={room.title}
+                  sx={{ position: 'relative' }}
                 />
+                {/* Overlay for unavailable rooms */}
+                {!room.available && (
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      bgcolor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent black
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      fontWeight: 'bolder',
+                      fontSize: '1.5rem',
+                    }}
+                  >
+                    Reserved
+                  </Box>
+                )}
                 <CardContent>
                   <Typography variant="h6">{room.title}</Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -73,7 +106,7 @@ const Rooms = () => {
           </Grid>
         ))}
       </Grid>
-
+  
       {/* Dialog for detailed room information */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         {selectedRoom && (
@@ -90,7 +123,7 @@ const Rooms = () => {
                 Owner: {selectedRoom.ownerName}
               </Typography>
               <Typography variant="body1" sx={{ mt: 2 }}>
-                Uploade Date: {selectedRoom.createdAt}
+                Upload Date: {selectedRoom.createdAt}
               </Typography>
               <Typography variant="body1" sx={{ mt: 2 }}>
                 Description: {selectedRoom.description}
@@ -106,7 +139,7 @@ const Rooms = () => {
               <Button onClick={handleCloseDialog} color="primary">
                 Close
               </Button>
-              <Button color="secondary" variant="contained">
+              <Button color="secondary" variant="contained" onClick={handleBookClick}>
                 Book
               </Button>
             </DialogActions>
@@ -115,6 +148,7 @@ const Rooms = () => {
       </Dialog>
     </Box>
   );
+  
 };
 
 export default Rooms;
