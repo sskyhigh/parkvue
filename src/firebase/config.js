@@ -33,17 +33,19 @@ import { getStorage } from "firebase/storage";
 //     messagingSenderId: "419852219763",
 //     appId: "1:419852219763:web:8f3e0bce11ceb94b6dc106"
 // };
+
+// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCL4EWTi-0lyIN6b0cBuay-3kLwLRKmoGQ",
-  authDomain: "parkvue-c18db.firebaseapp.com",
-  databaseURL:
-    "https://parkvue-c18db-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "parkvue-c18db",
-  storageBucket: "parkvue-c18db.appspot.com",
-  messagingSenderId: "277540950422",
-  appId: "1:277540950422:web:8942da1274b1c726784db7",
+  apiKey: "AIzaSyC8rDDRKFLRnFTN4VqyoshY4ZWnCvuZ5Rw",
+  authDomain: "parkvue-a2738.firebaseapp.com",
+  projectId: "parkvue-a2738",
+  storageBucket: "parkvue-a2738.firebasestorage.app",
+  messagingSenderId: "184433069550",
+  appId: "1:184433069550:web:59a2e8df778d71a3d4d2ff",
+  measurementId: "G-ZCRFFW4RLD"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
