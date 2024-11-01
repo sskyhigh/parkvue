@@ -24,17 +24,6 @@ import {
 } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
-// Your web app's Firebase configuration
-// const firebaseConfig = {
-//     apiKey: "AIzaSyDFsKb1fvVEkkHxuq4yxvX0eCY91inSiIY",
-//     authDomain: "parkvue-48dcc.firebaseapp.com",
-//     projectId: "parkvue-48dcc",
-//     storageBucket: "parkvue-48dcc.appspot.com",
-//     messagingSenderId: "419852219763",
-//     appId: "1:419852219763:web:8f3e0bce11ceb94b6dc106"
-// };
-
-// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyC8rDDRKFLRnFTN4VqyoshY4ZWnCvuZ5Rw",
   authDomain: "parkvue-a2738.firebaseapp.com",

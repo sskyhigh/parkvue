@@ -93,18 +93,17 @@ const Register = () => {
 
     try {
       setLoading(true);
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
-      await addDoc(collection(db, "users"), {
+    
+      const userData = {
         uid: user.uid,
         fullName: fullName,
         email: email,
-      });
+      };
+    
+      await addDoc(collection(db, "users"), userData);
+    
       dispatch({
         type: "UPDATE_ALERT",
         payload: {
@@ -113,15 +112,10 @@ const Register = () => {
           message: "Registration successful",
         },
       });
-      sessionStorage.setItem(
-        "userData",
-        JSON.stringify({ email: email, fullName: fullName, uid: user.uid })
-      );
-      localStorage.setItem(
-        "userData",
-        JSON.stringify({ email: email, fullName: fullName, uid: user.uid })
-      );
-      setCurrentUser({ email: email, fullName: fullName, uid: user.uid });
+    
+      sessionStorage.setItem("userData", JSON.stringify(userData));
+      localStorage.setItem("userData", JSON.stringify(userData));
+      setCurrentUser(userData);
       navigate("/");
     } catch (error) {
       let errorMessage = "An error occurred:" + error.message;
