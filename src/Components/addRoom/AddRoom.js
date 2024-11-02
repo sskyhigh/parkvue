@@ -8,7 +8,7 @@ import {
   StepButton,
   Stepper,
 } from "@mui/material";
-import AddLocation from "./addLocation/AddLocation";
+import ClusterMap from "../map/ClusterMap";
 import AddDetails from "./addDetails/AddDetails";
 import AddImages from "./addImages/AddImages";
 import { useValue, Context } from "../../context/ContextProvider";
@@ -130,7 +130,7 @@ const AddRoom = () => {
       <Box sx={{ pb: 7 }}>
         {
           {
-            0: <AddLocation />,
+            0: <ClusterMap />,
             1: <AddDetails />,
             2: <AddImages />,
           }[activeStep]
