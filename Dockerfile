@@ -1,23 +1,32 @@
-FROM node:20-alpine AS base
+# Stage 1: Build the React app
+FROM node:18-alpine AS builder
 
-# Install dependencies only when needed
-FROM base AS deps
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk add --no-cache libc6-compat
-
-FROM deps as application
-
-# Set the working directory
 WORKDIR /app
-# Copy the package.json and package-lock.json files
-COPY package*.json ./
-# Install the dependencies
-RUN npm install
-# Copy the app files
+
+# Install dependencies based on the preferred package manager
+COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
+RUN \
+  if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
+  elif [ -f package-lock.json ]; then npm ci; \
+  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile; \
+  else echo "Lockfile not found." && exit 1; \
+  fi
+
+# Copy the rest of the source code and build the React app
 COPY . .
-# Build the app
-RUN npm run build
-# Expose the port
-EXPOSE 3000
-# Run the app
-CMD ["npm", "start"]
+RUN \
+  if [ -f yarn.lock ]; then yarn run build; \
+  elif [ -f package-lock.json ]; then npm run build; \
+  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm run build; \
+  else echo "Lockfile not found." && exit 1; \
+  fi
+
+# Stage 2: Serve the app using a lightweight server (e.g., Nginx)
+FROM nginx:alpine AS production
+
+# Copy the build directory from the builder stage
+COPY --from=builder /app/build /usr/share/nginx/html
+
+# Expose port 80 and set the default CMD for Nginx
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
