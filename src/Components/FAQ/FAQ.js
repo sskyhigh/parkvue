@@ -3,7 +3,7 @@ import React, { useState } from "react";
 
 const dataCollection = [
   {
-    question: "How does ParkVue work for users looking to rent a parking spot???123",
+    question: "How does ParkVue work for users looking to rent a parking spot???123456",
     answer:
       "ParkVue makes it easy for users to find and rent nearby parking spots. Simply search for available spots on the app, choose the one that suits your needs, and complete the booking process. You will receive instructions on how to access the parking spot, and your payment is securely handled through the app.",
   },
