@@ -20,20 +20,26 @@ const ClusterMap = () => {
 
   useEffect(() => {
     if (!lng && !lat) {
-      fetch("https://ipapi.co/json")
-        .then((response) => response.json())
-        .then((data) => {
-          mapRef.current?.flyTo({
-            center: [data.longitude, data.latitude],
-          });
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          if (mapRef.current) {
+            mapRef.current.flyTo({
+              center: [longitude, latitude],
+              zoom: 10,
+              essential: true,
+            });
+          }
           dispatch({
             type: "UPDATE_LOCATION",
-            payload: { lng: data.longitude, lat: data.latitude },
+            payload: { lng: longitude, lat: latitude },
           });
-        })
-        .catch((error) => console.error("Error fetching IP location:", error));
+        },
+        (error) => console.error("Error getting location:", error),
+        { enableHighAccuracy: true }
+      );
     }
-  }, [lng, lat, dispatch]); // Add dispatch and location as dependencies
+  }, [dispatch, lng, lat]);
 
   return (
     <Box sx={{ height: 800, position: "relative" }}>

@@ -158,8 +158,8 @@ const NavBar = () => {
             <ListItem button component={Link} to="/about">
               <ListItemText primary="About" />
             </ListItem>
-            <ListItem button component={Link} to="/upload">
-              <ListItemText primary="Upload" />
+            <ListItem button component={Link} to="/space">
+              <ListItemText primary="Space" />
             </ListItem>
           </List>
         </Box>

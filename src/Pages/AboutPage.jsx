@@ -3,8 +3,8 @@ import { keyframes } from "@emotion/react";
 
 // Keyframes for animations
 const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0.7; transform: translateY(-25px); }
+  to { opacity: 1; transform: translateY(0px); }
 `;
 
 const drawDivider = keyframes`
@@ -22,7 +22,7 @@ export default function AboutPage() {
         background: "linear-gradient(135deg, #e0f7fa, #80deea)", // Soft gradient
         borderRadius: 4,
         p: 4,
-        boxShadow: "0 8px 20px rgba(0,0,0,0.1)",
+        boxShadow: "0 8px 20px rgba(0,0,0,0.5)",
       }}
     >
       <Typography
@@ -33,7 +33,7 @@ export default function AboutPage() {
         sx={{
           color: "primary.main",
           textShadow: "1px 1px 2px rgba(0,0,0,0.2)",
-          animation: `${fadeIn} 0.6s ease-out`,
+          animation: `${fadeIn} 0.3s ease-out`,
         }}
       >
         About ParkVue
@@ -44,11 +44,11 @@ export default function AboutPage() {
           height: 2,
           backgroundColor: "primary.main",
           width: "100%",
-          animation: `${drawDivider} 0.8s ease-out`,
+          animation: `${drawDivider} 0.5s ease-out`,
         }}
       />
       <Box
-        sx={{ mt: 3, mb: 3, animation: `${fadeIn} 1s ease-out 0.3s forwards` }}
+        sx={{ mt: 3, mb: 3, animation: `${fadeIn} 0.7s ease-out 0.3s forwards` }}
       >
         <Typography
           variant="h6"
@@ -70,9 +70,17 @@ export default function AboutPage() {
         </Typography>
       </Box>
 
-      <Divider sx={{ my: 2, height: 2, backgroundColor: "primary.main" }} />
+      <Divider
+        sx={{
+          my: 2,
+          height: 2,
+          backgroundColor: "primary.main",
+          width: "100%",
+          animation: `${drawDivider} 0.5s ease-out`,
+        }}
+      />
 
-      <Box sx={{ mt: 3, animation: `${fadeIn} 1s ease-out 0.6s forwards` }}>
+      <Box sx={{ mt: 3, animation: `${fadeIn} 0.7s ease-out 0.3s forwards` }}>
         <Typography variant="body1">
           Whether you’re planning a trip to the city or just need a place to
           park, ParkVue takes the guesswork out of parking. More than a parking
