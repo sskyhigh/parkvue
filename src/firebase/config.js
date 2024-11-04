@@ -24,8 +24,6 @@ import {
 } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
-const key = process.env.REACT_APP_API_KEY;
-console.log("key: " + key);
 
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_API_KEY,
