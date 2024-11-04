@@ -24,14 +24,15 @@ import {
 } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
+
 const firebaseConfig = {
-  apiKey: "AIzaSyC8rDDRKFLRnFTN4VqyoshY4ZWnCvuZ5Rw",
-  authDomain: "parkvue-a2738.firebaseapp.com",
-  projectId: "parkvue-a2738",
-  storageBucket: "parkvue-a2738.firebasestorage.app",
-  messagingSenderId: "184433069550",
-  appId: "1:184433069550:web:59a2e8df778d71a3d4d2ff",
-  measurementId: "G-ZCRFFW4RLD"
+  apiKey: process.env.REACT_APP_API_KEY,
+  authDomain: process.env.REACT_APP_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_MESSAGING_SENDING_ID,
+  appId: process.env.REACT_APP_APP_ID,
+  measurementId: process.env.REACT_APP_MEASUREMENT_ID,
 };
 
 // Initialize Firebase
