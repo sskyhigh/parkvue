@@ -15,7 +15,7 @@ const Notification = () => {
     return (
         <Snackbar //toggle
             open={alert.open} //global variable from context provider
-            autoHideDuration={6000} //6sec. duration
+            autoHideDuration={2000} //6sec. duration
             onClose={handleClose}
             anchorOrigin={{ vertical: 'top', horizontal: 'center' }} //position
         >
