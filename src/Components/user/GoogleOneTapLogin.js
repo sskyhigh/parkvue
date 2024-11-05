@@ -71,7 +71,11 @@ const GoogleOneTapLogin = () => {
         try {
             window.google.accounts.id.prompt((notification) => {
                 if (notification.isNotDisplayed()) {
-                    throw new Error('One Tap prompt not displayed. Please try again later.');
+                    dispatch({
+                        type: 'UPDATE_ALERT',
+                        payload: { open: true, severity: 'error', message: "Couldn't open Goolge one tap login" },
+                    });
+                    return;
                 }
                 if (notification.isSkippedMoment() || notification.isDismissedMoment()) {
                     setDisabled(false);
@@ -82,7 +86,6 @@ const GoogleOneTapLogin = () => {
                 type: 'UPDATE_ALERT',
                 payload: { open: true, severity: 'error', message: error.message },
             });
-            console.error('Google Login Error:', error);
             setDisabled(false);
         }
     };
