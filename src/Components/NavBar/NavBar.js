@@ -25,7 +25,6 @@ const NavBar = () => {
   const toggleDrawer = () => {
     setDrawerOpen(!drawerOpen);
   };
-  console.log(currentUser);
 
   return (
     <>

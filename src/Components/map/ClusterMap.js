@@ -10,6 +10,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import Geocoder from "./Geocoder";
 
 const ClusterMap = () => {
+  const defaultLocation = { lng: -74.006, lat: 40.7128 }; // NYC default location
   const {
     state: {
       location: { lng, lat },
@@ -35,7 +36,14 @@ const ClusterMap = () => {
             payload: { lng: longitude, lat: latitude },
           });
         },
-        (error) => console.error("Error getting location:", error),
+        (error) => {
+          console.error("Error getting location:", error);
+          // Fallback to default location
+          dispatch({
+            type: "UPDATE_LOCATION",
+            payload: defaultLocation,
+          });
+        },
         { enableHighAccuracy: true }
       );
     }
@@ -47,15 +55,15 @@ const ClusterMap = () => {
         ref={mapRef}
         mapboxAccessToken={process.env.REACT_APP_MAP_TOKEN}
         initialViewState={{
-          longitude: -74.006, // NYC longitude
-          latitude: 40.7128, // NYC latitude
-          zoom: 12, // Adjust this for initial zoom level
+          longitude: lng || defaultLocation.lng,
+          latitude: lat || defaultLocation.lat,
+          zoom: 12,
         }}
         mapStyle="mapbox://styles/mapbox/streets-v11"
       >
         <Marker
-          latitude={lat || 0}
-          longitude={lng || 0}
+          latitude={lat || defaultLocation.lat}
+          longitude={lng || defaultLocation.lng}
           draggable
           onDragEnd={(e) =>
             dispatch({

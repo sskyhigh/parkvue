@@ -47,7 +47,7 @@ const AddLocation = () => {
     <Box sx={{ height: 400, position: "relative" }}>
       <ReactMapGL
         ref={mapRef}
-        mapboxAccessToken={process.env.REACT_APP_MAP_TOKEN}
+        mapboxAccessToken={pk.eyJ1Ijoic3NreWhpZ2giLCJhIjoiY2xweDRxYmN3MDd1aDJrcGFkMGNrZ2NnayJ9.zBViNdV3rkn4QDeNfNjUtw} // change this with env variable
         initialViewState={{
           longitude: lng || -74.006, // Default to NYC if lng not set
           latitude: lat || 40.7128, // Default to NYC if lat not set
