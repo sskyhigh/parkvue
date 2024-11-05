@@ -20,7 +20,7 @@ const GoogleOneTapLogin = () => {
         window.google.accounts.id.initialize({
             client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
             callback: handleResponse,
-            auto_select: true, // Auto-select if user has previously logged in
+            auto_select: false,
         });
 
         // Prompt One Tap immediately
