@@ -4,9 +4,11 @@ import { Button } from '@mui/material';
 import { useValue } from '../../context/ContextProvider';
 import { jwtDecode } from "jwt-decode";
 import { signInWithCredential, GoogleAuthProvider } from "firebase/auth";
-import { auth } from '../../firebase/config';
+import { auth, collection, query, where, getDocs, addDoc, db } from '../../firebase/config';
+import { useNavigate } from 'react-router-dom';
 
 const GoogleOneTapLogin = () => {
+    const navigate = useNavigate();
     const { dispatch } = useValue();
     const [disabled, setDisabled] = useState(false);
 
@@ -32,25 +34,50 @@ const GoogleOneTapLogin = () => {
         const token = response.credential;
         const decodedToken = jwtDecode(token);
         const { sub: id, email, name, picture: photoURL } = decodedToken;
-
+    
         try {
+            // Authenticate user with Firebase using Google credential
             const credential = GoogleAuthProvider.credential(token);
             const userCredential = await signInWithCredential(auth, credential);
-
-            // Store user data with Firebase User UID
-            dispatch({
-                type: 'UPDATE_USER',
-                payload: {
-                    id: userCredential.user.uid,
-                    email,
-                    name,
-                    photoURL,
-                    token,
+            const user = userCredential.user;
+    
+            // Check if user already exists in Firestore
+            const usersRef = collection(db, "users");
+            const userQuery = query(usersRef, where("uid", "==", user.uid));
+            const userSnapshot = await getDocs(userQuery);
+    
+            // If user does not exist in Firestore, add them
+            if (userSnapshot.empty) {
+                const userData = {
+                    uid: user.uid,
+                    fullName: name,
+                    email: email,
+                    photoURL: photoURL,
                     google: true,
-                },
-            });
-
-            dispatch({ type: 'CLOSE_LOGIN' });
+                };
+    
+                await addDoc(usersRef, userData); // Add user data to Firestore
+    
+                // Store user data in session and local storage
+                sessionStorage.setItem("userData", JSON.stringify(userData));
+                localStorage.setItem("userData", JSON.stringify(userData));
+                dispatch({
+                    type: "UPDATE_ALERT",
+                    payload: {
+                        open: true,
+                        severity: "success",
+                        message: "Google registration successful",
+                    },
+                });
+                navigate("/");
+            } else {
+                // If user already exists, use their existing data
+                const existingUserData = userSnapshot.docs[0].data();
+                sessionStorage.setItem("userData", JSON.stringify(existingUserData));
+                localStorage.setItem("userData", JSON.stringify(existingUserData));
+            }
+    
+            navigate("/");
         } catch (error) {
             dispatch({
                 type: 'UPDATE_ALERT',
