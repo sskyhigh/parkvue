@@ -1,11 +1,13 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Box } from "@mui/material";
 import ReactMapGL, {
   GeolocateControl,
   Marker,
   NavigationControl,
 } from "react-map-gl";
+import { useLocation } from "react-router-dom"; // For checking the current URL
 import { useValue } from "../../context/ContextProvider";
+import { db, collection, getDocs } from "../../firebase/config"; // Firebase configuration
 import "mapbox-gl/dist/mapbox-gl.css";
 import Geocoder from "./Geocoder";
 
@@ -17,7 +19,26 @@ const ClusterMap = () => {
     },
     dispatch,
   } = useValue();
+  const [rooms, setRooms] = useState([]); // State to store rooms from Firebase
   const mapRef = useRef();
+  const currentLocation = useLocation(); // Get current URL
+
+  useEffect(() => {
+    // Fetch rooms from Firebase if on "/space/rooms"
+    const fetchRooms = async () => {
+      try {
+        const roomsSnapshot = await getDocs(collection(db, "rooms"));
+        const roomsData = roomsSnapshot.docs.map(doc => doc.data());
+        setRooms(roomsData);
+      } catch (error) {
+        console.error("Error fetching rooms:", error);
+      }
+    };
+
+    if (currentLocation.pathname === "/space/rooms") {
+      fetchRooms();
+    }
+  }, [currentLocation]);
 
   useEffect(() => {
     if (!lng && !lat) {
@@ -61,17 +82,33 @@ const ClusterMap = () => {
         }}
         mapStyle="mapbox://styles/mapbox/streets-v11"
       >
-        <Marker
-          latitude={lat || defaultLocation.lat}
-          longitude={lng || defaultLocation.lng}
-          draggable
-          onDragEnd={(e) =>
-            dispatch({
-              type: "UPDATE_LOCATION",
-              payload: { lng: e.lngLat.lng, lat: e.lngLat.lat },
-            })
-          }
-        />
+        {/* Draggable marker for selecting new room location */}
+        {currentLocation.pathname === "/space/upload" && (
+          <Marker
+            latitude={lat || defaultLocation.lat}
+            longitude={lng || defaultLocation.lng}
+            draggable
+            onDragEnd={(e) =>
+              dispatch({
+                type: "UPDATE_LOCATION",
+                payload: { lng: e.lngLat.lng, lat: e.lngLat.lat },
+              })
+            }
+          />
+        )}
+        
+        {/* Display room markers only on "/space/rooms" */}
+        {currentLocation.pathname === "/space/map" &&
+          rooms.map((room, index) => (
+            <Marker
+              key={index}
+              latitude={room.lat}
+              longitude={room.lng}
+              color="red" // Use a different color to distinguish room markers
+              draggable={false}
+            />
+          ))}
+
         <NavigationControl position="bottom-right" />
         <GeolocateControl
           position="top-left"

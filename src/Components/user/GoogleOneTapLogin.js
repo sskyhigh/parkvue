@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Google } from '@mui/icons-material';
 import { Button } from '@mui/material';
-import { useValue } from '../../context/ContextProvider';
+import { useValue, Context } from '../../context/ContextProvider';
 import { jwtDecode } from "jwt-decode";
 import { signInWithCredential, GoogleAuthProvider } from "firebase/auth";
-import { auth } from '../../firebase/config';
+import { auth, collection, query, where, getDocs, addDoc, db } from '../../firebase/config';
+import { useNavigate } from 'react-router-dom';
 
 const GoogleOneTapLogin = () => {
+    const navigate = useNavigate();
     const { dispatch } = useValue();
+    const { setCurrentUser } = useContext(Context);
     const [disabled, setDisabled] = useState(false);
 
     useEffect(() => {
@@ -17,7 +20,7 @@ const GoogleOneTapLogin = () => {
         window.google.accounts.id.initialize({
             client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
             callback: handleResponse,
-            auto_select: true, // Auto-select if user has previously logged in
+            auto_select: false,
         });
 
         // Prompt One Tap immediately
@@ -32,25 +35,53 @@ const GoogleOneTapLogin = () => {
         const token = response.credential;
         const decodedToken = jwtDecode(token);
         const { sub: id, email, name, picture: photoURL } = decodedToken;
-
+        
         try {
+            // Authenticate user with Firebase using Google credential
             const credential = GoogleAuthProvider.credential(token);
             const userCredential = await signInWithCredential(auth, credential);
-
-            // Store user data with Firebase User UID
-            dispatch({
-                type: 'UPDATE_USER',
-                payload: {
-                    id: userCredential.user.uid,
-                    email,
-                    name,
-                    photoURL,
-                    token,
-                    google: true,
-                },
-            });
-
-            dispatch({ type: 'CLOSE_LOGIN' });
+            const user = userCredential.user;
+    
+            // Check if user already exists in Firestore
+            const usersRef = collection(db, "users");
+            const userQuery = query(usersRef, where("uid", "==", user.uid));
+            const userSnapshot = await getDocs(userQuery);
+    
+            // Prepare user data object
+            const newUserData = {
+                uid: user.uid,
+                fullName: name,
+                email: email,
+                photoURL: photoURL,
+                google: true,
+            };
+    
+            if (userSnapshot.empty) {
+                // If user does not exist in Firestore, add them
+                await addDoc(usersRef, newUserData); // Directly use newUserData
+    
+                // Store user data in session and local storage
+                sessionStorage.setItem("userData", JSON.stringify(newUserData));
+                localStorage.setItem("userData", JSON.stringify(newUserData));
+                setCurrentUser(newUserData);
+    
+                dispatch({
+                    type: "UPDATE_ALERT",
+                    payload: {
+                        open: true,
+                        severity: "success",
+                        message: "Google registration successful",
+                    },
+                });
+            } else {
+                // If user already exists, use their existing data
+                const existingUserData = userSnapshot.docs[0].data();
+                sessionStorage.setItem("userData", JSON.stringify(existingUserData));
+                localStorage.setItem("userData", JSON.stringify(existingUserData));
+                setCurrentUser(existingUserData);
+            }
+    
+            navigate("/"); // Redirect user to the home page
         } catch (error) {
             dispatch({
                 type: 'UPDATE_ALERT',
@@ -71,7 +102,11 @@ const GoogleOneTapLogin = () => {
         try {
             window.google.accounts.id.prompt((notification) => {
                 if (notification.isNotDisplayed()) {
-                    throw new Error('One Tap prompt not displayed. Please try again later.');
+                    dispatch({
+                        type: 'UPDATE_ALERT',
+                        payload: { open: true, severity: 'error', message: "Couldn't open Goolge one tap login" },
+                    });
+                    return;
                 }
                 if (notification.isSkippedMoment() || notification.isDismissedMoment()) {
                     setDisabled(false);
@@ -82,7 +117,6 @@ const GoogleOneTapLogin = () => {
                 type: 'UPDATE_ALERT',
                 payload: { open: true, severity: 'error', message: error.message },
             });
-            console.error('Google Login Error:', error);
             setDisabled(false);
         }
     };
