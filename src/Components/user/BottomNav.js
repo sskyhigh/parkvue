@@ -19,9 +19,9 @@ const BottomNav = () => {
     ref.current.ownerDocument.body.scrollTop = 0;
   }, [value]);
   useEffect(() => {
-    if (value === 1) navigate(`/space/rooms`);
-    if (value === 2) navigate(`/space/upload`);
-    if (value === 0) navigate(`/space/map`);
+    if (value === 1) navigate(`/upload/rooms`);
+    if (value === 2) navigate(`/upload/upload`);
+    if (value === 0) navigate(`/upload/map`);
   }, [value, navigate]);
   return (
     <Box ref={ref}>
