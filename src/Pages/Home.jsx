@@ -1,7 +1,8 @@
+import "../index.css";
 export default function Home() {
   return (
-    <div>
-      {/* <!-- Search Menu --> */}
+    <div className="home-container">
+      {/* Search Menu */}
       <div className="form-container">
         <form action="">
           <div className="input-box">
@@ -18,11 +19,10 @@ export default function Home() {
             <span>Check-Out</span>
             <input type="date" name="" id="" />
           </div>
-          {/* <!-- Filter Add on --> */}
 
+          {/* Filter Add on */}
           <div className="input-box">
             <span>Refine Your Search</span>
-            {/* <!--  <input type="" name="" id="" placeholder="Search Places"> --> */}
             <div className="search-container">
               <div className="filter-dropdown">
                 <select id="filter">
@@ -34,15 +34,18 @@ export default function Home() {
               </div>
             </div>
           </div>
+
           <div className="input-box">
             <span>Time-In</span>
             <input type="time" name="" id="" />
           </div>
+
           <div className="input-box">
             <span>Time-Out</span>
             <input type="time" name="" id="" />
           </div>
-          <button> Submit</button>
+
+          <button>Submit</button>
         </form>
       </div>
     </div>

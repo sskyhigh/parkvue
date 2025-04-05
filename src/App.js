@@ -63,7 +63,7 @@ const App = () => {
         <Route path="/logout" element={<Logout />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/map" element={<ClusterMap />} />
-        <Route path="/space/*" element={<BottomNav />} />
+        <Route path="/upload/*" element={<BottomNav />} />
         <Route path="/booking/:roomId" element={<Booking />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

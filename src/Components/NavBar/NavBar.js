@@ -21,6 +21,7 @@ import { Context } from "../../context/ContextProvider";
 const NavBar = () => {
   const { currentUser } = useContext(Context);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [dropDownOpen, setDropDownOpen] = useState(false);
 
   const toggleDrawer = () => {
     setDrawerOpen(!drawerOpen);
@@ -30,9 +31,14 @@ const NavBar = () => {
     <>
       <AppBar
         position="fixed"
-        sx={{ backgroundColor: "#00acca", color: "#333" }}
+        sx={{ backgroundColor: "#00acca", color: "#333", overflow: "visible" }}
       >
-        <Container maxWidth="lg">
+        <Container
+          maxWidth="lg"
+          sx={{
+            overflow: "visible", // Ensure container allows overflow
+          }}
+        >
           <Toolbar disableGutters>
             {/* Logo and desktop navigation */}
             <Typography
@@ -77,21 +83,68 @@ const NavBar = () => {
                     <Link to="/about">About</Link>
                   </li>
                   <li>
-                    <Link to="/space">Space</Link>
-                  </li>
-                  <li>
-                    {currentUser ? (
-                      <Link to="/logout">{currentUser.fullName}</Link>
-                    ) : (
-                      <Link to="/login">
-                        <Lock
-                          sx={{ fontSize: "1rem", verticalAlign: "middle" }}
-                        />{" "}
-                        Login
-                      </Link>
-                    )}
+                    <Link to="/upload">Upload</Link>
                   </li>
                 </ul>
+                <Box
+                  className="navbar"
+                  sx={{
+                    position: "absolute",
+                    right: 20,
+                    top: 24,
+                  }}
+                >
+                  {currentUser ? (
+                    <>
+                      <Link
+                        to="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setDropDownOpen(!dropDownOpen);
+                        }}
+                        style={{ textDecoration: "none", color: "inherit" }}
+                      >
+                        {currentUser.fullName}
+                      </Link>
+                      {dropDownOpen && (
+                        <Box
+                          sx={{
+                            position: "absolute",
+                            top: "100%",
+                            left: 0,
+                            backgroundColor: "#00bcca",
+                            boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+                            borderRadius: "4px",
+                            zIndex: 50,
+                            padding: "0.5rem 1rem",
+                            minWidth: "150px",
+                          }}
+                        >
+                          <Link
+                            to="/profile"
+                            style={{ display: "block", padding: "0.5rem 0" }}
+                          >
+                            Profile
+                          </Link>
+                          <Link
+                            to="/settings"
+                            style={{ display: "block", padding: "0.5rem 0" }}
+                          >
+                            Settings
+                          </Link>
+                          <Link
+                            to="/logout"
+                            style={{ display: "block", padding: "0.5rem 0" }}
+                          >
+                            Logout
+                          </Link>
+                        </Box>
+                      )}
+                    </>
+                  ) : (
+                    <Link to="/login">Login</Link>
+                  )}
+                </Box>
               </Box>
             </Typography>
 
@@ -144,7 +197,7 @@ const NavBar = () => {
             <ListItem
               button
               component={Link}
-              to={currentUser ? "/logout" : "/login"}
+              to={currentUser ? "#00bcca" : "/login"}
             >
               <ListItemText primary={currentUser.fullName || "Login"} />
             </ListItem>
@@ -157,9 +210,14 @@ const NavBar = () => {
             <ListItem button component={Link} to="/about">
               <ListItemText primary="About" />
             </ListItem>
-            <ListItem button component={Link} to="/space">
-              <ListItemText primary="Space" />
+            <ListItem button component={Link} to="/upload">
+              <ListItemText primary="Upload" />
             </ListItem>
+            {currentUser && (
+              <ListItem button component={Link} to="/logout">
+                <ListItemText primary="Logout" />
+              </ListItem>
+            )}
           </List>
         </Box>
       </Drawer>
