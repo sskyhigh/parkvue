@@ -17,8 +17,7 @@ const PasswordField = ({passwordRef, id='password', label='Password', }) => {
     return (
         //change properties to the user information
         <TextField
-            margin ='normal'
-            variant = 'standard'
+            variant = 'outlined'
             id = {id}
             label ={label}
             type = {showPassword ? 'text' : 'password'}
@@ -26,6 +25,14 @@ const PasswordField = ({passwordRef, id='password', label='Password', }) => {
             inputRef = {passwordRef}
             inputProps = {{minLength: 6}}
             required
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+                "&:hover fieldset": {
+                  borderColor: "primary.light",
+                },
+              }
+            }}
             InputProps = {{
                 //icon to switch between text and password
                 endAdornment: (

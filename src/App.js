@@ -1,14 +1,12 @@
 import "./App.css";
 import React from "react";
-// import SearchMenu from './Components/SearchMenu/SearchMenu';
 import NavBar from "./Components/NavBar/NavBar";
 import HomeBanner from "./Components/HomeBanner/HomeBanner";
-// import MapSelect from './Components/HomeAd/MapSelect';
 import Reserve from "./Components/HomeAd/Reserve";
 import UploadListing from "./Components/HomeAd/UploadListing";
 import { Route, Routes } from "react-router-dom";
+import { useTheme } from "@mui/material";
 
-import Home from "./Pages/Home";
 import { Toaster } from "react-hot-toast";
 
 import FAQ from "./Components/FAQ/FAQ";
@@ -18,21 +16,25 @@ import Login from "./Components/user/Login";
 import Logout from "./Components/user/Logout";
 import Notification from "./Components/Notification";
 import Loading from "./Components/Loading";
-import BottomNav from "./Components/user/BottomNav";
+import AddRoom from "./Components/addRoom/AddRoom";
 import ClusterMap from "./Components/map/ClusterMap";
 import Booking from "./Components/rooms/Booking";
+import Rooms from "./Components/rooms/Rooms";
 import NotFound from "./NotFound/NotFound";
+import UserDashboard from "./Components/user/Dashboard";
+import { FloatingButtonsHolder } from "./Components/chatbot/ChatbotHolder";
 
 const App = () => {
+  const muiTheme = useTheme();
+
   return (
-    <div className="App">
+    <div className="App" style={{ background: muiTheme.palette.background.default }}>
       <>
         <Loading />
         <Notification />
-        <Login />
         <NavBar />
+        <FloatingButtonsHolder />
       </>
-      <NavBar />
       {/*defines the position and duration*/}
       <Toaster position="bottom-center" toastOptions={{ duration: 2000 }} />
 
@@ -48,7 +50,6 @@ const App = () => {
               </div>
               <Reserve />
               <UploadListing />
-              {/*<MapSelect/>*/}
               <FAQ />
             </>
           }
@@ -57,13 +58,14 @@ const App = () => {
         {/*website.com/register => registers accounts*/}
         {/*website.com/login => sends to login*/}
         {/*website.com/home => sends to homepage*/}
-        <Route path="/" element={<Home />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/dashboard" element={<UserDashboard />} />
         <Route path="/logout" element={<Logout />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/map" element={<ClusterMap />} />
-        <Route path="/upload/*" element={<BottomNav />} />
+        <Route path="/upload" element={<AddRoom />} />
+        <Route path="/rooms" element={<Rooms />} />
         <Route path="/booking/:roomId" element={<Booking />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

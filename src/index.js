@@ -3,12 +3,15 @@ import {BrowserRouter} from "react-router-dom";
 import {createRoot} from 'react-dom/client';
 import ContextProvider from './context/ContextProvider';
 import App from "./App";
+import {ThemeProvider} from "./context/themeContext";
 
 // Wrap your app with the provider using createRoot
 createRoot(document.getElementById('root')).render(
     <ContextProvider>
         <BrowserRouter>
-            <App/>
+            <ThemeProvider>
+                <App/>
+            </ThemeProvider>
         </BrowserRouter>
     </ContextProvider>
 );

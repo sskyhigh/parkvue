@@ -1,162 +1,892 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useCallback } from "react";
 import {
   Box,
   Button,
   Container,
-  Stack,
-  Step,
-  StepButton,
-  Stepper,
+  Typography,
+  Paper,
+  useTheme,
+  alpha,
+  Grid,
+  CircularProgress,
+  Divider,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Chip,
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
+  IconButton,
+  Alert,
+  Card,
+  CardMedia,
 } from "@mui/material";
-import ClusterMap from "../map/ClusterMap";
-import AddDetails from "./addDetails/AddDetails";
-import AddImages from "./addImages/AddImages";
+import {
+  Send,
+  CloudUpload,
+  LocationOn,
+  Close,
+  CheckCircle,
+  Save,
+  CarRental,
+  Security,
+  MonetizationOn,
+} from "@mui/icons-material";
+import { useDropzone } from "react-dropzone";
+import ReactMapGL, {
+  GeolocateControl,
+  Marker,
+  NavigationControl,
+} from "react-map-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+import Geocoder from "../map/Geocoder";
 import { useValue, Context } from "../../context/ContextProvider";
-import { Send } from "@mui/icons-material";
 import { db, doc, setDoc } from "../../firebase/config";
-import { v4 as uuidv4 } from "uuid"; // For unique IDs
+import { v4 as uuidv4 } from "uuid";
 import { useNavigate } from "react-router-dom";
+import uploadFileProgress from "../../firebase/uploadFileProgress";
 
 const AddRoom = () => {
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
+  
   const {
-    state: { images, details, location },
+    state: { images, location },
     dispatch,
   } = useValue();
+  
   const { currentUser } = useContext(Context);
-  const [activeStep, setActiveStep] = useState(0);
-  const [steps, setSteps] = useState([
-    { label: "Location", completed: false },
-    { label: "Details", completed: false },
-    { label: "Images", completed: false },
-  ]);
   const [uploading, setUploading] = useState(false);
-  const [showSubmit, setShowSubmit] = useState(false);
+  const [saveForFuture, setSaveForFuture] = useState(false);
+  const [imageUrls, setImageUrls] = useState([]);
+  const [progress, setProgress] = useState({});
   const navigate = useNavigate();
+  const [viewport, setViewport] = useState({
+    longitude: location.lng || -74.006,
+    latitude: location.lat || 40.7128,
+    zoom: 12,
+  });
 
-  const handleNext = () => {
-    setActiveStep((prev) => Math.min(prev + 1, steps.length - 1));
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!currentUser) { 
+      navigate("/login");
+    }
+  }, [currentUser, navigate]);
+
+  // Form fields state
+  const [formData, setFormData] = useState({
+    address: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    title: "",
+    description: "",
+    price: "",
+    vehicleTypes: [],
+    amenities: [],
+    size: "standard",
+    securityFeatures: [],
+    accessHours: "24/7",
+  });
+
+  // Available options
+  const vehicleTypeOptions = [
+    "Car", "SUV", "Truck", "Motorcycle", "Van", "Electric Vehicle", "Compact Car", "Sedan"
+  ];
+
+  const amenityOptions = [
+    "Covered", "24/7 Access", "Security Camera", "Lighted", "Gated", "EV Charging", 
+    "Handicap Accessible", "Near Elevator", "Valet Available", "Monthly Discount"
+  ];
+
+  const securityFeatureOptions = [
+    "Security Cameras", "Lighting", "Gated Entry", "Attendant On-site", "Alarm System", "Security Patrol"
+  ];
+
+  // Handle form field changes
+  const handleChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
-  const handleBack = () => setActiveStep((prev) => Math.max(prev - 1, 0));
-
-  const checkStepCompletion = (index, condition) => {
-    setSteps((prevSteps) => {
-      const updatedSteps = [...prevSteps];
-      updatedSteps[index].completed = condition;
-      return updatedSteps;
-    });
-  };
-
-  useEffect(() => {
-    checkStepCompletion(0, !!location.lat && !!location.lng);
-    checkStepCompletion(
-      1,
-      details.title.length > 4 && details.description.length > 9
-    );
-    checkStepCompletion(2, images.length > 0);
-  }, [location, details, images]);
-
-  useEffect(() => {
-    setShowSubmit(steps.every((step) => step.completed));
-  }, [steps]);
-
-  const handleSubmit = async () => {
-    if (!showSubmit) return;
-
-    try {
-      setUploading(true);
-      dispatch({ type: "START_LOADING" });
-
-      // Define uniqueRoomId for Firestore document
-      const uniqueRoomId = uuidv4();
-
-      // Define the room data
-      const room = {
-        id: uniqueRoomId,
-        available: true,
-        lng: location.lng,
-        lat: location.lat,
-        price: details.price,
-        title: details.title,
-        description: details.description,
-        images: images,
-        createdBy: currentUser.uid,
-        ownerName: currentUser.fullName,
-        createdAt: new Date().toISOString(), // Optional timestamp for sorting
-      };
-
-      // Save the room data in Firestore
-      await setDoc(doc(db, "rooms", uniqueRoomId), room);
-
-      // Dispatch success message if save is successful
-      dispatch({
-        type: "UPDATE_ALERT",
-        payload: {
-          open: true,
-          severity: "success",
-          message: "Room added successfully!",
-        },
-      });
-      navigate("/");
-    } catch (error) {
-      console.error("Error:", error);
-
-      // Dispatch error message if any step fails
+  // Handle image upload
+  const onDrop = useCallback((acceptedFiles) => {
+    if (images.length + acceptedFiles.length > 3) {
       dispatch({
         type: "UPDATE_ALERT",
         payload: {
           open: true,
           severity: "error",
-          message: currentUser.uid ? "Failed to add room" : "You have to be logged in to upload a room",
+          message: "Maximum 3 images allowed",
+        },
+      });
+      return;
+    }
+
+    acceptedFiles.forEach((file) => {
+      const imageName = uuidv4() + "." + file.name.split(".").pop();
+      const imageURL = URL.createObjectURL(file);
+      
+      // Add to images array immediately for preview
+      dispatch({ type: "UPDATE_IMAGES", payload: imageURL });
+      
+      // Upload to Firebase
+      uploadFileProgress(
+        file,
+        `rooms/${currentUser?.uid || 'anonymous'}`,
+        imageName,
+        (uploadProgress) => {
+          setProgress(prev => ({
+            ...prev,
+            [imageName]: uploadProgress
+          }));
+        }
+      ).then((finalUrl) => {
+        // upload completed HERE
+        setImageUrls(prev => [...prev, finalUrl]);
+      }).catch((error) => {
+        console.error("Upload error:", error);
+        dispatch({
+          type: "UPDATE_ALERT",
+          payload: {
+            open: true,
+            severity: "error",
+            message: "Failed to upload image",
+          },
+        });
+      });
+    });
+  }, [images.length, currentUser, dispatch]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: { 'image/*': [] },
+    maxFiles: 3 - images.length,
+  });
+
+  // Remove image
+  const removeImage = (index) => {
+    dispatch({ 
+      type: "DELETE_IMAGE", 
+      payload: index 
+    });
+  };
+
+  // Handle map viewport change
+  const handleViewportChange = (newViewport) => {
+    setViewport(newViewport);
+    dispatch({
+      type: "UPDATE_LOCATION",
+      payload: { 
+        lng: newViewport.longitude, 
+        lat: newViewport.latitude 
+      },
+    });
+  };
+
+  // Handle location marker drag
+  const handleMarkerDrag = (event) => {
+    dispatch({
+      type: "UPDATE_LOCATION",
+      payload: { 
+        lng: event.lngLat.lng, 
+        lat: event.lngLat.lat 
+      },
+    });
+  };
+
+  // Handle geolocation
+  const handleGeolocate = (event) => {
+    dispatch({
+      type: "UPDATE_LOCATION",
+      payload: { 
+        lng: event.coords.longitude, 
+        lat: event.coords.latitude 
+      },
+    });
+    setViewport({
+      ...viewport,
+      longitude: event.coords.longitude,
+      latitude: event.coords.latitude,
+    });
+  };
+
+  // Validate form
+  const validateForm = () => {
+    if (!formData.address || !formData.city || !formData.state || !formData.zipCode) {
+      return "Please complete all address fields";
+    }
+    if (!formData.title || formData.title.length < 5) {
+      return "Title must be at least 5 characters";
+    }
+    if (!formData.description || formData.description.length < 20) {
+      return "Description must be at least 20 characters";
+    }
+    if (!formData.price || parseFloat(formData.price) <= 0) {
+      return "Please enter a valid price";
+    }
+    if (formData.vehicleTypes.length === 0) {
+      return "Please select at least one vehicle type";
+    }
+    if (images.length === 0) {
+      return "Please upload at least one image";
+    }
+    if (!location.lng || !location.lat) {
+      return "Please select a location on the map";
+    }
+    return null;
+  };
+
+  // Handle form submission
+  const handleSubmit = async () => {
+    const validationError = validateForm();
+    if (validationError) {
+      dispatch({
+        type: "UPDATE_ALERT",
+        payload: {
+          open: true,
+          severity: "error",
+          message: validationError,
+        },
+      });
+      return;
+    }
+
+    try {
+      setUploading(true);
+      
+      const uniqueRoomId = uuidv4();
+      const fullAddress = `${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}`;
+
+      const room = {
+        id: uniqueRoomId,
+        available: true,
+        lng: location.lng,
+        lat: location.lat,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zipCode: formData.zipCode,
+        fullAddress,
+        price: parseFloat(formData.price),
+        title: formData.title,
+        description: formData.description,
+        vehicleTypes: formData.vehicleTypes,
+        amenities: formData.amenities,
+        size: formData.size,
+        securityFeatures: formData.securityFeatures,
+        accessHours: formData.accessHours,
+        images: imageUrls,
+        createdBy: currentUser?.uid,
+        ownerName: currentUser?.fullName || "Anonymous",
+        ownerEmail: currentUser?.email,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        rating: 0,
+        reviews: [],
+        bookings: [],
+      };
+
+      await setDoc(doc(db, "rooms", uniqueRoomId), room);
+
+      // Save form data to localStorage if checkbox is checked
+      if (saveForFuture) {
+        const savedData = {
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          zipCode: formData.zipCode,
+          vehicleTypes: formData.vehicleTypes,
+          amenities: formData.amenities,
+          size: formData.size,
+          securityFeatures: formData.securityFeatures,
+          accessHours: formData.accessHours,
+        };
+        localStorage.setItem('parkvue_saved_form', JSON.stringify(savedData));
+      }
+
+      dispatch({
+        type: "UPDATE_ALERT",
+        payload: {
+          open: true,
+          severity: "success",
+          message: "Parking spot listed successfully!",
+        },
+      });
+
+      // Reset form
+      setFormData({
+        address: "",
+        city: "",
+        state: "",
+        zipCode: "",
+        title: "",
+        description: "",
+        price: "",
+        vehicleTypes: [],
+        amenities: [],
+        size: "standard",
+        securityFeatures: [],
+        accessHours: "24/7",
+      });
+
+      navigate("/");
+    } catch (error) {
+      console.error("Submission error:", error);
+      dispatch({
+        type: "UPDATE_ALERT",
+        payload: {
+          open: true,
+          severity: "error",
+          message: currentUser?.uid 
+            ? "Failed to list parking spot. Please try again." 
+            : "Please log in to list a parking spot",
         },
       });
     } finally {
       setUploading(false);
-      dispatch({ type: "END_LOADING" });
     }
   };
 
+  // Load saved form data
+  useEffect(() => {
+    const savedData = localStorage.getItem('parkvue_saved_form');
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+        setFormData(prev => ({
+          ...prev,
+          ...parsedData
+        }));
+      } catch (error) {
+        console.error("Error loading saved form data:", error);
+      }
+    }
+  }, []);
+
   return (
-    <Container sx={{ my: 4 }}>
-      <Stepper alternativeLabel nonLinear activeStep={activeStep}>
-        {steps.map((step, index) => (
-          <Step key={step.label} completed={step.completed}>
-            <StepButton onClick={() => setActiveStep(index)}>
-              {step.label}
-            </StepButton>
-          </Step>
-        ))}
-      </Stepper>
-      <Box sx={{ pb: 7 }}>
-        {
-          {
-            0: <ClusterMap />,
-            1: <AddDetails />,
-            2: <AddImages />,
-          }[activeStep]
-        }
-        <Stack direction="row" sx={{ pt: 2, justifyContent: "space-around" }}>
-          <Button color="inherit" disabled={!activeStep} onClick={handleBack}>
-            Back
-          </Button>
-          <Button disabled={activeStep >= steps.length} onClick={handleNext}>
-            Next
-          </Button>
-        </Stack>
-        {showSubmit && (
-          <Stack sx={{ alignItems: "center", mt: 2 }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        pt: { xs: 4, md: 9 },
+        px: { xs: 2, md: 4 },
+        background: isDarkMode
+          ? `linear-gradient(135deg, ${theme.palette.background.default} 0%, ${alpha(theme.palette.primary.dark, 0.1)} 100%)`
+          : `linear-gradient(135deg, ${theme.palette.background.default} 0%, ${alpha(theme.palette.primary.light, 0.05)} 100%)`,
+      }}
+    >
+      <Container maxWidth="xl">
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 3, md: 4 },
+            borderRadius: 4,
+            background: isDarkMode
+              ? alpha(theme.palette.background.paper, 0.85)
+              : alpha(theme.palette.background.paper, 0.95),
+            backdropFilter: "blur(10px)",
+            border: `1px solid ${alpha(theme.palette.divider, isDarkMode ? 0.3 : 0.1)}`,
+            boxShadow: isDarkMode
+              ? "0 20px 60px rgba(0,0,0,0.4)"
+              : "0 20px 60px rgba(0,0,0,0.1)",
+          }}
+        >
+          {/* Header */}
+          <Box sx={{ textAlign: "center", mb: 4 }}>
+            <Typography
+              variant="h3"
+              component="h1"
+              sx={{
+                fontWeight: 700,
+                mb: 1,
+                background: theme.palette.primary.main,
+                backgroundClip: "text",
+                WebkitBackgroundClip: "text",
+                color: "transparent",
+              }}
+            >
+              List Your Parking Spot
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{
+                color: theme.palette.text.secondary,
+                mb: 3,
+              }}
+            >
+              Share your parking space and start earning today
+            </Typography>
+          </Box>
+
+          <Grid container spacing={4}>
+            {/* Left Column: Form */}
+            <Grid item xs={12} lg={6}>
+              <Box sx={{ mb: 4 }}>
+                <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
+                  <LocationOn sx={{ mr: 1, verticalAlign: "middle" }} />
+                  Address Information
+                </Typography>
+                
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Street Address"
+                      value={formData.address}
+                      onChange={(e) => handleChange("address", e.target.value)}
+                      placeholder="123 Main Street"
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="City"
+                      value={formData.city}
+                      onChange={(e) => handleChange("city", e.target.value)}
+                      placeholder="New York"
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="State"
+                      value={formData.state}
+                      onChange={(e) => handleChange("state", e.target.value)}
+                      placeholder="NY"
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="ZIP Code"
+                      value={formData.zipCode}
+                      onChange={(e) => handleChange("zipCode", e.target.value)}
+                      placeholder="10001"
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Country"
+                      value="United States"
+                    />
+                  </Grid>
+                </Grid>
+              </Box>
+
+              <Divider sx={{ my: 4 }} />
+
+              <Box sx={{ mb: 4 }}>
+                <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
+                  <MonetizationOn sx={{ mr: 1, verticalAlign: "middle" }} />
+                  Parking Details
+                </Typography>
+
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Title"
+                      value={formData.title}
+                      onChange={(e) => handleChange("title", e.target.value)}
+                      placeholder="e.g., Spacious Downtown Parking Spot"
+                      required
+                      helperText="Make it descriptive and attractive"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Description"
+                      value={formData.description}
+                      onChange={(e) => handleChange("description", e.target.value)}
+                      placeholder="Describe your parking spot..."
+                      multiline
+                      rows={4}
+                      required
+                      helperText="Describe features, size, access instructions, etc."
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Daily Rate ($)"
+                      type="number"
+                      value={formData.price}
+                      onChange={(e) => handleChange("price", e.target.value)}
+                      placeholder="15.00"
+                      required
+                      InputProps={{
+                        startAdornment: "$",
+                      }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth>
+                      <InputLabel>Spot Size</InputLabel>
+                      <Select
+                        value={formData.size}
+                        onChange={(e) => handleChange("size", e.target.value)}
+                        label="Spot Size"
+                      >
+                        <MenuItem value="compact">Compact</MenuItem>
+                        <MenuItem value="standard">Standard</MenuItem>
+                        <MenuItem value="large">Large</MenuItem>
+                        <MenuItem value="oversized">Oversized</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                </Grid>
+              </Box>
+
+              <Box sx={{ mb: 4 }}>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                  <CarRental sx={{ mr: 1, verticalAlign: "middle" }} />
+                  Vehicle Types Allowed
+                </Typography>
+                <FormGroup>
+                  <Grid container spacing={1}>
+                    {vehicleTypeOptions.map((type) => (
+                      <Grid item xs={6} sm={4} key={type}>
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={formData.vehicleTypes.includes(type)}
+                              onChange={(e) => {
+                                const newTypes = e.target.checked
+                                  ? [...formData.vehicleTypes, type]
+                                  : formData.vehicleTypes.filter(t => t !== type);
+                                handleChange("vehicleTypes", newTypes);
+                              }}
+                            />
+                          }
+                          label={type}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                </FormGroup>
+              </Box>
+
+              <Box sx={{ mb: 4 }}>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                  <Security sx={{ mr: 1, verticalAlign: "middle" }} />
+                  Amenities & Features
+                </Typography>
+                
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Amenities
+                  </Typography>
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                    {amenityOptions.map((amenity) => (
+                      <Chip
+                        key={amenity}
+                        label={amenity}
+                        clickable
+                        color={formData.amenities.includes(amenity) ? "primary" : "default"}
+                        onClick={() => {
+                          const newAmenities = formData.amenities.includes(amenity)
+                            ? formData.amenities.filter(a => a !== amenity)
+                            : [...formData.amenities, amenity];
+                          handleChange("amenities", newAmenities);
+                        }}
+                        variant={formData.amenities.includes(amenity) ? "filled" : "outlined"}
+                      />
+                    ))}
+                  </Box>
+                </Box>
+
+                <Box>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Security Features
+                  </Typography>
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                    {securityFeatureOptions.map((feature) => (
+                      <Chip
+                        key={feature}
+                        label={feature}
+                        clickable
+                        color={formData.securityFeatures.includes(feature) ? "primary" : "default"}
+                        onClick={() => {
+                          const newFeatures = formData.securityFeatures.includes(feature)
+                            ? formData.securityFeatures.filter(f => f !== feature)
+                            : [...formData.securityFeatures, feature];
+                          handleChange("securityFeatures", newFeatures);
+                        }}
+                        variant={formData.securityFeatures.includes(feature) ? "filled" : "outlined"}
+                      />
+                    ))}
+                  </Box>
+                </Box>
+              </Box>
+            </Grid>
+
+            {/* Right Column: Map & Images */}
+            <Grid item xs={12} lg={6}>
+              {/* Map Section */}
+              <Box sx={{ mb: 4 }}>
+                <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
+                  <LocationOn sx={{ mr: 1, verticalAlign: "middle" }} />
+                  Location on Map
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Drag the marker to adjust the exact location
+                </Typography>
+                
+                <Box
+                  sx={{
+                    height: 300,
+                    borderRadius: 2,
+                    overflow: "hidden",
+                    border: `1px solid ${alpha(theme.palette.divider, 0.3)}`,
+                  }}
+                >
+                  <ReactMapGL
+                    {...viewport}
+                    onMove={(evt) => {
+                      setViewport(evt.viewState);
+                      handleViewportChange(evt.viewState);
+                    }}
+                    mapboxAccessToken={process.env.REACT_APP_MAP_TOKEN}
+                    mapStyle={isDarkMode 
+                      ? "mapbox://styles/mapbox/dark-v11" 
+                      : "mapbox://styles/mapbox/streets-v12"
+                    }
+                    style={{ width: '100%', height: '100%' }}
+                  >
+                    <Marker
+                      latitude={location.lat || viewport.latitude}
+                      longitude={location.lng || viewport.longitude}
+                      draggable
+                      onDragEnd={handleMarkerDrag}
+                    >
+                      <LocationOn
+                        sx={{
+                          color: theme.palette.primary.main,
+                          fontSize: 40,
+                          filter: `drop-shadow(0 2px 4px ${alpha(theme.palette.common.black, 0.3)})`,
+                        }}
+                      />
+                    </Marker>
+                    <NavigationControl position="bottom-right" />
+                    <GeolocateControl
+                      position="top-left"
+                      trackUserLocation
+                      onGeolocate={handleGeolocate}
+                    />
+                    <Geocoder />
+                  </ReactMapGL>
+                </Box>
+              </Box>
+
+              {/* Image Upload Section */}
+              <Box>
+                <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
+                  <CloudUpload sx={{ mr: 1, verticalAlign: "middle" }} />
+                  Upload Photos ({images.length}/3)
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Upload clear photos of your parking spot. Maximum 3 images.
+                </Typography>
+
+                {/* Image Preview Grid */}
+                {images.length > 0 && (
+                  <Grid container spacing={2} sx={{ mb: 2 }}>
+                    {images.map((image, index) => (
+                      <Grid item xs={4} key={index}>
+                        <Card
+                          sx={{
+                            position: "relative",
+                            borderRadius: 2,
+                            overflow: "hidden",
+                          }}
+                        >
+                          <CardMedia
+                            component="img"
+                            height="120"
+                            image={image}
+                            alt={`Parking spot ${index + 1}`}
+                          />
+                          <Box
+                            sx={{
+                              position: "absolute",
+                              top: 8,
+                              right: 8,
+                              bgcolor: alpha(theme.palette.error.main, 0.9),
+                              borderRadius: "50%",
+                            }}
+                          >
+                            <IconButton
+                              size="small"
+                              onClick={() => removeImage(image)}
+                              sx={{ color: "white" }}
+                            >
+                              <Close fontSize="small" />
+                            </IconButton>
+                          </Box>
+                          {progress[image] && progress[image] < 100 && (
+                            <Box
+                              sx={{
+                                position: "absolute",
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                bgcolor: alpha(theme.palette.common.black, 0.7),
+                                color: "white",
+                                textAlign: "center",
+                                py: 0.5,
+                              }}
+                            >
+                              <Typography variant="caption">
+                                Uploading {progress[image]}%
+                              </Typography>
+                            </Box>
+                          )}
+                        </Card>
+                      </Grid>
+                    ))}
+                  </Grid>
+                )}
+
+                {/* Dropzone */}
+                {images.length < 3 && (
+                  <Paper
+                    {...getRootProps()}
+                    elevation={0}
+                    sx={{
+                      p: 4,
+                      border: `2px dashed ${isDragActive ? theme.palette.primary.main : alpha(theme.palette.divider, 0.5)}`,
+                      borderRadius: 2,
+                      bgcolor: isDragActive 
+                        ? alpha(theme.palette.primary.main, 0.05) 
+                        : alpha(theme.palette.background.paper, 0.5),
+                      cursor: "pointer",
+                      textAlign: "center",
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        borderColor: theme.palette.primary.main,
+                        bgcolor: alpha(theme.palette.primary.main, 0.08),
+                      },
+                    }}
+                  >
+                    <input {...getInputProps()} />
+                    <CloudUpload
+                      sx={{
+                        fontSize: 48,
+                        color: theme.palette.primary.main,
+                        mb: 2,
+                      }}
+                    />
+                    {isDragActive ? (
+                      <Typography variant="h6" color="primary">
+                        Drop the files here...
+                      </Typography>
+                    ) : (
+                      <>
+                        <Typography variant="h6" gutterBottom>
+                          Drag & drop images here
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          or click to browse files
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+                          Supports: JPG, PNG up to 5MB each
+                        </Typography>
+                      </>
+                    )}
+                  </Paper>
+                )}
+              </Box>
+
+              {/* Save for Future Checkbox */}
+              <Box sx={{ mt: 4, pt: 3, borderTop: `1px solid ${alpha(theme.palette.divider, 0.2)}` }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={saveForFuture}
+                      onChange={(e) => setSaveForFuture(e.target.checked)}
+                      icon={<Save />}
+                      checkedIcon={<CheckCircle />}
+                    />
+                  }
+                  label={
+                    <>
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        Save these details for future use
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                        We'll remember your preferences for next time
+                      </Typography>
+                    </>
+                  }
+                />
+              </Box>
+            </Grid>
+          </Grid>
+
+          {/* Submit Section */}
+          <Box sx={{ 
+            mt: 6, 
+            pt: 4, 
+            borderTop: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+            textAlign: "center" 
+          }}>
+            <Alert 
+              severity="info" 
+              sx={{ 
+                mb: 3,
+                bgcolor: alpha(theme.palette.info.main, 0.1),
+                border: `1px solid ${alpha(theme.palette.info.main, 0.2)}`,
+              }}
+            >
+              Review all information before publishing. Once published, your spot will be visible to renters.
+            </Alert>
+
             <Button
               variant="contained"
-              endIcon={<Send />}
+              size="large"
+              endIcon={uploading ? <CircularProgress size={20} color="inherit" /> : <Send />}
               onClick={handleSubmit}
               disabled={uploading}
+              sx={{
+                px: 8,
+                py: 2,
+                borderRadius: 3,
+                fontSize: "1.1rem",
+                fontWeight: 600,
+                textTransform: "none",
+                background: theme.customStyles?.neonGradient || `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                boxShadow: isDarkMode
+                  ? `0 8px 25px ${alpha(theme.palette.primary.main, 0.5)}`
+                  : `0 8px 25px ${alpha(theme.palette.primary.main, 0.4)}`,
+                "&:hover": {
+                  transform: "translateY(-3px)",
+                  boxShadow: isDarkMode
+                    ? `0 12px 35px ${alpha(theme.palette.primary.main, 0.7)}`
+                    : `0 12px 35px ${alpha(theme.palette.primary.main, 0.6)}`,
+                  background: `linear-gradient(45deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
+                },
+                transition: "all 0.3s ease",
+                minWidth: 250,
+              }}
             >
-              {uploading ? "Uploading..." : "Submit"}
+              {uploading ? "Publishing..." : "Publish Parking Spot"}
             </Button>
-          </Stack>
-        )}
-      </Box>
-    </Container>
+          </Box>
+        </Paper>
+      </Container>
+    </Box>
   );
 };
 
