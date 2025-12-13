@@ -55,6 +55,7 @@ import {
   ExpandMore,
   ExpandLess,
   RestartAlt,
+  Chat as ChatIcon,
 } from "@mui/icons-material";
 import { Context } from "../../context/ContextProvider";
 
@@ -63,7 +64,7 @@ const ROOMS_PER_PAGE = 12;
 const Rooms = () => {
   const theme = useTheme();
   const navigate = useNavigate();
-  const { currentUser } = useContext(Context);
+  const { currentUser, dispatch } = useContext(Context);
 
   const [rooms, setRooms] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -1022,7 +1023,7 @@ const Rooms = () => {
                     >
                       <Stack direction="row" alignItems="center" spacing={2}>
                         <Avatar sx={{ bgcolor: alpha(theme.palette.secondary.main, 0.1) }}>
-                          <PersonIcon />
+                          {selectedRoom.ownerName ? selectedRoom.ownerName.charAt(0).toUpperCase() : <PersonIcon />}
                         </Avatar>
                         <Box>
                           <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
@@ -1032,6 +1033,31 @@ const Rooms = () => {
                             Listed on {prettyDate(selectedRoom.createdAt)}
                           </Typography>
                         </Box>
+                        {currentUser?.uid !== selectedRoom?.uid && (
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<ChatIcon />}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!currentUser) return navigate('/login');
+                              dispatch({
+                                type: 'UPDATE_CHAT',
+                                payload: {
+                                  open: true,
+                                  user: {
+                                    uid: selectedRoom.uid,
+                                    name: selectedRoom.ownerName,
+                                    photoURL: selectedRoom.photoURL ? selectedRoom.photoURL : "/dev.png"
+                                  }
+                                }
+                              });
+                            }}
+                            sx={{ ml: 'auto', borderRadius: 2 }}
+                          >
+                            Chat
+                          </Button>
+                        )}
                       </Stack>
                     </Paper>
                   </Stack>

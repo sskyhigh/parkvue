@@ -8,6 +8,7 @@ const initialState = {
   loading: false,
   details: { title: "", description: "", price: 0 },
   location: { lng: 0, lat: 0 },
+  chat: { open: false, user: null },
 };
 
 // Create a context for easy access to state and dispatch

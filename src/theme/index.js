@@ -30,7 +30,7 @@ export const darkTheme = createTheme({
       secondary: alpha("#ffffff", 0.75),
     },
     primary: { main: "#009fb4ff" },  // accent color
-    secondary: { main: "#FF6584" }, // secondary accent
+    secondary: { main: "#b62542ff" }, // secondary accent
     info: { main: "#4DD0E1" }, // modern cyan-ish
   },
   customStyles: {

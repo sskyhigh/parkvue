@@ -486,7 +486,7 @@ function About() {
                     }}
                   >
                     Passionate about building solutions that solve real-world problems.
-                    With over 5 years of experience in web development, I created ParkVue
+                    With over 3 years of experience in web development, I created ParkVue
                     to address the growing parking challenges in urban areas and to
                     contribute to smarter, more sustainable cities.
                   </Typography>
@@ -505,108 +505,51 @@ function About() {
                             transform: 'translateY(-2px)',
                           },
                         }}
-                        src="/Shao.jpeg"
-                        alt="Developer"
-                      />
-                    </Box>
-                  </Grid>
-                  
-                  <Grid item xs={12} md={8}>
-                    <Typography
-                      variant="h4"
-                      sx={{
-                        fontWeight: 700,
-                        mb: 2,
-                        color: 'text.primary',
-                      }}
-                    >
-                      Shao Yan
-                    </Typography>
-                    
-                    <Typography
-                      variant="subtitle1"
-                      sx={{
-                        color: 'primary.main',
-                        mb: 3,
-                        fontWeight: 600,
-                      }}
-                    >
-                      Full Stack Developer & Founder
-                    </Typography>
-                    
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        color: 'text.secondary',
-                        mb: 3,
-                        lineHeight: 1.7,
-                      }}
-                    >
-                      Passionate about building solutions that solve real-world problems. 
-                      With over 3 years of experience in web development, I created ParkVue 
-                      to address the growing parking challenges in urban areas and to 
-                      contribute to smarter, more sustainable cities.
-                    </Typography>
-                    
-                    <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
-                      <a href="https://github.com/sskyhigh" target="_blank" rel="noopener noreferrer">
-                        <Avatar
-                          sx={{
-                            bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                            color: 'text.primary',
-                            cursor: 'pointer',
-                            transition: 'all 0.3s ease',
-                            '&:hover': {
-                              bgcolor: 'primary.main',
-                              color: 'white',
-                              transform: 'translateY(-2px)',
-                            },
-                          }}
-                        >
-                          <GitHub />
-                        </Avatar>
-                      </a>
+                      >
+                        <GitHub />
+                      </Avatar>
+                    </a>
 
-                      <a href="https://www.linkedin.com/in/shaoyan8/" target="_blank" rel="noopener noreferrer">
-                        <Avatar
-                          sx={{
-                            bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                            color: 'text.primary',
-                            cursor: 'pointer',
-                            transition: 'all 0.3s ease',
-                            '&:hover': {
-                              bgcolor: '#0077B5',
-                              color: 'white',
-                              transform: 'translateY(-2px)',
-                            },
-                          }}
-                        >
-                          <LinkedIn />
-                        </Avatar>
-                      </a>
+                    <a href="https://www.linkedin.com/in/shaoyan8/" target="_blank" rel="noopener noreferrer">
+                      <Avatar
+                        sx={{
+                          bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                          color: 'text.primary',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            bgcolor: '#0077B5',
+                            color: 'white',
+                            transform: 'translateY(-2px)',
+                          },
+                        }}
+                      >
+                        <LinkedIn />
+                      </Avatar>
+                    </a>
 
-                      <a href="mailto:shaoyan888@gmail.com">
-                        <Avatar
-                          sx={{
-                            bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-                            color: 'text.primary',
-                            cursor: 'pointer',
-                            transition: 'all 0.3s ease',
-                            '&:hover': {
-                              bgcolor: '#EA4335',
-                              color: 'white',
-                              transform: 'translateY(-2px)',
-                            },
-                          }}
-                        >
-                          <Email />
-                        </Avatar>
-                      </a>
-                    </Box>
+                    <a href="mailto:shaoyan888@gmail.com">
+                      <Avatar
+                        sx={{
+                          bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                          color: 'text.primary',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            bgcolor: '#EA4335',
+                            color: 'white',
+                            transform: 'translateY(-2px)',
+                          },
+                        }}
+                      >
+                        <Email />
+                      </Avatar>
+                    </a>
+                  </Box>
 
-                  </Grid>
                 </Grid>
               </Grid>
+
             </CardContent>
           </Card>
         </Box>

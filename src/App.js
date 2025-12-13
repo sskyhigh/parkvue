@@ -23,7 +23,7 @@ import Rooms from "./Components/rooms/Rooms";
 import NotFound from "./NotFound/NotFound";
 import UserDashboard from "./Components/user/Dashboard";
 import UserProfile from "./Components/user/UserProfile";
-import { FloatingButtonsHolder } from "./Components/chatbot/ChatbotHolder";
+import { FloatingButtonsHolder } from "./Components/chatbot/FloatingChatHolder";
 
 const App = () => {
   const muiTheme = useTheme();
