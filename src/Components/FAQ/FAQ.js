@@ -1,9 +1,9 @@
-import { 
-  Box, 
-  Container, 
-  Typography, 
-  Accordion, 
-  AccordionSummary, 
+import {
+  Box,
+  Container,
+  Typography,
+  Accordion,
+  AccordionSummary,
   AccordionDetails,
   useTheme,
   alpha
@@ -62,7 +62,6 @@ function FAQ() {
           ? "linear-gradient(135deg, #1a1a23 0%, #0f0f15 100%)"
           : "linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%)",
         position: "relative",
-        overflow: "hidden",
       }}
     >
       {/* Background decorative elements */}
@@ -110,14 +109,14 @@ function FAQ() {
               mb: 3,
             }}
           >
-            <HelpOutline 
-              sx={{ 
-                fontSize: 40, 
+            <HelpOutline
+              sx={{
+                fontSize: 40,
                 color: "primary.main",
-              }} 
+              }}
             />
           </Box>
-          
+
           <Typography
             variant="overline"
             sx={{
@@ -131,7 +130,7 @@ function FAQ() {
           >
             Frequently Asked Questions
           </Typography>
-          
+
           <Typography
             variant="h2"
             component="h1"
@@ -150,7 +149,7 @@ function FAQ() {
           >
             Let's Answer Your Questions
           </Typography>
-          
+
           <Typography
             variant="h6"
             sx={{
@@ -206,11 +205,11 @@ function FAQ() {
             >
               <AccordionSummary
                 expandIcon={
-                  <ExpandMore 
-                    sx={{ 
+                  <ExpandMore
+                    sx={{
                       color: "primary.main",
                       transition: "transform 0.3s ease",
-                    }} 
+                    }}
                   />
                 }
                 sx={{
@@ -240,7 +239,7 @@ function FAQ() {
                   {item.question}
                 </Typography>
               </AccordionSummary>
-              
+
               <AccordionDetails
                 sx={{
                   padding: { xs: "0 20px 20px", md: "0 24px 24px" },

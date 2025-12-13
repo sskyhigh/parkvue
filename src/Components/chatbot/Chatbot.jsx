@@ -54,7 +54,7 @@ const ChatBot = () => {
 
   // Initialize Gemini
   const apiKey = process.env.REACT_APP_GOOGLE_AI_API_KEY;
-  const ai = new GoogleGenAI({apiKey: apiKey});
+  const ai = new GoogleGenAI({ apiKey: apiKey });
 
   const config = {
     systemInstruction: `You are Parkvue Virtual Assistant, an AI assistant for a parking space rental platform called Parkvue.
@@ -103,13 +103,13 @@ const ChatBot = () => {
   }, [messages, currentUser]);
 
   async function generateResponse(text) {
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    config,
-    contents: text,
-  });
-  return response.text;
-}
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      config,
+      contents: text,
+    });
+    return response.text;
+  }
 
   const scrollToBottom = () => {
     setTimeout(() => {
@@ -121,11 +121,52 @@ const ChatBot = () => {
     scrollToBottom();
   }, [messages, isTyping]);
 
+  // Lock body scroll when chatbot is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      // Focus input when chatbot opens
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  // Close chatbot when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isOpen && chatBoxRef.current && !chatBoxRef.current.contains(event.target)) {
+        // Check if the click is also not on the floating button
+        const floatingButton = document.querySelector('[data-chatbot-button]');
+        if (floatingButton && !floatingButton.contains(event.target)) {
+          setIsOpen(false);
+        }
+      }
+    };
+
+    if (isOpen) {
+      // Add a small delay to prevent immediate closing when opening
+      setTimeout(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+      }, 100);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
   const handleSend = async () => {
     if (!input.trim()) return;
 
     // Check for profanity
-    const containsBadWord = badWords.some(word => 
+    const containsBadWord = badWords.some(word =>
       input.toLowerCase().includes(word.toLowerCase())
     );
 
@@ -140,7 +181,7 @@ const ChatBot = () => {
       setInput("");
       setTimeout(() => {
         inputRef.current?.focus();
-      }, 0);
+      }, 100);
       return;
     }
 
@@ -153,7 +194,7 @@ const ChatBot = () => {
 
     try {
       const reply = await generateResponse(input);
-      
+
       const formatted = marked.parse(reply);
 
       setMessages((prev) => [
@@ -171,7 +212,10 @@ const ChatBot = () => {
       ]);
     } finally {
       setIsTyping(false);
-      inputRef.current?.focus();
+      // Focus input after response with a delay to ensure DOM has updated
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
     }
   };
 
@@ -194,10 +238,11 @@ const ChatBot = () => {
       {/* Floating button - Always visible */}
       <Tooltip title="Parkvue Virtual Assistant" placement="left">
         <IconButton
+          data-chatbot-button
           onClick={() => {
             setIsOpen(!isOpen);
             scrollToBottom();
-        }}
+          }}
           sx={{
             position: "fixed",
             bottom: 50,
@@ -228,7 +273,7 @@ const ChatBot = () => {
             position: "fixed",
             bottom: 100,
             right: 24,
-            width: { xs: 380, sm: 400, md: 450 },
+            width: { xs: 340, sm: 400, md: 450 },
             height: { xs: 500, sm: 620 },
             display: "flex",
             flexDirection: "column",
@@ -280,28 +325,28 @@ const ChatBot = () => {
               </Box>
             </Box>
             <Stack direction="row" spacing={0.5}>
-                <IconButton
-                  onClick={() => setClearHistoryDialog(true)}
-                  sx={{
-                    color: "white",
-                    "&:hover": {
-                      bgcolor: alpha(theme.palette.error.main, 0.2),
-                    },
-                  }}
-                >
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-                <IconButton
-                  onClick={() => setIsOpen(false)}
-                  sx={{
-                    color: "white",
-                    "&:hover": {
-                      bgcolor: alpha(theme.palette.common.white, 0.1),
-                    },
-                  }}
-                >
-                  <CloseIcon />
-                </IconButton>
+              <IconButton
+                onClick={() => setClearHistoryDialog(true)}
+                sx={{
+                  color: "white",
+                  "&:hover": {
+                    bgcolor: alpha(theme.palette.error.main, 0.2),
+                  },
+                }}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+              <IconButton
+                onClick={() => setIsOpen(false)}
+                sx={{
+                  color: "white",
+                  "&:hover": {
+                    bgcolor: alpha(theme.palette.common.white, 0.1),
+                  },
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
             </Stack>
           </Box>
 
@@ -386,8 +431,8 @@ const ChatBot = () => {
                         message.sender === "user"
                           ? theme.palette.primary.main
                           : message.sender === "model"
-                          ? theme.palette.background.paper
-                          : alpha(theme.palette.warning.main, 0.1),
+                            ? theme.palette.background.paper
+                            : alpha(theme.palette.warning.main, 0.1),
                       color:
                         message.sender === "user"
                           ? "white"
@@ -482,24 +527,24 @@ const ChatBot = () => {
                     },
                   }}
                 />
-                  <span>
-                    <IconButton
-                      onClick={handleSend}
-                      disabled={!input.trim() || isTyping}
-                      sx={{
-                        bgcolor: theme.palette.primary.main,
-                        color: "white",
-                        "&:hover": {
-                          bgcolor: theme.palette.primary.dark,
-                        },
-                        "&.Mui-disabled": {
-                          bgcolor: theme.palette.action.disabled,
-                        },
-                      }}
-                    >
-                      <SendIcon />
-                    </IconButton>
-                  </span>
+                <span>
+                  <IconButton
+                    onClick={handleSend}
+                    disabled={!input.trim() || isTyping}
+                    sx={{
+                      bgcolor: theme.palette.primary.main,
+                      color: "white",
+                      "&:hover": {
+                        bgcolor: theme.palette.primary.dark,
+                      },
+                      "&.Mui-disabled": {
+                        bgcolor: theme.palette.action.disabled,
+                      },
+                    }}
+                  >
+                    <SendIcon />
+                  </IconButton>
+                </span>
               </Box>
             </Stack>
           </Box>

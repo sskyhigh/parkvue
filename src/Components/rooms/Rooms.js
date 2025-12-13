@@ -30,6 +30,11 @@ import {
   Tooltip,
   Fade,
   CardActions,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Collapse,
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -46,6 +51,10 @@ import {
   CheckCircle,
   Warning,
   Info,
+  FilterList as FilterIcon,
+  ExpandMore,
+  ExpandLess,
+  RestartAlt,
 } from "@mui/icons-material";
 import { Context } from "../../context/ContextProvider";
 
@@ -63,6 +72,33 @@ const Rooms = () => {
 
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
+
+  // Filter states
+  const [filterStatus, setFilterStatus] = useState("all"); // 'all', 'available', 'reserved'
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterVehicle, setFilterVehicle] = useState("");
+  const [filterAmenity, setFilterAmenity] = useState("");
+  const [filterSecurity, setFilterSecurity] = useState("");
+  const [filterCity, setFilterCity] = useState("");
+
+  // Filter options
+  const vehicleTypeOptions = [
+    "Car", "SUV", "Truck", "Motorcycle", "Van", "Electric Vehicle", "Compact Car", "Sedan"
+  ];
+
+  const amenityOptions = [
+    "Covered", "24/7 Access", "Security Camera", "Lighted", "Gated", "EV Charging",
+    "Handicap Accessible", "Near Elevator", "Valet Available", "Monthly Discount"
+  ];
+
+  const securityFeatureOptions = [
+    "Security Cameras", "Lighting", "Gated Entry", "Attendant On-site", "Alarm System", "Security Patrol"
+  ];
+
+  const uniqueCities = useMemo(() => {
+    const cities = rooms.map(r => r.city).filter(Boolean);
+    return [...new Set(cities)].sort();
+  }, [rooms]);
 
   // Fetch rooms
   useEffect(() => {
@@ -104,11 +140,11 @@ const Rooms = () => {
 
   const handleBookClick = () => {
     if (selectedRoom) {
-      navigate(`/booking/${selectedRoom.id}`, { 
-        state: { 
-          room: selectedRoom, 
-          self: selectedRoom.ownerEmail === currentUser.email ? true : false 
-        } 
+      navigate(`/booking/${selectedRoom.id}`, {
+        state: {
+          room: selectedRoom,
+          self: selectedRoom.ownerEmail === currentUser.email ? true : false
+        }
       });
     }
   };
@@ -139,12 +175,52 @@ const Rooms = () => {
 
   // derived: filtered + ordered (available first) list
   const filteredOrdered = useMemo(() => {
-    const filtered = rooms.filter((r) => matchesQuery(r, query));
+    let filtered = rooms.filter((r) => matchesQuery(r, query));
+
+    // Apply filters
+    if (filterStatus === 'available') {
+      filtered = filtered.filter(r => r.available !== false);
+    } else if (filterStatus === 'reserved') {
+      filtered = filtered.filter(r => r.available === false);
+    }
+
+    if (filterVehicle) {
+      filtered = filtered.filter(r => r.vehicleTypes && r.vehicleTypes.includes(filterVehicle));
+    }
+
+    if (filterAmenity) {
+      filtered = filtered.filter(r => r.amenities && r.amenities.includes(filterAmenity));
+    }
+
+    if (filterSecurity) {
+      filtered = filtered.filter(r => r.securityFeatures && r.securityFeatures.includes(filterSecurity));
+    }
+
+    if (filterCity) {
+      filtered = filtered.filter(r => r.city === filterCity);
+    }
+
     // stable partition: available first, reserved last
     const available = filtered.filter((r) => r.available !== false);
     const reserved = filtered.filter((r) => r.available === false);
     return [...available, ...reserved];
-  }, [rooms, query]);
+  }, [rooms, query, filterStatus, filterVehicle, filterAmenity, filterSecurity, filterCity]);
+
+  // counts for badges (ignoring status filter)
+  const counts = useMemo(() => {
+    let filtered = rooms.filter(r => matchesQuery(r, query));
+
+    if (filterVehicle) filtered = filtered.filter(r => r.vehicleTypes && r.vehicleTypes.includes(filterVehicle));
+    if (filterAmenity) filtered = filtered.filter(r => r.amenities && r.amenities.includes(filterAmenity));
+    if (filterSecurity) filtered = filtered.filter(r => r.securityFeatures && r.securityFeatures.includes(filterSecurity));
+    if (filterCity) filtered = filtered.filter(r => r.city === filterCity);
+
+    return {
+      total: filtered.length,
+      available: filtered.filter(r => r.available !== false).length,
+      reserved: filtered.filter(r => r.available === false).length
+    };
+  }, [rooms, query, filterVehicle, filterAmenity, filterSecurity, filterCity]);
 
   // pagination
   const pageCount = Math.max(1, Math.ceil(filteredOrdered.length / ROOMS_PER_PAGE));
@@ -200,9 +276,9 @@ const Rooms = () => {
     <Box
       sx={{
         minHeight: "100dvh",
+        pt: { xs: 2, md: 3 },
+        pb: { xs: 8, md: 10 },
         background: theme.palette.customStyles?.heroBackground || theme.palette.background.default,
-        pt: { xs: 10, md: 8 },
-        pb: 6,
         ...fadeIn,
         animation: "fadeIn 0.5s ease-out",
       }}
@@ -275,10 +351,23 @@ const Rooms = () => {
             </Box>
             <Stack direction="row" spacing={1} sx={{ mt: { xs: 2, md: 3 } }}>
               <Button
+                variant={showFilters ? "contained" : "outlined"}
+                startIcon={showFilters ? <ExpandLess /> : <FilterIcon />}
+                onClick={() => setShowFilters(!showFilters)}
+                sx={{ whiteSpace: "nowrap", borderRadius: 2 }}
+              >
+                Filters
+              </Button>
+              <Button
                 variant="outlined"
                 startIcon={<SearchOff />}
                 onClick={() => {
                   setQuery("");
+                  setFilterStatus("all");
+                  setFilterVehicle("");
+                  setFilterAmenity("");
+                  setFilterSecurity("");
+                  setFilterCity("");
                   setPage(1);
                 }}
                 sx={{ whiteSpace: "nowrap", borderRadius: 2 }}
@@ -287,26 +376,114 @@ const Rooms = () => {
               </Button>
             </Stack>
           </Stack>
-          
+
+          <Collapse in={showFilters}>
+            <Box sx={{ mt: 3, pt: 3, borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Filter Options</Typography>
+                <Button
+                  size="small"
+                  startIcon={<RestartAlt />}
+                  onClick={() => {
+                    setFilterVehicle("");
+                    setFilterAmenity("");
+                    setFilterSecurity("");
+                    setFilterCity("");
+                  }}
+                >
+                  Reset Filters
+                </Button>
+              </Stack>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Vehicle Type</InputLabel>
+                    <Select
+                      value={filterVehicle}
+                      label="Vehicle Type"
+                      onChange={(e) => setFilterVehicle(e.target.value)}
+                    >
+                      <MenuItem value=""><em>All Types</em></MenuItem>
+                      {vehicleTypeOptions.map((v) => (
+                        <MenuItem key={v} value={v}>{v}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Amenity</InputLabel>
+                    <Select
+                      value={filterAmenity}
+                      label="Amenity"
+                      onChange={(e) => setFilterAmenity(e.target.value)}
+                    >
+                      <MenuItem value=""><em>All Amenities</em></MenuItem>
+                      {amenityOptions.map((a) => (
+                        <MenuItem key={a} value={a}>{a}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Security</InputLabel>
+                    <Select
+                      value={filterSecurity}
+                      label="Security"
+                      onChange={(e) => setFilterSecurity(e.target.value)}
+                    >
+                      <MenuItem value=""><em>All Features</em></MenuItem>
+                      {securityFeatureOptions.map((s) => (
+                        <MenuItem key={s} value={s}>{s}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>City</InputLabel>
+                    <Select
+                      value={filterCity}
+                      label="City"
+                      onChange={(e) => setFilterCity(e.target.value)}
+                    >
+                      <MenuItem value=""><em>All Cities</em></MenuItem>
+                      {uniqueCities.map((c) => (
+                        <MenuItem key={c} value={c}>{c}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </Grid>
+            </Box>
+          </Collapse>
+
           {/* Stats Row */}
           <Stack direction="row" spacing={2} sx={{ mt: 3, flexWrap: 'wrap', gap: 1 }}>
             <Chip
               icon={<CheckCircle sx={{ fontSize: 16 }} />}
-              label={`${filteredOrdered.filter(r => r.available !== false).length} Available`}
+              label={`${counts.available} Available`}
               color="success"
-              variant="outlined"
+              variant={filterStatus === 'available' ? "filled" : "outlined"}
+              onClick={() => setFilterStatus(filterStatus === 'available' ? 'all' : 'available')}
+              sx={{ cursor: 'pointer' }}
             />
             <Chip
               icon={<Warning sx={{ fontSize: 16 }} />}
-              label={`${filteredOrdered.filter(r => r.available === false).length} Reserved`}
+              label={`${counts.reserved} Reserved`}
               color="default"
-              variant="outlined"
+              variant={filterStatus === 'reserved' ? "filled" : "outlined"}
+              onClick={() => setFilterStatus(filterStatus === 'reserved' ? 'all' : 'reserved')}
+              sx={{ cursor: 'pointer' }}
             />
             <Chip
               icon={<Info sx={{ fontSize: 16 }} />}
-              label={`${filteredOrdered.length} Total Spaces`}
+              label={`${counts.total} Total Spaces`}
               color="primary"
-              variant="outlined"
+              variant={filterStatus === 'all' ? "filled" : "outlined"}
+              onClick={() => setFilterStatus('all')}
+              sx={{ cursor: 'pointer' }}
             />
           </Stack>
         </Paper>
@@ -461,6 +638,23 @@ const Rooms = () => {
                                   {room.city ? `${room.city}, ${room.state || ""}` : room.fullAddress || "Location not specified"}
                                 </Typography>
                               </Stack>
+
+                              {/* Availability */}
+                              {room.availableFrom && room.availableTo && (
+                                <Stack direction="row" alignItems="flex-start" spacing={1}>
+                                  <CalendarTodayIcon sx={{ fontSize: 18, color: "success.main", mt: 0.25 }} />
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                    sx={{
+                                      flex: 1,
+                                      lineHeight: 1.3,
+                                    }}
+                                  >
+                                    Available: {prettyDate(room.availableFrom)} - {prettyDate(room.availableTo)}
+                                  </Typography>
+                                </Stack>
+                              )}
 
                               {/* Tags */}
                               <Stack direction="row" spacing={0.5} sx={{ flexWrap: "wrap", gap: 0.5 }}>
@@ -766,6 +960,32 @@ const Rooms = () => {
                             {(selectedRoom.vehicleTypes || []).join(", ") || "All vehicles"}
                           </Typography>
                         </Stack>
+
+                        {selectedRoom.availableFrom && selectedRoom.availableTo && (
+                          <Stack direction="row" spacing={2}>
+                            <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1 }}>
+                              <CalendarTodayIcon color="primary" sx={{ fontSize: 20 }} />
+                              <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500 }}>
+                                Availability:
+                              </Typography>
+                            </Stack>
+                            <Typography variant="body2" color="text.secondary" sx={{ flex: 2 }}>
+                              {new Date(selectedRoom.availableFrom).toLocaleString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: 'numeric',
+                                minute: '2-digit'
+                              })} - {new Date(selectedRoom.availableTo).toLocaleString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: 'numeric',
+                                minute: '2-digit'
+                              })}
+                            </Typography>
+                          </Stack>
+                        )}
                       </Stack>
                     </Box>
 

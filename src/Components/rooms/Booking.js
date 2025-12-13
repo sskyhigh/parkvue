@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { db } from "../../firebase/config";
 import { useValue, Context } from "../../context/ContextProvider";
@@ -112,6 +112,39 @@ const Booking = () => {
   const [processing, setProcessing] = useState(false);
   const [errors, setErrors] = useState({});
 
+  // booking duration state
+  const [bookingStart, setBookingStart] = useState("");
+  const [bookingEnd, setBookingEnd] = useState("");
+  const [duration, setDuration] = useState(0);
+  const [totalPrice, setTotalPrice] = useState(0);
+
+  // Calculate duration and total price when booking dates change
+  useEffect(() => {
+    if (bookingStart && bookingEnd && room) {
+      const start = new Date(bookingStart);
+      const end = new Date(bookingEnd);
+
+      if (end > start) {
+        const durationMs = end - start;
+        const durationMinutes = durationMs / (1000 * 60);
+        const durationHours = Math.ceil(durationMinutes / 60); // Round up to nearest hour
+
+        setDuration(durationHours);
+
+        // Calculate total price (daily rate / 24 for hourly rate)
+        const hourlyRate = (room.price || 0) / 24;
+        const calculatedTotal = durationHours * hourlyRate;
+        setTotalPrice(calculatedTotal);
+      } else {
+        setDuration(0);
+        setTotalPrice(0);
+      }
+    } else {
+      setDuration(0);
+      setTotalPrice(0);
+    }
+  }, [bookingStart, bookingEnd, room]);
+
   if (!room) return <NotFound information={"parking space"} />;
 
   // validate locally
@@ -123,6 +156,30 @@ const Booking = () => {
     else if (!luhnCheck(digits)) err.cardNumber = "Invalid card number (failed checksum)";
     if (!validExpiry(cardExpiry)) err.cardExpiry = "Invalid or expired expiry date (MM/YY)";
     if (!/^\d{3,4}$/.test(cardCvc)) err.cardCvc = "CVC must be 3 or 4 digits";
+
+    // Validate booking dates
+    if (!bookingStart) err.bookingStart = "Booking start date and time required";
+    if (!bookingEnd) err.bookingEnd = "Booking end date and time required";
+
+    if (bookingStart && bookingEnd) {
+      const start = new Date(bookingStart);
+      const end = new Date(bookingEnd);
+
+      if (end <= start) {
+        err.bookingEnd = "End date must be after start date";
+      }
+
+      // Check if booking is within availability
+      if (room.availableFrom && room.availableTo) {
+        const availStart = new Date(room.availableFrom);
+        const availEnd = new Date(room.availableTo);
+
+        if (start < availStart || end > availEnd) {
+          err.bookingStart = "Booking must be within availability period";
+        }
+      }
+    }
+
     setErrors(err);
     return Object.keys(err).length === 0;
   };
@@ -152,6 +209,10 @@ const Booking = () => {
       const reservationPayload = {
         reserverId: currentUser.uid,
         roomId: room.id,
+        bookingStart: bookingStart,
+        bookingEnd: bookingEnd,
+        duration: duration,
+        totalPrice: totalPrice,
         paymentMethod: "card",
         paymentDetails: {
           cardBrand,
@@ -174,26 +235,25 @@ const Booking = () => {
 
       // 3) update total earnings for owner (optional, can be computed on the fly instead)
       const usersRef = collection(db, "users");
-        const q = query(usersRef, where("uid", "==", room.createdBy));
-        const querySnapshot = await getDocs(q);
-        
-        if (!querySnapshot.empty) {
-          // Assuming there's only one document per user uid
-          const userDoc = querySnapshot.docs[0];
-          const userRef = doc(db, "users", userDoc.id);
-          const userData = userDoc.data();
-          
-          // Calculate new total earnings
-          const currentEarnings = userData.totalEarnings || 0;
-          const roomPrice = room.price || 0;
-          const newTotalEarnings = currentEarnings + parseFloat(roomPrice);
-          
-          // Update the user's document
-          await updateDoc(userRef, {
-            totalEarnings: newTotalEarnings,
-            lastEarningUpdate: serverTimestamp(),
-          })
-        };
+      const q = query(usersRef, where("uid", "==", room.createdBy));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        // Assuming there's only one document per user uid
+        const userDoc = querySnapshot.docs[0];
+        const userRef = doc(db, "users", userDoc.id);
+        const userData = userDoc.data();
+
+        // Calculate new total earnings
+        const currentEarnings = userData.totalEarnings || 0;
+        const newTotalEarnings = currentEarnings + parseFloat(totalPrice);
+
+        // Update the user's document
+        await updateDoc(userRef, {
+          totalEarnings: newTotalEarnings,
+          lastEarningUpdate: serverTimestamp(),
+        })
+      };
 
       dispatch({
         type: "UPDATE_ALERT",
@@ -260,10 +320,10 @@ const Booking = () => {
   return (
     <Box
       sx={{
-        minHeight: "100dvh",
+        minHeight: "100vh",
         background: theme.palette.customStyles?.heroBackground || theme.palette.background.default,
-        pt: { xs: 10, md: 8 },
-        pb: 6,
+        pt: { xs: 2, md: 3 },
+        pb: { xs: 8, md: 10 },
         ...fadeIn,
         animation: "fadeIn 0.6s ease-out",
       }}
@@ -430,8 +490,7 @@ const Booking = () => {
                         <ListItemText
                           primary={
                             room.fullAddress ||
-                            `${room.address || ""} ${room.city || ""}, ${room.state || ""} ${
-                              room.zipCode || ""
+                            `${room.address || ""} ${room.city || ""}, ${room.state || ""} ${room.zipCode || ""
                             }`
                           }
                           primaryTypographyProps={{ variant: "body2" }}
@@ -451,11 +510,10 @@ const Booking = () => {
                           <Security color="primary" />
                         </ListItemIcon>
                         <ListItemText
-                          primary={`Security: ${
-                            (room.securityFeatures || []).length
-                              ? (room.securityFeatures || []).join(", ")
-                              : "Standard"
-                          }`}
+                          primary={`Security: ${(room.securityFeatures || []).length
+                            ? (room.securityFeatures || []).join(", ")
+                            : "Standard"
+                            }`}
                           primaryTypographyProps={{ variant: "body2" }}
                         />
                       </ListItem>
@@ -464,9 +522,8 @@ const Booking = () => {
                           <DirectionsCar color="primary" />
                         </ListItemIcon>
                         <ListItemText
-                          primary={`Vehicle types: ${
-                            (room.vehicleTypes || []).join(", ") || "All types"
-                          }`}
+                          primary={`Vehicle types: ${(room.vehicleTypes || []).join(", ") || "All types"
+                            }`}
                           primaryTypographyProps={{ variant: "body2" }}
                         />
                       </ListItem>
@@ -479,6 +536,29 @@ const Booking = () => {
                           primaryTypographyProps={{ variant: "body2" }}
                         />
                       </ListItem>
+                      {room.availableFrom && room.availableTo && (
+                        <ListItem sx={{ px: 0, py: 0.5 }}>
+                          <ListItemIcon sx={{ minWidth: 36 }}>
+                            <CalendarToday color="primary" />
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={`Available: ${new Date(room.availableFrom).toLocaleString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                              hour: 'numeric',
+                              minute: '2-digit'
+                            })} - ${new Date(room.availableTo).toLocaleString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                              hour: 'numeric',
+                              minute: '2-digit'
+                            })}`}
+                            primaryTypographyProps={{ variant: "body2" }}
+                          />
+                        </ListItem>
+                      )}
                     </List>
                   </Box>
 
@@ -571,6 +651,65 @@ const Booking = () => {
 
                 <form onSubmit={handleSubmit}>
                   <Stack spacing={3}>
+                    {/* Booking Duration Section */}
+                    <Box sx={{ p: 2, bgcolor: alpha(theme.palette.info.main, 0.05), borderRadius: 2 }}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, color: theme.palette.text.primary }}>
+                        Booking Duration
+                      </Typography>
+
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+                            Start Date & Time
+                          </Typography>
+                          <TextField
+                            type="datetime-local"
+                            value={bookingStart}
+                            onChange={(e) => setBookingStart(e.target.value)}
+                            error={!!errors.bookingStart}
+                            helperText={errors.bookingStart}
+                            fullWidth
+                            size="small"
+                            disabled={!room.available || processing}
+                            InputLabelProps={{
+                              shrink: true,
+                            }}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+                            End Date & Time
+                          </Typography>
+                          <TextField
+                            type="datetime-local"
+                            value={bookingEnd}
+                            onChange={(e) => setBookingEnd(e.target.value)}
+                            error={!!errors.bookingEnd}
+                            helperText={errors.bookingEnd}
+                            fullWidth
+                            size="small"
+                            disabled={!room.available || processing}
+                            InputLabelProps={{
+                              shrink: true,
+                            }}
+                          />
+                        </Grid>
+                      </Grid>
+
+                      {duration > 0 && (
+                        <Box sx={{ mt: 2, p: 1.5, bgcolor: alpha(theme.palette.success.main, 0.1), borderRadius: 1 }}>
+                          <Typography variant="body2" sx={{ fontWeight: 600, color: theme.palette.text.primary }}>
+                            Duration: {duration} hour{duration !== 1 ? 's' : ''}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Hourly Rate: ${(room.price / 24).toFixed(2)}/hr (Daily: ${room.price})
+                          </Typography>
+                        </Box>
+                      )}
+                    </Box>
+
+                    <Divider />
+
                     {/* Card Holder Name */}
                     <Box>
                       <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
@@ -672,12 +811,27 @@ const Booking = () => {
                         sx={{ mb: 1 }}
                       >
                         <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                          Room Price
+                          Hourly Rate
                         </Typography>
                         <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                          ${priceNice}
+                          ${(room.price / 24).toFixed(2)}/hr
                         </Typography>
                       </Stack>
+                      {duration > 0 && (
+                        <Stack
+                          direction="row"
+                          justifyContent="space-between"
+                          alignItems="center"
+                          sx={{ mb: 1 }}
+                        >
+                          <Typography variant="body2" color="text.secondary">
+                            Duration ({duration} hour{duration !== 1 ? 's' : ''})
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            ${totalPrice.toFixed(2)}
+                          </Typography>
+                        </Stack>
+                      )}
                       <Stack
                         direction="row"
                         justifyContent="space-between"
@@ -708,7 +862,7 @@ const Booking = () => {
                             color: theme.palette.primary.main,
                           }}
                         >
-                          ${priceNice}
+                          ${totalPrice > 0 ? totalPrice.toFixed(2) : priceNice}
                         </Typography>
                       </Stack>
                     </Paper>
@@ -745,7 +899,7 @@ const Booking = () => {
                       {processing ? (
                         <CircularProgress size={24} color="inherit" />
                       ) : (
-                        `Pay $${priceNice} & Confirm Booking`
+                        `Pay $${totalPrice > 0 ? totalPrice.toFixed(2) : priceNice} & Confirm Booking`
                       )}
                     </Button>
 

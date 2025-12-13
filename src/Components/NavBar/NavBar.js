@@ -33,6 +33,7 @@ import {
   Close,
   ExpandLess,
   GarageRounded as LocalParking,
+  Badge,
 } from "@mui/icons-material";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
@@ -94,7 +95,7 @@ const NavBar = () => {
   return (
     <>
       <AppBar
-        position="fixed"
+        position="static"
         sx={{
           background: appBarBg,
           backdropFilter: "blur(32px)",
@@ -423,7 +424,7 @@ const NavBar = () => {
                       color: muiTheme.palette.text.primary,
                       fontWeight: 500,
                       borderRadius: 2,
-                      px: 3,
+                      px: "auto",
                       py: 1,
                       background: buttonHoverBg,
                       border: `1px solid ${menuBorder}`,
@@ -459,6 +460,7 @@ const NavBar = () => {
                   >
                     {[
                       { path: "/dashboard", label: "Dashboard", icon: <Person /> },
+                      { path: "/profile", label: "Profile", icon: <Badge /> },
                       { path: "/logout", label: "Logout", icon: <Logout /> },
                     ].map((item, index) => (
                       <Button
@@ -626,7 +628,7 @@ const NavBar = () => {
               </ListItemIcon>
               <ListItemText primary="Rooms" primaryTypographyProps={{ fontWeight: 500 }} />
             </ListItemButton>
-            
+
             <ListItemButton
               component={Link}
               to="/about"
@@ -781,9 +783,6 @@ const NavBar = () => {
           </Box>
         </Box>
       </Drawer>
-
-      {/* Spacer for fixed AppBar */}
-      <Toolbar />
     </>
   );
 };

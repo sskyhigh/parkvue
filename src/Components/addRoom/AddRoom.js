@@ -52,12 +52,12 @@ import uploadFileProgress from "../../firebase/uploadFileProgress";
 const AddRoom = () => {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
-  
+
   const {
     state: { images, location },
     dispatch,
   } = useValue();
-  
+
   const { currentUser } = useContext(Context);
   const [uploading, setUploading] = useState(false);
   const [saveForFuture, setSaveForFuture] = useState(false);
@@ -72,7 +72,7 @@ const AddRoom = () => {
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (!currentUser) { 
+    if (!currentUser) {
       navigate("/login");
     }
   }, [currentUser, navigate]);
@@ -91,6 +91,8 @@ const AddRoom = () => {
     size: "standard",
     securityFeatures: [],
     accessHours: "24/7",
+    availableFrom: "",
+    availableTo: "",
   });
 
   // Available options
@@ -99,7 +101,7 @@ const AddRoom = () => {
   ];
 
   const amenityOptions = [
-    "Covered", "24/7 Access", "Security Camera", "Lighted", "Gated", "EV Charging", 
+    "Covered", "24/7 Access", "Security Camera", "Lighted", "Gated", "EV Charging",
     "Handicap Accessible", "Near Elevator", "Valet Available", "Monthly Discount"
   ];
 
@@ -132,10 +134,10 @@ const AddRoom = () => {
     acceptedFiles.forEach((file) => {
       const imageName = uuidv4() + "." + file.name.split(".").pop();
       const imageURL = URL.createObjectURL(file);
-      
+
       // Add to images array immediately for preview
       dispatch({ type: "UPDATE_IMAGES", payload: imageURL });
-      
+
       // Upload to Firebase
       uploadFileProgress(
         file,
@@ -172,9 +174,9 @@ const AddRoom = () => {
 
   // Remove image
   const removeImage = (index) => {
-    dispatch({ 
-      type: "DELETE_IMAGE", 
-      payload: index 
+    dispatch({
+      type: "DELETE_IMAGE",
+      payload: index
     });
   };
 
@@ -183,9 +185,9 @@ const AddRoom = () => {
     setViewport(newViewport);
     dispatch({
       type: "UPDATE_LOCATION",
-      payload: { 
-        lng: newViewport.longitude, 
-        lat: newViewport.latitude 
+      payload: {
+        lng: newViewport.longitude,
+        lat: newViewport.latitude
       },
     });
   };
@@ -194,9 +196,9 @@ const AddRoom = () => {
   const handleMarkerDrag = (event) => {
     dispatch({
       type: "UPDATE_LOCATION",
-      payload: { 
-        lng: event.lngLat.lng, 
-        lat: event.lngLat.lat 
+      payload: {
+        lng: event.lngLat.lng,
+        lat: event.lngLat.lat
       },
     });
   };
@@ -205,9 +207,9 @@ const AddRoom = () => {
   const handleGeolocate = (event) => {
     dispatch({
       type: "UPDATE_LOCATION",
-      payload: { 
-        lng: event.coords.longitude, 
-        lat: event.coords.latitude 
+      payload: {
+        lng: event.coords.longitude,
+        lat: event.coords.latitude
       },
     });
     setViewport({
@@ -240,6 +242,17 @@ const AddRoom = () => {
     if (!location.lng || !location.lat) {
       return "Please select a location on the map";
     }
+    if (!formData.availableFrom) {
+      return "Please select availability start date and time";
+    }
+    if (!formData.availableTo) {
+      return "Please select availability end date and time";
+    }
+    const startDate = new Date(formData.availableFrom);
+    const endDate = new Date(formData.availableTo);
+    if (endDate <= startDate) {
+      return "Availability end date must be after start date";
+    }
     return null;
   };
 
@@ -260,7 +273,7 @@ const AddRoom = () => {
 
     try {
       setUploading(true);
-      
+
       const uniqueRoomId = uuidv4();
       const fullAddress = `${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}`;
 
@@ -282,6 +295,8 @@ const AddRoom = () => {
         size: formData.size,
         securityFeatures: formData.securityFeatures,
         accessHours: formData.accessHours,
+        availableFrom: formData.availableFrom,
+        availableTo: formData.availableTo,
         images: imageUrls,
         createdBy: currentUser?.uid,
         ownerName: currentUser?.fullName || "Anonymous",
@@ -334,6 +349,8 @@ const AddRoom = () => {
         size: "standard",
         securityFeatures: [],
         accessHours: "24/7",
+        availableFrom: "",
+        availableTo: "",
       });
 
       navigate("/");
@@ -344,8 +361,8 @@ const AddRoom = () => {
         payload: {
           open: true,
           severity: "error",
-          message: currentUser?.uid 
-            ? "Failed to list parking spot. Please try again." 
+          message: currentUser?.uid
+            ? "Failed to list parking spot. Please try again."
             : "Please log in to list a parking spot",
         },
       });
@@ -374,11 +391,10 @@ const AddRoom = () => {
     <Box
       sx={{
         minHeight: "100vh",
-        pt: { xs: 4, md: 9 },
+        pt: { xs: 2, md: 3 },
+        pb: { xs: 8, md: 10 },
         px: { xs: 2, md: 4 },
-        background: isDarkMode
-          ? `linear-gradient(135deg, ${theme.palette.background.default} 0%, ${alpha(theme.palette.primary.dark, 0.1)} 100%)`
-          : `linear-gradient(135deg, ${theme.palette.background.default} 0%, ${alpha(theme.palette.primary.light, 0.05)} 100%)`,
+        background: theme.palette.customStyles?.heroBackground || theme.palette.background.default,
       }}
     >
       <Container maxWidth="xl">
@@ -432,7 +448,7 @@ const AddRoom = () => {
                   <LocationOn sx={{ mr: 1, verticalAlign: "middle" }} />
                   Address Information
                 </Typography>
-                
+
                 <Grid container spacing={2}>
                   <Grid item xs={12}>
                     <TextField
@@ -546,6 +562,34 @@ const AddRoom = () => {
                       </Select>
                     </FormControl>
                   </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Available From"
+                      type="datetime-local"
+                      value={formData.availableFrom}
+                      onChange={(e) => handleChange("availableFrom", e.target.value)}
+                      required
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      helperText="When will the parking spot be available?"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Available Until"
+                      type="datetime-local"
+                      value={formData.availableTo}
+                      onChange={(e) => handleChange("availableTo", e.target.value)}
+                      required
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      helperText="When will the availability end?"
+                    />
+                  </Grid>
                 </Grid>
               </Box>
 
@@ -583,7 +627,7 @@ const AddRoom = () => {
                   <Security sx={{ mr: 1, verticalAlign: "middle" }} />
                   Amenities & Features
                 </Typography>
-                
+
                 <Box sx={{ mb: 3 }}>
                   <Typography variant="subtitle2" gutterBottom>
                     Amenities
@@ -643,7 +687,7 @@ const AddRoom = () => {
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                   Drag the marker to adjust the exact location
                 </Typography>
-                
+
                 <Box
                   sx={{
                     height: 300,
@@ -659,8 +703,8 @@ const AddRoom = () => {
                       handleViewportChange(evt.viewState);
                     }}
                     mapboxAccessToken={process.env.REACT_APP_MAP_TOKEN}
-                    mapStyle={isDarkMode 
-                      ? "mapbox://styles/mapbox/dark-v11" 
+                    mapStyle={isDarkMode
+                      ? "mapbox://styles/mapbox/dark-v11"
                       : "mapbox://styles/mapbox/streets-v12"
                     }
                     style={{ width: '100%', height: '100%' }}
@@ -768,8 +812,8 @@ const AddRoom = () => {
                       p: 4,
                       border: `2px dashed ${isDragActive ? theme.palette.primary.main : alpha(theme.palette.divider, 0.5)}`,
                       borderRadius: 2,
-                      bgcolor: isDragActive 
-                        ? alpha(theme.palette.primary.main, 0.05) 
+                      bgcolor: isDragActive
+                        ? alpha(theme.palette.primary.main, 0.05)
                         : alpha(theme.palette.background.paper, 0.5),
                       cursor: "pointer",
                       textAlign: "center",
@@ -836,15 +880,15 @@ const AddRoom = () => {
           </Grid>
 
           {/* Submit Section */}
-          <Box sx={{ 
-            mt: 6, 
-            pt: 4, 
+          <Box sx={{
+            mt: 6,
+            pt: 4,
             borderTop: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
-            textAlign: "center" 
+            textAlign: "center"
           }}>
-            <Alert 
-              severity="info" 
-              sx={{ 
+            <Alert
+              severity="info"
+              sx={{
                 mb: 3,
                 bgcolor: alpha(theme.palette.info.main, 0.1),
                 border: `1px solid ${alpha(theme.palette.info.main, 0.2)}`,
