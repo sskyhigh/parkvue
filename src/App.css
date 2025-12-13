@@ -16,32 +16,35 @@
     --main-color: #2B74A8;
     --second-color: #3FA9F5;
     --text-color: #444;
-    --gradient: linear-gradient(#2B74A8, #3FA9F5);
+    --gradient: linear-gradient(#2B74A8, #3FA9F5); 
 }
 
-/* Custom Scroll Bar */
+/* Modern neutral scrollbar for both light & dark themes */
 html::-webkit-scrollbar {
-    width: 0.5rem;
+  width: 0.5rem;
+  background: transparent; /* track is invisible */
 }
 
 html::-webkit-scrollbar-track {
-    background: transparent;
+  background: transparent;
 }
 
 html::-webkit-scrollbar-thumb {
-    background: var(--main-color);
-    border-radius: 5rem;
+  background: rgba(100, 100, 100, 0.863); /* neutral gray */
+  border-radius: 5rem;
+  transition: background 0.3s ease;
 }
 
-section {
-    padding: 50px 100px;
+html::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 100, 100, 0.815); /* subtle fade on hover */
 }
 
-/* -- <span> Color selected for text </span> -- */
-.text span {
-    color: #3FA9F5;
+.mapboxgl-popup-content {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
 }
-
-.text p {
-    margin: 0.5rem 0 1rem;
+.mapboxgl-popup-tip {
+  display: none !important;
 }

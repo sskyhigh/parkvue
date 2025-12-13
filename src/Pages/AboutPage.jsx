@@ -1,195 +1,564 @@
-import {
-  Box,
-  Typography,
-  Container,
-  Divider,
-  Grid,
+import { 
+  Box, 
+  Container, 
+  Typography, 
+  Grid, 
+  Card, 
+  CardContent,
   Avatar,
-} from "@mui/material";
-import { keyframes } from "@emotion/react";
+  useTheme,
+  keyframes 
+} from '@mui/material';
+import {
+  LocationOn,
+  Schedule,
+  MonetizationOn,
+  Security,
+  People,
+  LocalParking,
+  EmojiEvents,
+  TrendingUp,
+  CheckCircle,
+  GitHub,
+  LinkedIn,
+  Email
+} from '@mui/icons-material';
 
-// Keyframes for animations
-const fadeIn = keyframes`
-  from { opacity: 0.7; transform: translateY(-25px); }
-  to { opacity: 1; transform: translateY(0px); }
+// Define animations
+const fadeInUp = keyframes`
+  from { 
+    opacity: 0; 
+    transform: translateY(20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
 `;
 
-const drawDivider = keyframes`
-  from { width: 0; }
-  to { width: 100%; }
-`;
+function About() {
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
 
-export default function AboutPage() {
+  // Features with icons
+  const features = [
+    {
+      icon: <LocationOn sx={{ fontSize: 40 }} />,
+      title: "Find Spots Instantly",
+      description: "Real-time availability and precise location mapping"
+    },
+    {
+      icon: <Schedule sx={{ fontSize: 40 }} />,
+      title: "24/7 Booking",
+      description: "Book parking anytime, anywhere with instant confirmation"
+    },
+    {
+      icon: <MonetizationOn sx={{ fontSize: 40 }} />,
+      title: "Fair Pricing",
+      description: "Transparent pricing with no hidden fees"
+    },
+    {
+      icon: <Security sx={{ fontSize: 40 }} />,
+      title: "Secure & Verified",
+      description: "All spots and users are verified for your safety"
+    }
+  ];
+
+  // Stats data
+  const stats = [
+    { 
+      value: "10,000+", 
+      label: "Happy Users", 
+      icon: <People />,
+      description: "Active community members"
+    },
+    { 
+      value: "5,000+", 
+      label: "Parking Spots", 
+      icon: <LocalParking />,
+      description: "Verified parking locations"
+    },
+    { 
+      value: "5", 
+      label: "Cities", 
+      icon: <EmojiEvents />,
+      description: "Across major metropolitan areas"
+    },
+    { 
+      value: "98%", 
+      label: "Satisfaction", 
+      icon: <TrendingUp />,
+      description: "User satisfaction rate"
+    }
+  ];
+
+  // Mission highlights
+  const missionPoints = [
+    "Reduce urban congestion",
+    "Optimize parking space utilization",
+    "Provide affordable parking solutions",
+    "Create sustainable urban mobility",
+    "Empower local communities",
+    "Enhance city living experience"
+  ];
+
   return (
-    <Box
-      sx={{
-        minHeight: "87vh",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        background: "linear-gradient(135deg, #f0f4f8, #a9cce3)", // Subtle gradient
-      }}
-    >
-      <Container
-        maxWidth="2xl"
+    <Box sx={{ overflow: 'hidden', minHeight: '100vh' }}>
+      {/* Hero Section */}
+      <Box
         sx={{
-          background: "#a9cce3",
-          borderRadius: 2,
-          boxShadow: "0 8px 20px rgba(0,0,0,0.2)",
-          overflow: "hidden",
-          px: 2,
+          py: { xs: 6, md: 10 },
+          background: isDarkMode
+            ? 'linear-gradient(135deg, #0f0f15 0%, #1a1a23 50%, #0f0f15 100%)'
+            : 'linear-gradient(135deg, #f8f8fb 0%, #e3e3f0 50%, #f8f8fb 100%)',
+          position: 'relative',
+          animation: `${fadeInUp} 0.8s ease-out`,
         }}
       >
-        <Grid container>
-          {/* Developer Section */}
-          <Grid
-            item
-            xs={12}
-            md={4}
-            sx={{
-              background: "linear-gradient(135deg, #00bcd4, #0288d1)", // Gradient for dev section
-              color: "white",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "center",
-              py: { xs: 4, md: 31 },
-            }}
-          >
-            <Typography variant="h5" sx={{ mb: 2 }}>
-              About the Developer
-            </Typography>
-            <Avatar
-              src="https://via.placeholder.com/150" // Replace with actual image if you want
-              alt="Shao Yan"
-              sx={{
-                width: 120,
-                height: 120,
-                border: "3px solid white",
-                mb: 2,
-              }}
-            />
-            <Typography variant="h6" sx={{ mb: 1 }}>
-              Shao Yan
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 0.5 }}>
-              Brooklyn, NYC
-            </Typography>
-            <Typography variant="body2" sx={{ mb: 2 }}>
-              Email:{" "}
-              <a
-                href="mailto:shaoyan888@gmail.com"
-                style={{ color: "white", textDecoration: "none" }}
-              >
-                shaoyan888@gmail.com
-              </a>
-            </Typography>
-            <Divider
-              sx={{
-                width: "80%",
-                my: 2,
-                backgroundColor: "rgba(255, 255, 255, 0.5)",
-              }}
-            />
+        <Container maxWidth="lg">
+          <Box sx={{ textAlign: 'center', mb: 8 }}>
             <Typography
-              variant="body1"
-              align="center"
+              variant="overline"
               sx={{
-                fontStyle: "italic",
-                fontSize: "0.95rem",
+                color: 'primary.main',
+                fontWeight: 600,
+                fontSize: '1rem',
+                letterSpacing: 3,
+                mb: 2,
+                display: 'block',
               }}
             >
-              "A visionary developer who believes in using technology to
-              simplify everyday problems. Passionate about creating efficient,
-              impactful solutions that make a difference."
+              ABOUT PARKVUE
             </Typography>
+            
+            <Typography
+              variant="h1"
+              sx={{
+                fontWeight: 800,
+                fontSize: { xs: '2.5rem', md: '3.5rem', lg: '4rem' },
+                mb: 3,
+                background: theme.customStyles?.neonGradient || 'linear-gradient(45deg, #00acca, #00bcca)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                color: 'primary.main',
+                lineHeight: 1.1,
+              }}
+            >
+              Revolutionizing
+              <Box component="span" sx={{ display: 'block', color: 'primary.main' }}>
+                Urban Parking
+              </Box>
+            </Typography>
+            
+            <Typography
+              variant="h6"
+              sx={{
+                color: 'text.secondary',
+                maxWidth: '800px',
+                mx: 'auto',
+                lineHeight: 1.6,
+                fontSize: { xs: '1.1rem', md: '1.3rem' },
+              }}
+            >
+              We're transforming how cities handle parking by connecting drivers with available 
+              spots through an intuitive platform that makes urban mobility efficient, accessible, 
+              and stress-free for everyone.
+            </Typography>
+          </Box>
+
+          {/* Features Grid */}
+          <Grid container spacing={4} sx={{ mb: 10 }}>
+            {features.map((feature, index) => (
+              <Grid item xs={12} sm={6} md={3} key={index}>
+                <Card
+                  sx={{
+                    height: '100%',
+                    background: theme.customStyles?.cardGlass?.background || 
+                      (isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.8)'),
+                    border: theme.customStyles?.cardGlass?.border || 
+                      (isDarkMode ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(0, 0, 0, 0.08)'),
+                    backdropFilter: 'blur(10px)',
+                    borderRadius: 3,
+                    transition: 'all 0.3s ease',
+                    animation: `${fadeInUp} ${0.5 + index * 0.1}s ease-out`,
+                    '&:hover': {
+                      transform: 'translateY(-5px)',
+                      boxShadow: theme.shadows[8],
+                    },
+                  }}
+                >
+                  <CardContent sx={{ p: 4, textAlign: 'center' }}>
+                    <Box
+                      sx={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 80,
+                        height: 80,
+                        borderRadius: '50%',
+                        background: `linear-gradient(135deg, ${theme.palette.primary.main}20, ${theme.palette.secondary.main}20)`,
+                        mb: 3,
+                      }}
+                    >
+                      {feature.icon}
+                    </Box>
+                    
+                    <Typography
+                      variant="h5"
+                      sx={{
+                        fontWeight: 600,
+                        mb: 2,
+                        color: 'text.primary',
+                      }}
+                    >
+                      {feature.title}
+                    </Typography>
+                    
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        color: 'text.secondary',
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      {feature.description}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
           </Grid>
 
-          {/* About Text Section */}
-          <Grid
-            item
-            xs={12}
-            md={8}
-            sx={{
-              p: 4,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              py: { xs: 4, md: 30 },
-            }}
-          >
+          {/* Stats Section */}
+          <Box sx={{ mb: 10 }}>
             <Typography
-              variant="h4"
-              component="h1"
-              gutterBottom
-              align="center"
+              variant="h2"
               sx={{
-                color: "primary.main",
-                textShadow: "1px 1px 2px rgba(0,0,0,0.2)",
-                animation: `${fadeIn} 0.3s ease-out`,
+                textAlign: 'center',
+                fontWeight: 700,
+                mb: 6,
+                fontSize: { xs: '2rem', md: '2.5rem' },
+                color: 'text.primary',
               }}
             >
-              About ParkVue
+              Our Impact in Numbers
             </Typography>
-            <Divider
-              sx={{
-                my: 2,
-                height: 2,
-                backgroundColor: "primary.main",
-                width: "100%",
-                animation: `${drawDivider} 0.5s ease-out`,
-              }}
-            />
-            <Typography
-              variant="body1"
-              sx={{
-                color: "text.primary",
-                mb: 3,
-                animation: `${fadeIn} 0.7s ease-out 0.3s forwards`,
-              }}
-            >
-              ParkVue is a revolutionary platform designed to simplify the
-              parking experience for New Yorkers. Living in New York City, we
-              understand the struggle of finding a parking spot amidst the
-              hustle and bustle. Every minute spent looking for parking is a
-              minute lost, so we developed ParkVue— a user-friendly platform
-              that allows you to locate available parking spaces in real-time.
-              Our platform leverages advanced technology to provide you with the
-              most accurate and up-to-date information about parking
-              availability.
-            </Typography>
-            <Typography
-              variant="body1"
-              sx={{
-                color: "text.primary",
-                mb: 3,
-                animation: `${fadeIn} 0.7s ease-out 0.5s forwards`,
-              }}
-            >
-              Whether you’re planning a trip to the city or just need a place to
-              park, ParkVue takes the guesswork out of parking. More than a
-              parking locator, ParkVue is a community of New Yorkers helping
-              each other navigate the challenges of city parking. By using
-              ParkVue, you’re saving time and stress, contributing to a more
-              efficient and less congested city.
-            </Typography>
-            <Typography
-              variant="body1"
-              sx={{
-                color: "text.primary",
-                animation: `${fadeIn} 0.7s ease-out 0.7s forwards`,
-              }}
-            >
-              We believe that by making parking easier, we can make New York
-              City a better place to live. Less time spent looking for parking
-              means more time spent enjoying the city. Fewer cars searching for
-              parking means less traffic and pollution. Welcome to ParkVue,
-              where parking is made easy. Together, let’s change the way we
-              park, one spot at a time.
-            </Typography>
+            
+            <Grid container spacing={4}>
+              {stats.map((stat, index) => (
+                <Grid item xs={6} md={3} key={index}>
+                  <Box
+                    sx={{
+                      textAlign: 'center',
+                      p: 3,
+                      animation: `${fadeInUp} ${0.6 + index * 0.1}s ease-out`,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        mb: 2,
+                      }}
+                    >
+                      <Avatar
+                        sx={{
+                          bgcolor: `rgba(${isDarkMode ? '255,255,255' : '0,172,202'}, 0.1)`,
+                          color: 'primary.main',
+                          width: 60,
+                          height: 60,
+                        }}
+                      >
+                        {stat.icon}
+                      </Avatar>
+                    </Box>
+                    
+                    <Typography
+                      variant="h3"
+                      sx={{
+                        fontWeight: 800,
+                        mb: 1,
+                        backgroundClip: 'text',
+                        WebkitBackgroundClip: 'text',
+                        color: 'primary.main',
+                      }}
+                    >
+                      {stat.value}
+                    </Typography>
+                    
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontWeight: 600,
+                        mb: 1,
+                        color: 'text.primary',
+                      }}
+                    >
+                      {stat.label}
+                    </Typography>
+                    
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: 'text.secondary',
+                      }}
+                    >
+                      {stat.description}
+                    </Typography>
+                  </Box>
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+
+          {/* Mission & Vision Section */}
+          <Grid container spacing={6} alignItems="center" sx={{ mb: 10 }}>
+            <Grid item xs={12} md={6}>
+              <Box sx={{ animation: `${fadeInUp} 0.8s ease-out` }}>
+                <Typography
+                  variant="h2"
+                  sx={{
+                    fontWeight: 700,
+                    mb: 4,
+                    fontSize: { xs: '2rem', md: '2.5rem' },
+                    color: 'text.primary',
+                  }}
+                >
+                  Our Mission & Vision
+                </Typography>
+                
+                <Typography
+                  variant="body1"
+                  sx={{
+                    color: 'text.secondary',
+                    mb: 3,
+                    lineHeight: 1.7,
+                    fontSize: '1.1rem',
+                  }}
+                >
+                  At ParkVue, we believe that finding parking shouldn't be a stressful experience. 
+                  Our mission is to create smarter cities by optimizing parking space utilization 
+                  through innovative technology.
+                </Typography>
+                
+                <Typography
+                  variant="body1"
+                  sx={{
+                    color: 'text.secondary',
+                    mb: 4,
+                    lineHeight: 1.7,
+                    fontSize: '1.1rem',
+                  }}
+                >
+                  We envision a future where urban mobility is seamless, efficient, and accessible 
+                  to everyone. By connecting parking space owners with drivers, we're building 
+                  sustainable communities while reducing traffic congestion and carbon emissions.
+                </Typography>
+                
+                <Box sx={{ mt: 4 }}>
+                  <Grid container spacing={2}>
+                    {missionPoints.map((point, index) => (
+                      <Grid item xs={6} key={index}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                          <CheckCircle sx={{ color: 'primary.main', mr: 1, fontSize: 20 }} />
+                          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                            {point}
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Box>
+              </Box>
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                }}
+              >
+                <Box
+                  sx={{
+                    width: '100%',
+                    maxWidth: 400,
+                    height: 400,
+                    borderRadius: 4,
+                    background: theme.customStyles?.neonGradient || 'linear-gradient(45deg, #00acca, #00bcca)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'relative',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background: `radial-gradient(circle at 30% 30%, ${
+                        isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.25)'
+                      } 0%, transparent 70%)`,
+                    }}
+                  />
+                  <LocalParking sx={{ fontSize: 120, color: 'white', opacity: 0.9 }} />
+                </Box>
+              </Box>
+            </Grid>
           </Grid>
-        </Grid>
-      </Container>
+
+          {/* About Me Section */}
+          <Box sx={{ mb: 10 }}>
+            <Typography
+              variant="h2"
+              sx={{
+                textAlign: 'center',
+                fontWeight: 700,
+                mb: 6,
+                fontSize: { xs: '2rem', md: '2.5rem' },
+                color: 'text.primary',
+              }}
+            >
+              About the Developer
+            </Typography>
+            
+            <Card
+              sx={{
+                maxWidth: 800,
+                mx: 'auto',
+                background: theme.customStyles?.cardGlass?.background || 
+                  (isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.8)'),
+                border: theme.customStyles?.cardGlass?.border || 
+                  (isDarkMode ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(0, 0, 0, 0.08)'),
+                backdropFilter: 'blur(10px)',
+                borderRadius: 3,
+                overflow: 'hidden',
+                animation: `${fadeInUp} 0.8s ease-out`,
+              }}
+            >
+              <CardContent sx={{ p: { xs: 3, md: 4 } }}>
+                <Grid container spacing={4} alignItems="center">
+                  <Grid item xs={12} md={4}>
+                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                      <Avatar
+                        sx={{
+                          width: 200,
+                          height: 200,
+                          border: `4px solid ${theme.palette.primary.main}`,
+                        }}
+                        src="/Shao.jpeg"
+                        alt="Developer"
+                      />
+                    </Box>
+                  </Grid>
+                  
+                  <Grid item xs={12} md={8}>
+                    <Typography
+                      variant="h4"
+                      sx={{
+                        fontWeight: 700,
+                        mb: 2,
+                        color: 'text.primary',
+                      }}
+                    >
+                      Shao Yan
+                    </Typography>
+                    
+                    <Typography
+                      variant="subtitle1"
+                      sx={{
+                        color: 'primary.main',
+                        mb: 3,
+                        fontWeight: 600,
+                      }}
+                    >
+                      Full Stack Developer & Founder
+                    </Typography>
+                    
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        color: 'text.secondary',
+                        mb: 3,
+                        lineHeight: 1.7,
+                      }}
+                    >
+                      Passionate about building solutions that solve real-world problems. 
+                      With over 5 years of experience in web development, I created ParkVue 
+                      to address the growing parking challenges in urban areas and to 
+                      contribute to smarter, more sustainable cities.
+                    </Typography>
+                    
+                    <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
+                      <a href="https://github.com/sskyhigh" target="_blank" rel="noopener noreferrer">
+                        <Avatar
+                          sx={{
+                            bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                            color: 'text.primary',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                              bgcolor: 'primary.main',
+                              color: 'white',
+                              transform: 'translateY(-2px)',
+                            },
+                          }}
+                        >
+                          <GitHub />
+                        </Avatar>
+                      </a>
+
+                      <a href="https://www.linkedin.com/in/shaoyan8/" target="_blank" rel="noopener noreferrer">
+                        <Avatar
+                          sx={{
+                            bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                            color: 'text.primary',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                              bgcolor: '#0077B5',
+                              color: 'white',
+                              transform: 'translateY(-2px)',
+                            },
+                          }}
+                        >
+                          <LinkedIn />
+                        </Avatar>
+                      </a>
+
+                      <a href="mailto:shaoyan888@gmail.com">
+                        <Avatar
+                          sx={{
+                            bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                            color: 'text.primary',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                              bgcolor: '#EA4335',
+                              color: 'white',
+                              transform: 'translateY(-2px)',
+                            },
+                          }}
+                        >
+                          <Email />
+                        </Avatar>
+                      </a>
+                    </Box>
+
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
+          </Box>
+        </Container>
+      </Box>
     </Box>
   );
 }
+
+export default About;

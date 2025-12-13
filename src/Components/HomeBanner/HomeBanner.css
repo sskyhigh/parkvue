@@ -2,7 +2,6 @@
     width: 100%;
     min-height: 100vh;
     position: relative;
-    background-image: url("../../img/HomeBanner.png"); /* Default background image */
     background-repeat: no-repeat;
     background-position: center right;
     background-size: cover;
@@ -20,11 +19,4 @@
     width: 150px; /* -- market place icons size -- */
     margin-right: 1rem;
     cursor: pointer;
-}
-
-/* Media Query for Small Devices background image change */
-@media (max-width: 900px) {
-    .home {
-        background-image: url("../../img/Banner.png"); /* New background image for small screens */
-    }
 }
