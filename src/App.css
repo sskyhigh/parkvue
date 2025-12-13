@@ -1,42 +1,47 @@
 /* Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap'); /* @import */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
+
+/* @import */
 /* CSS rules to specify families */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    scroll-padding-top: 2rem;
-    scroll-behavior: smooth;
-    list-style: none;
-    text-decoration: none;
-    font-family: "Poppins", sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  scroll-padding-top: 2rem;
+  scroll-behavior: smooth;
+  list-style: none;
+  text-decoration: none;
+  font-family: "Poppins", sans-serif;
 }
 
 :root {
-    --main-color: #2B74A8;
-    --second-color: #3FA9F5;
-    --text-color: #444;
-    --gradient: linear-gradient(#2B74A8, #3FA9F5); 
+  --main-color: #2B74A8;
+  --second-color: #3FA9F5;
+  --text-color: #444;
+  --gradient: linear-gradient(#2B74A8, #3FA9F5);
 }
 
 /* Modern neutral scrollbar for both light & dark themes */
-html::-webkit-scrollbar {
+::-webkit-scrollbar {
   width: 0.5rem;
-  background: transparent; /* track is invisible */
+  background: transparent;
+  /* track is invisible */
 }
 
-html::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
   background: transparent;
 }
 
-html::-webkit-scrollbar-thumb {
-  background: rgba(100, 100, 100, 0.863); /* neutral gray */
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 100, 100, 0.863);
+  /* neutral gray */
   border-radius: 5rem;
   transition: background 0.3s ease;
 }
 
-html::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 100, 100, 0.815); /* subtle fade on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 100, 100, 0.815);
+  /* subtle fade on hover */
 }
 
 .mapboxgl-popup-content {
@@ -45,6 +50,7 @@ html::-webkit-scrollbar-thumb:hover {
   padding: 0 !important;
   border-radius: 0 !important;
 }
+
 .mapboxgl-popup-tip {
   display: none !important;
 }

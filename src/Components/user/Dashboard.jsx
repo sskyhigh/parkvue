@@ -77,7 +77,7 @@ export default function UserDashboard() {
   const [userStats, setUserStats] = useState({
     totalEarnings: 0,
     totalBookings: 0,
-    });
+  });
 
   // Fetch user's uploaded rooms
   useEffect(() => {
@@ -106,31 +106,31 @@ export default function UserDashboard() {
   }, [currentUser, dispatch]);
 
   // Fetch user document with earnings
-    useEffect(() => {
+  useEffect(() => {
     if (!currentUser || !currentUser.uid) return;
-    
+
     const fetchUserStats = async () => {
-        try {
+      try {
         const usersRef = collection(db, "users");
         const q = query(usersRef, where("uid", "==", currentUser.uid));
         const querySnapshot = await getDocs(q);
-        
+
         if (!querySnapshot.empty) {
-            const userDoc = querySnapshot.docs[0];
-            const userData = userDoc.data();
-            
-            setUserStats({
+          const userDoc = querySnapshot.docs[0];
+          const userData = userDoc.data();
+
+          setUserStats({
             totalEarnings: userData.totalEarnings || 0,
             totalBookings: userData.totalBookings || 0,
-            });
+          });
         }
-        } catch (err) {
+      } catch (err) {
         console.error("Error fetching user stats:", err);
-        }
+      }
     };
-    
+
     fetchUserStats();
-    }, [currentUser]);
+  }, [currentUser]);
 
   // Fetch reservations where user is the reserver
   useEffect(() => {
@@ -239,10 +239,10 @@ export default function UserDashboard() {
 
   // UI small components
   const RoomCard = ({ room, compact = false }) => (
-    <Card 
-      sx={{ 
-        height: "100%", 
-        display: "flex", 
+    <Card
+      sx={{
+        height: "100%",
+        display: "flex",
         flexDirection: "column",
         transition: "all 0.3s ease",
         '&:hover': {
@@ -253,16 +253,16 @@ export default function UserDashboard() {
     >
       <CardActionArea onClick={() => navigate(`/booking/${room.id}`, { state: { room: room, self: true } })}>
         {room.images?.[0] ? (
-          <CardMedia 
-            component="img" 
-            height={compact ? 140 : 200} 
-            image={room.images[0]} 
+          <CardMedia
+            component="img"
+            height={compact ? 140 : 200}
+            image={room.images[0]}
             alt={room.title}
             sx={{ objectFit: 'cover' }}
           />
         ) : (
-          <Box sx={{ 
-            height: compact ? 140 : 200, 
+          <Box sx={{
+            height: compact ? 140 : 200,
             background: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.secondary.light} 100%)`,
             display: 'flex',
             alignItems: 'center',
@@ -279,19 +279,19 @@ export default function UserDashboard() {
               <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.text.primary, mb: 0.5 }}>
                 {room.title}
               </Typography>
-              <Chip 
-                label={room.available ? "Available" : "Reserved"} 
-                color={room.available ? "success" : "error"} 
+              <Chip
+                label={room.available ? "Available" : "Reserved"}
+                color={room.available ? "success" : "error"}
                 size="small"
-                sx={{ 
+                sx={{
                   fontWeight: 600,
                   fontSize: '0.75rem',
                   height: 22
                 }}
               />
             </Box>
-            <Typography variant="h6" sx={{ 
-              fontWeight: 800, 
+            <Typography variant="h6" sx={{
+              fontWeight: 800,
               color: theme.palette.primary.main,
               display: 'flex',
               alignItems: 'center',
@@ -313,17 +313,17 @@ export default function UserDashboard() {
           </Typography>
 
           <Divider sx={{ my: 1 }} />
-          
+
           <Stack direction="row" justifyContent="space-between" alignItems="center">
             <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <CalendarMonth fontSize="small" /> Last updated {room.updatedAt?.toDate ? room.updatedAt.toDate().toLocaleDateString() : 'N/A'}
             </Typography>
             <Stack direction="row" spacing={0.5}>
               <Tooltip title="Edit">
-                <IconButton 
-                  onClick={() => openEdit(room)} 
+                <IconButton
+                  onClick={() => openEdit(room)}
                   size="small"
-                  sx={{ 
+                  sx={{
                     bgcolor: alpha(theme.palette.primary.main, 0.1),
                     '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) }
                   }}
@@ -332,12 +332,12 @@ export default function UserDashboard() {
                 </IconButton>
               </Tooltip>
               <Tooltip title={room.available ? "Mark Reserved" : "Mark Available"}>
-                <IconButton 
-                  onClick={() => confirmAction({ type: "toggleAvail", id: room.id, extra: { newVal: !room.available } })} 
+                <IconButton
+                  onClick={() => confirmAction({ type: "toggleAvail", id: room.id, extra: { newVal: !room.available } })}
                   size="small"
-                  sx={{ 
+                  sx={{
                     bgcolor: room.available ? alpha(theme.palette.warning.main, 0.1) : alpha(theme.palette.success.main, 0.1),
-                    '&:hover': { 
+                    '&:hover': {
                       bgcolor: room.available ? alpha(theme.palette.warning.main, 0.2) : alpha(theme.palette.success.main, 0.2)
                     }
                   }}
@@ -346,10 +346,10 @@ export default function UserDashboard() {
                 </IconButton>
               </Tooltip>
               <Tooltip title="Delete">
-                <IconButton 
-                  onClick={() => confirmAction({ type: "deleteRoom", id: room.id })} 
+                <IconButton
+                  onClick={() => confirmAction({ type: "deleteRoom", id: room.id })}
                   size="small"
-                  sx={{ 
+                  sx={{
                     bgcolor: alpha(theme.palette.error.main, 0.1),
                     '&:hover': { bgcolor: alpha(theme.palette.error.main, 0.2) }
                   }}
@@ -384,20 +384,20 @@ export default function UserDashboard() {
   );
 
   return (
-    <Box sx={{ 
+    <Box sx={{
       minHeight: "100dvh",
-      pt: { xs: 4, md: 9 }, 
-      pb: 6, 
+      pt: { xs: 2, md: 3 },
+      pb: { xs: 8, md: 10 },
       bgcolor: theme.palette.background.default,
       background: `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.05)} 0%, ${alpha(theme.palette.secondary.light, 0.05)} 100%)`
     }}>
       <Container maxWidth="xl">
         {/* Header Section */}
-        <Paper 
-          elevation={0} 
-          sx={{ 
-            p: { xs: 3, md: 4 }, 
-            mb: 4, 
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 3, md: 4 },
+            mb: 4,
             borderRadius: 3,
             background: theme.customStyles.heroBackground,
             color: 'white',
@@ -428,31 +428,31 @@ export default function UserDashboard() {
             </Stack>
 
             <Stack direction="row" spacing={2} alignItems="center">
-              <Paper 
-                elevation={0} 
-                sx={{ 
-                    p: 2, 
-                    minWidth: 120,
-                    background: alpha(theme.palette.common.white, 0.15),
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: 2
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
+                  minWidth: 120,
+                  background: alpha(theme.palette.common.white, 0.15),
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: 2
                 }}
-                >
+              >
                 <Stack direction="row" alignItems="center" spacing={1}>
-                    <MonetizationOn sx={{ fontSize: 20 }} />
-                    <Box>
+                  <MonetizationOn sx={{ fontSize: 20 }} />
+                  <Box>
                     <Typography variant="caption" sx={{ opacity: 0.8 }}>Total Earnings</Typography>
                     <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                        ${userStats.totalEarnings}
+                      ${userStats.totalEarnings}
                     </Typography>
-                    </Box>
+                  </Box>
                 </Stack>
-            </Paper>
-              
-              <Paper 
-                elevation={0} 
-                sx={{ 
-                  p: 2, 
+              </Paper>
+
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 2,
                   minWidth: 120,
                   background: alpha(theme.palette.common.white, 0.15),
                   backdropFilter: 'blur(10px)',
@@ -467,12 +467,12 @@ export default function UserDashboard() {
                   </Box>
                 </Stack>
               </Paper>
-              
-              <Button 
-                variant="contained" 
-                startIcon={<UploadFile />} 
+
+              <Button
+                variant="contained"
+                startIcon={<UploadFile />}
                 onClick={() => navigate('/upload')}
-                sx={{ 
+                sx={{
                   bgcolor: 'white',
                   color: theme.palette.primary.main,
                   fontWeight: 700,
@@ -491,17 +491,17 @@ export default function UserDashboard() {
         <Grid container spacing={4}>
           {/* Left: My Rooms Section */}
           <Grid item xs={12} lg={8}>
-            <Paper 
-              elevation={0} 
-              sx={{ 
-                p: { xs: 2, md: 3 }, 
+            <Paper
+              elevation={0}
+              sx={{
+                p: { xs: 2, md: 3 },
                 borderRadius: 3,
                 bgcolor: 'background.paper',
                 border: `1px solid ${alpha(theme.palette.divider, 0.1)}`
               }}
             >
               <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 3 }}>
-                <Avatar sx={{ 
+                <Avatar sx={{
                   bgcolor: alpha(theme.palette.primary.main, 0.1),
                   color: theme.palette.primary.main
                 }}>
@@ -522,8 +522,8 @@ export default function UserDashboard() {
               {myRoomsLoading ? (
                 <SkeletonGrid />
               ) : myRooms.length === 0 ? (
-                <Box sx={{ 
-                  py: 8, 
+                <Box sx={{
+                  py: 8,
                   textAlign: 'center',
                   borderRadius: 2,
                   bgcolor: alpha(theme.palette.background.default, 0.5)
@@ -535,9 +535,9 @@ export default function UserDashboard() {
                   <Typography variant="body2" sx={{ mb: 3, color: theme.palette.text.secondary, maxWidth: 400, mx: 'auto' }}>
                     Upload your first room and start earning from rentals
                   </Typography>
-                  <Button 
-                    variant="contained" 
-                    startIcon={<UploadFile />} 
+                  <Button
+                    variant="contained"
+                    startIcon={<UploadFile />}
                     onClick={() => navigate('/upload')}
                     size="large"
                   >
@@ -558,10 +558,10 @@ export default function UserDashboard() {
 
           {/* Right: My Reservations Section */}
           <Grid item xs={12} lg={4}>
-            <Paper 
-              elevation={0} 
-              sx={{ 
-                p: { xs: 2, md: 3 }, 
+            <Paper
+              elevation={0}
+              sx={{
+                p: { xs: 2, md: 3 },
                 borderRadius: 3,
                 bgcolor: 'background.paper',
                 border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
@@ -569,7 +569,7 @@ export default function UserDashboard() {
               }}
             >
               <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 3 }}>
-                <Avatar sx={{ 
+                <Avatar sx={{
                   bgcolor: alpha(theme.palette.secondary.main, 0.1),
                   color: theme.palette.secondary.main
                 }}>
@@ -594,8 +594,8 @@ export default function UserDashboard() {
                   ))}
                 </Stack>
               ) : myReservations.length === 0 ? (
-                <Box sx={{ 
-                  py: 6, 
+                <Box sx={{
+                  py: 6,
                   textAlign: 'center',
                   borderRadius: 2,
                   bgcolor: alpha(theme.palette.background.default, 0.5)
@@ -607,8 +607,8 @@ export default function UserDashboard() {
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 3, maxWidth: 300, mx: 'auto' }}>
                     Find amazing rooms and book your next stay
                   </Typography>
-                  <Button 
-                    variant="outlined" 
+                  <Button
+                    variant="outlined"
                     onClick={() => navigate('/rooms')}
                     size="large"
                   >
@@ -618,9 +618,9 @@ export default function UserDashboard() {
               ) : (
                 <Stack spacing={2}>
                   {myReservations.map((res) => (
-                    <Card 
-                      key={res.reservationId} 
-                      sx={{ 
+                    <Card
+                      key={res.reservationId}
+                      sx={{
                         transition: 'all 0.2s ease',
                         '&:hover': {
                           transform: 'translateX(4px)',
@@ -631,20 +631,20 @@ export default function UserDashboard() {
                       <Grid container>
                         <Grid item xs={4}>
                           {res.room?.images?.[0] ? (
-                            <CardMedia 
-                              component="img" 
-                              image={res.room.images[0]} 
-                              alt={res.room.title} 
-                              sx={{ 
-                                height: 96, 
+                            <CardMedia
+                              component="img"
+                              image={res.room.images[0]}
+                              alt={res.room.title}
+                              sx={{
+                                height: 96,
                                 objectFit: 'cover',
                                 borderTopLeftRadius: '4px',
                                 borderBottomLeftRadius: '4px'
-                              }} 
+                              }}
                             />
                           ) : (
-                            <Box sx={{ 
-                              height: 96, 
+                            <Box sx={{
+                              height: 96,
                               bgcolor: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.secondary.light} 100%)`,
                               display: 'flex',
                               alignItems: 'center',
@@ -658,25 +658,25 @@ export default function UserDashboard() {
                           <CardContent sx={{ p: 1.5 }}>
                             <Stack spacing={1}>
                               <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                                <Typography variant="subtitle2" sx={{ 
+                                <Typography variant="subtitle2" sx={{
                                   fontWeight: 700,
                                   color: theme.palette.text.primary,
                                   lineHeight: 1.2
                                 }}>
                                   {res.room?.title || 'Room Unavailable'}
                                 </Typography>
-                                <Chip 
-                                  label={`$${res.room?.price ?? '—'}`} 
+                                <Chip
+                                  label={`$${res.room?.price ?? '—'}`}
                                   size="small"
                                   color="primary"
-                                  sx={{ 
+                                  sx={{
                                     height: 20,
                                     fontSize: '0.7rem',
                                     fontWeight: 700
                                   }}
                                 />
                               </Stack>
-                              
+
                               <Typography variant="caption" color="text.secondary" sx={{
                                 display: '-webkit-box',
                                 WebkitLineClamp: 2,
@@ -688,23 +688,23 @@ export default function UserDashboard() {
                               </Typography>
 
                               <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                                <Button 
-                                  size="small" 
+                                <Button
+                                  size="small"
                                   variant="outlined"
                                   onClick={() => navigate(`/booking/${res.room?.id}`, { state: { room: res.room } })}
-                                  sx={{ 
+                                  sx={{
                                     fontSize: '0.75rem',
                                     py: 0.25
                                   }}
                                 >
                                   View Details
                                 </Button>
-                                <Button 
-                                  size="small" 
-                                  color="error" 
+                                <Button
+                                  size="small"
+                                  color="error"
                                   variant="outlined"
                                   onClick={() => confirmAction({ type: 'unreserve', extra: { reservationId: res.reservationId, roomId: res.room?.id } })}
-                                  sx={{ 
+                                  sx={{
                                     fontSize: '0.75rem',
                                     py: 0.25
                                   }}
@@ -727,7 +727,7 @@ export default function UserDashboard() {
 
       {/* Edit dialog */}
       <Dialog open={editOpen} onClose={closeEdit} fullWidth maxWidth="sm">
-        <DialogTitle sx={{ 
+        <DialogTitle sx={{
           bgcolor: theme.palette.primary.main,
           color: 'white',
           fontWeight: 700
@@ -736,18 +736,18 @@ export default function UserDashboard() {
         </DialogTitle>
         <DialogContent sx={{ mt: 2 }}>
           <Stack spacing={3} sx={{ mt: 1 }}>
-            <TextField 
-              label="Title" 
-              fullWidth 
-              value={editValues.title || ''} 
+            <TextField
+              label="Title"
+              fullWidth
+              value={editValues.title || ''}
               onChange={(e) => setEditValues((s) => ({ ...s, title: e.target.value }))}
               variant="outlined"
               size="small"
             />
-            <TextField 
-              label="Price ($)" 
-              fullWidth 
-              value={editValues.price || ''} 
+            <TextField
+              label="Price ($)"
+              fullWidth
+              value={editValues.price || ''}
               onChange={(e) => setEditValues((s) => ({ ...s, price: e.target.value }))}
               variant="outlined"
               size="small"
@@ -755,12 +755,12 @@ export default function UserDashboard() {
                 startAdornment: <Typography color="text.secondary">$</Typography>
               }}
             />
-            <TextField 
-              label="Description" 
-              fullWidth 
-              multiline 
-              rows={4} 
-              value={editValues.description || ''} 
+            <TextField
+              label="Description"
+              fullWidth
+              multiline
+              rows={4}
+              value={editValues.description || ''}
               onChange={(e) => setEditValues((s) => ({ ...s, description: e.target.value }))}
               variant="outlined"
               size="small"
@@ -782,11 +782,11 @@ export default function UserDashboard() {
         <DialogTitle sx={{ fontWeight: 700 }}>Confirm Action</DialogTitle>
         <DialogContent>
           <Typography color="text.secondary">
-            {confirmPayload?.type === 'deleteRoom' 
+            {confirmPayload?.type === 'deleteRoom'
               ? 'Are you sure you want to delete this room? This action cannot be undone.'
-              : confirmPayload?.type === 'toggleAvail' 
-              ? 'Do you want to change the availability status of this room?'
-              : 'Are you sure you want to cancel this reservation?'}
+              : confirmPayload?.type === 'toggleAvail'
+                ? 'Do you want to change the availability status of this room?'
+                : 'Are you sure you want to cancel this reservation?'}
           </Typography>
         </DialogContent>
         <DialogActions sx={{ p: 2, pt: 0 }}>
