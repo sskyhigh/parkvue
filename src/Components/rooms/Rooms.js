@@ -1033,7 +1033,7 @@ const Rooms = () => {
                             Listed on {prettyDate(selectedRoom.createdAt)}
                           </Typography>
                         </Box>
-                        {currentUser?.uid !== selectedRoom?.uid && (
+                        {currentUser?.uid !== selectedRoom?.createdBy && (
                           <Button
                             variant="outlined"
                             size="small"
@@ -1041,12 +1041,13 @@ const Rooms = () => {
                             onClick={(e) => {
                               e.stopPropagation();
                               if (!currentUser) return navigate('/login');
+                              setOpenDialog(false);
                               dispatch({
                                 type: 'UPDATE_CHAT',
                                 payload: {
                                   open: true,
                                   user: {
-                                    uid: selectedRoom.uid,
+                                    uid: selectedRoom.createdBy,
                                     name: selectedRoom.ownerName,
                                     photoURL: selectedRoom.photoURL ? selectedRoom.photoURL : "/dev.png"
                                   }

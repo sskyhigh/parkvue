@@ -7,12 +7,9 @@ import {
     TextField,
     Avatar,
     Badge,
-    Button,
     useTheme,
     alpha,
     Stack,
-    Tooltip,
-    CircularProgress,
     List,
     ListItem,
     ListItemAvatar,
@@ -122,12 +119,51 @@ const UserChat = ({ isOpen, onClose }) => {
         if (view === "chat") scrollToBottom();
     }, [messages, view]);
 
-    // Focus input
+    // Lock body scroll when user chat is open
     useEffect(() => {
-        if (isOpen && view === "chat") {
-            setTimeout(() => inputRef.current?.focus(), 100);
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+            // Focus input when chat opens
+            if (view === "chat") {
+                setTimeout(() => {
+                    inputRef.current?.focus();
+                }, 100);
+            }
+        } else {
+            document.body.style.overflow = 'unset';
         }
+
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
     }, [isOpen, view]);
+
+    // Close chat when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (isOpen && chatBoxRef.current && !chatBoxRef.current.contains(event.target)) {
+                // Check if the click is also not on the floating button or toggle button
+                const floatingButton = document.querySelector('[data-userchat-button]');
+                // Also check if we are clicking inside a dialog (like delete confirmation)
+                const dialog = document.querySelector('.MuiDialog-root');
+
+                if (floatingButton && !floatingButton.contains(event.target) && (!dialog || !dialog.contains(event.target))) {
+                    handleClose();
+                }
+            }
+        };
+
+        if (isOpen) {
+            // Add a small delay to prevent immediate closing when opening
+            setTimeout(() => {
+                document.addEventListener('mousedown', handleClickOutside);
+            }, 100);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isOpen]);
 
     const handleSendMessage = async () => {
         if (!input.trim() || !activeChat || !currentUser) return;
@@ -135,53 +171,51 @@ const UserChat = ({ isOpen, onClose }) => {
         const text = input.trim();
         setInput("");
 
-        const message = {
-            senderId: currentUser.uid,
-            text,
-            timestamp: serverTimestamp(),
-        };
+        try {
+            const message = {
+                senderId: currentUser.uid,
+                text,
+                timestamp: serverTimestamp(),
+            };
 
-        // Push message
-        await push(ref(rtdb, `messages/${activeChat.chatId}`), message);
+            // Push message
+            await push(ref(rtdb, `messages/${activeChat.chatId}`), message);
 
-        // Update user_chats for both users
-        const updateData = {
-            lastMessage: text,
-            lastUpdated: serverTimestamp(),
-            recipientId: activeChat.recipientId,
-            recipientName: activeChat.recipientName, // Ideally store basic info
-        };
-
-        // Update current user's chat list
-        await update(ref(rtdb, `user_chats/${currentUser.uid}/${activeChat.chatId}`), {
-            ...updateData,
-            recipientId: activeChat.recipientId,
-            recipientName: activeChat.recipientName,
-            recipientPhoto: activeChat.recipientPhoto || null,
-            unreadCount: 0 // I read my own message
-        });
-
-        // Update recipient's chat list (increment unread)
-        // We need to fetch current unread count or use transaction, but for simplicity:
-        // We can't easily increment transactionally without a cloud function or proper rules/transaction.
-        // For now, we'll just read and update or just set a flag.
-        // Let's try a transaction for unreadCount.
-        const recipientChatRef = ref(rtdb, `user_chats/${activeChat.recipientId}/${activeChat.chatId}`);
-
-        // Check if it exists to get previous unread
-        get(recipientChatRef).then((snap) => {
-            let currentUnread = 0;
-            if (snap.exists()) {
-                currentUnread = snap.val().unreadCount || 0;
-            }
-            update(recipientChatRef, {
+            // Update user_chats for both users
+            const updateData = {
                 lastMessage: text,
                 lastUpdated: serverTimestamp(),
-                recipientId: currentUser.uid,
-                recipientName: currentUser.name || "User", // This might be stale if user updates profile, but okay for MVP
-                unreadCount: currentUnread + 1
+            };
+
+            // Update current user's chat list
+            await update(ref(rtdb, `user_chats/${currentUser.uid}/${activeChat.chatId}`), {
+                ...updateData,
+                recipientId: activeChat.recipientId,
+                recipientName: activeChat.recipientName || "Unknown User",
+                recipientPhoto: activeChat.recipientPhoto || null,
+                unreadCount: 0 // I read my own message
             });
-        });
+
+            // Update recipient's chat list (increment unread)
+            const recipientChatRef = ref(rtdb, `user_chats/${activeChat.recipientId}/${activeChat.chatId}`);
+
+            // Check if it exists to get previous unread
+            get(recipientChatRef).then((snap) => {
+                let currentUnread = 0;
+                if (snap.exists()) {
+                    currentUnread = snap.val().unreadCount || 0;
+                }
+                update(recipientChatRef, {
+                    ...updateData,
+                    recipientId: currentUser.uid,
+                    recipientName: currentUser.fullName || currentUser.name || "User",
+                    unreadCount: currentUnread + 1
+                });
+            });
+        } catch (error) {
+            console.error("Error sending message:", error);
+            // Optionally set an error state here
+        }
     };
 
     const handleDeleteHistory = async () => {

@@ -148,6 +148,7 @@ export function FloatingButtonsHolder() {
                             >
                                 <Tooltip title="Messages" placement="top">
                                     <IconButton
+                                        data-userchat-button
                                         onClick={handleUserChatToggle}
                                         sx={{
                                             width: 45,
