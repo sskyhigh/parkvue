@@ -489,7 +489,7 @@ function About() {
                       }}
                     >
                       Passionate about building solutions that solve real-world problems. 
-                      With over 5 years of experience in web development, I created ParkVue 
+                      With over 3 years of experience in web development, I created ParkVue 
                       to address the growing parking challenges in urban areas and to 
                       contribute to smarter, more sustainable cities.
                     </Typography>
