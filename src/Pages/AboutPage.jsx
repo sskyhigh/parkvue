@@ -105,9 +105,8 @@ function About() {
   return (
     <Box
       sx={{
-        minHeight: "100vh",
-        pt: { xs: 2, md: 3 },
-        pb: { xs: 6, md: 8 },
+        minHeight: "auto",
+        pt: 2,
         background: theme.palette.customStyles?.heroBackground || theme.palette.background.default,
         position: 'relative',
         animation: `${fadeInUp} 0.8s ease-out`,

@@ -35,7 +35,7 @@ export const darkTheme = createTheme({
   },
   customStyles: {
     cardGlass: {
-      background: alpha("#ffffff", 0.05), // softer glass
+      background: alpha("#a7a4a4ff", 0.05), // softer glass
       border: `1px solid ${alpha("#ffffff", 0.12)}`,
       backdropFilter: "blur(14px)",
       boxShadow: `0 8px 24px ${alpha("#000", 0.3)}`, // subtle shadow

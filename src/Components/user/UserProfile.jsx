@@ -230,12 +230,10 @@ const UserProfile = () => {
     return (
         <Box
             sx={{
-                minHeight: '100vh',
+                minHeight: 'auto',
                 pt: { xs: 2, md: 3 },
                 pb: { xs: 8, md: 10 },
-                background: isDarkMode
-                    ? `linear-gradient(135deg, ${theme.palette.background.default} 0%, ${alpha(theme.palette.primary.dark, 0.1)} 100%)`
-                    : `linear-gradient(135deg, ${theme.palette.background.default} 0%, ${alpha(theme.palette.primary.light, 0.05)} 100%)`,
+                background: theme.palette.background.default,
             }}
         >
             <Container maxWidth="md">
@@ -244,14 +242,10 @@ const UserProfile = () => {
                     sx={{
                         p: { xs: 3, md: 5 },
                         borderRadius: 4,
-                        background: isDarkMode
-                            ? alpha(theme.palette.background.paper, 0.6)
-                            : alpha(theme.palette.background.paper, 0.8),
+                        background: theme.palette.background.paper,
                         backdropFilter: 'blur(20px)',
                         border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                        boxShadow: isDarkMode
-                            ? '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
-                            : '0 8px 32px 0 rgba(31, 38, 135, 0.1)',
+                        boxShadow: theme.customStyles.cardGlass.boxShadow,
                     }}
                 >
                     {/* Header Section */}
@@ -466,6 +460,7 @@ const UserProfile = () => {
             <Dialog
                 open={openNameDialog}
                 onClose={() => setOpenNameDialog(false)}
+                sx={{ zIndex: 900 }}
                 PaperProps={{
                     sx: {
                         borderRadius: 3,
@@ -507,6 +502,7 @@ const UserProfile = () => {
             <Dialog
                 open={openPasswordDialog}
                 onClose={() => setOpenPasswordDialog(false)}
+                sx={{ zIndex: 900 }}
                 PaperProps={{
                     sx: {
                         borderRadius: 3,

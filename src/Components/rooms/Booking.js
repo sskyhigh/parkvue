@@ -320,10 +320,10 @@ const Booking = () => {
   return (
     <Box
       sx={{
-        minHeight: "100vh",
+        minHeight: "auto",
         background: theme.palette.customStyles?.heroBackground || theme.palette.background.default,
-        pt: { xs: 2, md: 3 },
-        pb: { xs: 8, md: 10 },
+        pt: 2,
+        pb: 3,
         ...fadeIn,
         animation: "fadeIn 0.6s ease-out",
       }}
@@ -473,6 +473,33 @@ const Booking = () => {
                   </Box>
 
                   <Divider />
+
+                  {/* Video Tour */}
+                  {room.video && (
+                    <>
+                      <Box>
+                        <Typography
+                          variant="subtitle1"
+                          sx={{ fontWeight: 700, mb: 1, color: theme.palette.text.primary }}
+                        >
+                          Video Tour
+                        </Typography>
+                        <CardMedia
+                          component="video"
+                          controls
+                          src={room.video}
+                          sx={{
+                            width: "100%",
+                            height: 300,
+                            borderRadius: 2,
+                            bgcolor: "black",
+                            display: "block",
+                          }}
+                        />
+                      </Box>
+                      <Divider />
+                    </>
+                  )}
 
                   {/* Room Details List */}
                   <Box>
@@ -754,8 +781,8 @@ const Booking = () => {
                     </Box>
 
                     {/* Expiry and CVC */}
-                    <Grid container spacing={2}>
-                      <Grid item xs={7}>
+                    <Grid container>
+                      <Grid item xs={6}>
                         <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
                           Expiry Date
                         </Typography>
@@ -776,8 +803,8 @@ const Booking = () => {
                           disabled={!room.available || processing}
                         />
                       </Grid>
-                      <Grid item xs={5}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+                      <Grid item xs={6}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, ml: 0.3 }}>
                           CVC
                         </Typography>
                         <TextField
@@ -787,6 +814,7 @@ const Booking = () => {
                           error={!!errors.cardCvc}
                           helperText={errors.cardCvc}
                           fullWidth
+                          sx={{ ml: 0.5, pr: 0.5 }}
                           size="small"
                           disabled={!room.available || processing}
                         />

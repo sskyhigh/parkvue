@@ -465,7 +465,11 @@ const NavBar = () => {
           {/* Header */}
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 4 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <AccountCircle sx={{ fontSize: 32 }} />
+              {currentUser.photoURL ? (
+                <img src={currentUser.photoURL} alt="Profile" style={{ width: 32, height: 32, borderRadius: "50%" }} />
+              ) : (
+                <AccountCircle sx={{ fontSize: 32 }} />
+              )}
               <Typography variant="h6" fontWeight="600" sx={{ color: "white" }}>
                 {currentUser ? currentUser.fullName : "Welcome"}
               </Typography>

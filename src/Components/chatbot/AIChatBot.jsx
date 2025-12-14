@@ -561,6 +561,7 @@ const AIChatBot = ({ isOpenProp, setIsOpenProp, customToggle }) => {
 
             {/* Clear History Dialog */}
             <Dialog
+                sx={{ zIndex: 900 }}
                 open={clearHistoryDialog}
                 onClose={() => setClearHistoryDialog(false)}
                 maxWidth="xs"

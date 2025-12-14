@@ -726,7 +726,7 @@ export default function UserDashboard() {
       </Container>
 
       {/* Edit dialog */}
-      <Dialog open={editOpen} onClose={closeEdit} fullWidth maxWidth="sm">
+      <Dialog open={editOpen} onClose={closeEdit} fullWidth maxWidth="sm" sx={{ zIndex: 900 }}>
         <DialogTitle sx={{
           bgcolor: theme.palette.primary.main,
           color: 'white',
@@ -778,7 +778,7 @@ export default function UserDashboard() {
       </Dialog>
 
       {/* Confirm dialog */}
-      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)} maxWidth="xs">
+      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)} maxWidth="xs" sx={{ zIndex: 900 }}>
         <DialogTitle sx={{ fontWeight: 700 }}>Confirm Action</DialogTitle>
         <DialogContent>
           <Typography color="text.secondary">

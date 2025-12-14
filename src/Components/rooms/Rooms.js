@@ -56,6 +56,9 @@ import {
   ExpandLess,
   RestartAlt,
   Chat as ChatIcon,
+  ArrowBackIos,
+  ArrowForwardIos,
+  PlayCircle,
 } from "@mui/icons-material";
 import { Context } from "../../context/ContextProvider";
 
@@ -70,6 +73,32 @@ const Rooms = () => {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [photoIndex, setPhotoIndex] = useState(0);
+
+  // Derive media list
+  const mediaList = useMemo(() => {
+    if (!selectedRoom) return [];
+    const list = [];
+    if (selectedRoom.video) list.push({ type: 'video', src: selectedRoom.video });
+    if (selectedRoom.images && Array.isArray(selectedRoom.images)) {
+      selectedRoom.images.forEach(img => list.push({ type: 'image', src: img }));
+    }
+    // Fallback if empty
+    if (list.length === 0) list.push({ type: 'image', src: "/placeholder-park.jpg" });
+    return list;
+  }, [selectedRoom]);
+
+  useEffect(() => {
+    setPhotoIndex(0);
+  }, [selectedRoom]);
+
+  const handleNextMedia = () => {
+    setPhotoIndex((prev) => (prev + 1) % mediaList.length);
+  };
+
+  const handlePrevMedia = () => {
+    setPhotoIndex((prev) => (prev - 1 + mediaList.length) % mediaList.length);
+  };
 
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -276,9 +305,9 @@ const Rooms = () => {
   return (
     <Box
       sx={{
-        minHeight: "100dvh",
-        pt: { xs: 2, md: 3 },
-        pb: { xs: 8, md: 10 },
+        minHeight: "auto",
+        pt: 2,
+        pb: 3,
         background: theme.palette.customStyles?.heroBackground || theme.palette.background.default,
         ...fadeIn,
         animation: "fadeIn 0.5s ease-out",
@@ -786,6 +815,7 @@ const Rooms = () => {
 
       {/* Enhanced Quick-view Dialog */}
       <Dialog
+        sx={{ zIndex: 900 }}
         open={openDialog}
         onClose={handleCloseDialog}
         maxWidth="md"
@@ -846,39 +876,103 @@ const Rooms = () => {
           <DialogContent dividers sx={{ p: 0 }}>
             <Grid container>
               {/* Images Column */}
+              {/* Images Column with Slider */}
               <Grid item xs={12} md={6}>
-                <Box sx={{ p: 3 }}>
+                <Box sx={{ p: 3, height: '100%' }}>
                   <Box
-                    component="img"
-                    src={selectedRoom.images?.[0] || "/placeholder-park.jpg"}
-                    alt={selectedRoom.title}
                     sx={{
+                      position: 'relative',
                       width: "100%",
-                      height: 280,
-                      objectFit: "cover",
+                      height: 300,
+                      bgcolor: '#000',
                       borderRadius: 2,
+                      overflow: 'hidden',
                       mb: 2,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
                     }}
-                  />
-                  <Stack direction="row" spacing={1}>
-                    {(selectedRoom.images || []).slice(1, 4).map((src, i) => (
+                  >
+                    {/* Media Display */}
+                    {mediaList[photoIndex]?.type === 'video' ? (
+                      <CardMedia
+                        component="video"
+                        controls
+                        src={mediaList[photoIndex].src}
+                        sx={{ width: '100%', height: '100%' }}
+                      />
+                    ) : (
+                      <CardMedia
+                        component="img"
+                        src={mediaList[photoIndex]?.src}
+                        alt={selectedRoom.title}
+                        sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    )}
+
+                    {/* Navigation Buttons */}
+                    {mediaList.length > 1 && (
+                      <>
+                        <IconButton
+                          onClick={handlePrevMedia}
+                          sx={{
+                            position: 'absolute',
+                            left: 8,
+                            bgcolor: alpha(theme.palette.common.black, 0.5),
+                            color: 'white',
+                            '&:hover': { bgcolor: alpha(theme.palette.common.black, 0.7) }
+                          }}
+                        >
+                          <ArrowBackIos fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          onClick={handleNextMedia}
+                          sx={{
+                            position: 'absolute',
+                            right: 8,
+                            bgcolor: alpha(theme.palette.common.black, 0.5),
+                            color: 'white',
+                            '&:hover': { bgcolor: alpha(theme.palette.common.black, 0.7) }
+                          }}
+                        >
+                          <ArrowForwardIos fontSize="small" />
+                        </IconButton>
+                      </>
+                    )}
+                  </Box>
+
+                  {/* Thumbnails */}
+                  <Stack direction="row" spacing={1} sx={{ overflowX: 'auto', pb: 1 }}>
+                    {mediaList.map((item, i) => (
                       <Box
                         key={i}
-                        component="img"
-                        src={src}
-                        alt={`img-${i}`}
+                        onClick={() => setPhotoIndex(i)}
                         sx={{
+                          position: 'relative',
                           width: 80,
                           height: 60,
-                          objectFit: "cover",
-                          borderRadius: 1,
-                          cursor: "pointer",
-                          transition: "transform 0.2s",
-                          '&:hover': {
-                            transform: 'scale(1.05)',
-                          }
+                          borderRadius: 2,
+                          overflow: 'hidden',
+                          cursor: 'pointer',
+                          opacity: i === photoIndex ? 1 : 0.6,
+                          border: i === photoIndex ? `2px solid ${theme.palette.primary.main}` : 'none',
+                          transition: "all 0.2s",
+                          flexShrink: 0,
                         }}
-                      />
+                      >
+                        {item.type === 'video' ? (
+                          <Box sx={{ width: '100%', height: '100%', bgcolor: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <PlayCircle sx={{ color: 'white' }} />
+                          </Box>
+                        ) : (
+                          <Box
+                            component="img"
+                            src={item.src}
+                            alt={`thumb-${i}`}
+                            sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        )}
+                      </Box>
                     ))}
                   </Stack>
                 </Box>
