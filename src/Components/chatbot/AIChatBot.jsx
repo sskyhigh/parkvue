@@ -224,7 +224,7 @@ const AIChatBot = ({ isOpenProp, setIsOpenProp, customToggle }) => {
             {/* If customToggle is passed, we assume parent handles the button rendering or we render it using customToggle */}
 
             {!customToggle && (
-                <Tooltip title="Parkvue Virtual Assistant" placement="left">
+                <Tooltip title="Parkvue Virtual Assistant" placement="top">
                     <IconButton
                         data-aichatbot-button
                         onClick={() => {
@@ -317,6 +317,7 @@ const AIChatBot = ({ isOpenProp, setIsOpenProp, customToggle }) => {
                                     <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1 }}>
                                         Parkvue Assistant
                                     </Typography>
+                                    <Typography variant="caption">Online</Typography>
                                     <Badge
                                         variant="dot"
                                         color="success"
@@ -324,10 +325,9 @@ const AIChatBot = ({ isOpenProp, setIsOpenProp, customToggle }) => {
                                             "& .MuiBadge-dot": {
                                                 backgroundColor: "#4CAF50",
                                             },
+                                            ml: 1,
                                         }}
-                                    >
-                                        <Typography variant="caption">Online</Typography>
-                                    </Badge>
+                                    />
                                 </Box>
                             </Box>
                             <Stack direction="row" spacing={0.5}>

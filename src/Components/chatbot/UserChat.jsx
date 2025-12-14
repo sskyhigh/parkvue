@@ -31,7 +31,7 @@ import {
 } from "@mui/icons-material";
 import { Context } from "../../context/ContextProvider";
 import { rtdb } from "../../firebase/config";
-import { ref, onValue, push, set, serverTimestamp, update, remove, get, runTransaction } from "firebase/database";
+import { ref, onValue, push, serverTimestamp, update, remove, runTransaction } from "firebase/database";
 
 const UserChat = ({ isOpen, onClose }) => {
     const theme = useTheme();
@@ -43,7 +43,6 @@ const UserChat = ({ isOpen, onClose }) => {
     const [chats, setChats] = useState([]);
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
-    const [isTyping, setIsTyping] = useState(false); // Can be enhanced with real-time typing status
     const [clearHistoryDialog, setClearHistoryDialog] = useState(false);
 
     const messagesEndRef = useRef(null);
@@ -260,14 +259,7 @@ const UserChat = ({ isOpen, onClose }) => {
                 sx={{
                     position: "fixed",
                     bottom: 100,
-                    right: 80, // Offset from AI bot if side-by-side, or same position if toggled
-                    // We'll let the holder position it, but for now absolute with fixed coords
-                    // Actually, the holder handles animation, but this Paper is the content.
-                    // Let's make this component just return the CONTENT, and Holder wraps it in Paper?
-                    // No, current Chatbot.jsx returns the Paper. I'll stick to that style.
-                    // I should adjust the `right` position or valid relative to holder.
-                    // I'll stick to "right: 24" (same as chatbot) assuming only one is open at a time.
-                    right: 24,
+                    right: 24, // same position as AI chat because only one is opened at a time
                     width: { xs: 340, sm: 400, md: 450 },
                     height: { xs: 500, sm: 620 },
                     display: "flex",
@@ -312,7 +304,7 @@ const UserChat = ({ isOpen, onClose }) => {
                             {activeChat?.recipientPhoto ? (
                                 <img src={activeChat.recipientPhoto} alt="" style={{ width: '100%', height: '100%' }} />
                             ) : (
-                                <ChatIcon fontSize="small" />
+                                view === "chat" ? <PersonIcon fontSize="small" /> : <ChatIcon fontSize="small" />
                             )}
                         </Avatar>
                         <Box>
