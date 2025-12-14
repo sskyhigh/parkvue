@@ -5,7 +5,7 @@ const reducer = (state, action) => {
   //Action taken by the current user states
   //2 situation switch toggle : test state type to determine action object
   switch (
-    action.type //type = payload
+  action.type //type = payload
   ) {
     case "START_LOADING":
       return { ...state, loading: true };
@@ -33,6 +33,9 @@ const reducer = (state, action) => {
       return { ...state, details: { ...state.details, ...action.payload } };
     case "UPDATE_LOCATION":
       return { ...state, location: action.payload };
+
+    case "UPDATE_CHAT":
+      return { ...state, chat: action.payload };
 
     default:
       //In case someone misspelled the action or forgets to add it here; throws a new error indicating no action available

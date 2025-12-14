@@ -39,7 +39,7 @@ const Register = () => {
   const location = useLocation();
   const [loading, setLoading] = useState(false);
   const { currentUser, setCurrentUser } = useContext(Context);
-  
+
   // Get theme from context and Material-UI
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
@@ -110,15 +110,15 @@ const Register = () => {
       setLoading(true);
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-    
+
       const userData = {
         uid: user.uid,
         fullName: fullName,
         email: email,
       };
-    
+
       await addDoc(collection(db, "users"), userData);
-    
+
       dispatch({
         type: "UPDATE_ALERT",
         payload: {
@@ -127,7 +127,7 @@ const Register = () => {
           message: "Registration successful",
         },
       });
-    
+
       sessionStorage.setItem("userData", JSON.stringify(userData));
       localStorage.setItem("userData", JSON.stringify(userData));
       setCurrentUser(userData);
@@ -162,16 +162,17 @@ const Register = () => {
   };
 
   return (
-    <Dialog 
-      open={location.pathname === "/register"} 
+    <Dialog
+      open={location.pathname === "/register"}
       onClose={handleClose}
+      sx={{ zIndex: 900 }}
       BackdropProps={{
         sx: {
           // Customize the backdrop
-          background: isDarkMode 
+          background: isDarkMode
             ? alpha(theme.palette.background.paper, 0.95) // Dark overlay for dark mode
             : alpha(theme.palette.background.paper, 0.2), // Light overlay for light mode
-          backdropFilter: "blur(2px)", // Optional: add blur effect to backdrop
+          backdropFilter: "blur(1px)", // Optional: add blur effect to backdrop
         }
       }}
       PaperProps={{
@@ -200,12 +201,12 @@ const Register = () => {
             margin: "20px 0",
           },
           "&::-webkit-scrollbar-thumb": {
-            background: isDarkMode 
+            background: isDarkMode
               ? alpha(theme.palette.primary.main, 0.7)
               : alpha(theme.palette.primary.main, 0.7),
             borderRadius: "4px",
             "&:hover": {
-              background: isDarkMode 
+              background: isDarkMode
                 ? alpha(theme.palette.secondary.main, 0.7)
                 : alpha(theme.palette.secondary.main, 0.7),
             },
@@ -213,8 +214,8 @@ const Register = () => {
         }
       }}
     >
-      <DialogTitle 
-        sx={{ 
+      <DialogTitle
+        sx={{
           pb: 1,
           background: isDarkMode
             ? `linear-gradient(135deg, ${alpha(theme.palette.background.default, 0.8)} 0%, ${alpha(theme.palette.background.paper, 0.9)} 100%)`
@@ -225,7 +226,7 @@ const Register = () => {
           textAlign: "center"
         }}
       >
-        <Typography 
+        <Typography
           fontSize="2.25rem"
           fontWeight="600"
           color="primary.main"
@@ -233,9 +234,9 @@ const Register = () => {
         >
           Create Account
         </Typography>
-        <DialogContentText 
-          sx={{ 
-            mb: 3, 
+        <DialogContentText
+          sx={{
+            mb: 3,
             color: isDarkMode ? theme.palette.text.secondary : "text.secondary",
             textAlign: "center"
           }}
@@ -287,7 +288,7 @@ const Register = () => {
           >
             OR
           </DialogContentText>
-          
+
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <TextField
               autoFocus
@@ -302,7 +303,7 @@ const Register = () => {
               sx={{
                 "& .MuiOutlinedInput-root": {
                   borderRadius: 2,
-                  background: isDarkMode 
+                  background: isDarkMode
                     ? alpha(theme.palette.background.paper, 0.6)
                     : alpha(theme.palette.background.paper, 0.8),
                   "&:hover fieldset": {
@@ -317,7 +318,7 @@ const Register = () => {
                 }
               }}
             />
-            
+
             <TextField
               variant="outlined"
               id="email"
@@ -329,7 +330,7 @@ const Register = () => {
               sx={{
                 "& .MuiOutlinedInput-root": {
                   borderRadius: 2,
-                  background: isDarkMode 
+                  background: isDarkMode
                     ? alpha(theme.palette.background.paper, 0.6)
                     : alpha(theme.palette.background.paper, 0.8),
                   "&:hover fieldset": {
@@ -344,15 +345,15 @@ const Register = () => {
                 }
               }}
             />
-            
-            <PasswordField 
+
+            <PasswordField
               passwordRef={passwordRef}
               id="password"
               label="password"
               sx={{
                 "& .MuiOutlinedInput-root": {
                   borderRadius: 2,
-                  background: isDarkMode 
+                  background: isDarkMode
                     ? alpha(theme.palette.background.paper, 0.6)
                     : alpha(theme.palette.background.paper, 0.8),
                   "&:hover fieldset": {
@@ -374,7 +375,7 @@ const Register = () => {
               sx={{
                 "& .MuiOutlinedInput-root": {
                   borderRadius: 2,
-                  background: isDarkMode 
+                  background: isDarkMode
                     ? alpha(theme.palette.background.paper, 0.6)
                     : alpha(theme.palette.background.paper, 0.8),
                   "&:hover fieldset": {
@@ -398,9 +399,9 @@ const Register = () => {
               <PulseLoader color={isDarkMode ? theme.palette.primary.light : "#005fff"} size={32} />
             </Box>
           ) : (
-            <Button 
-              type="submit" 
-              variant="contained" 
+            <Button
+              type="submit"
+              variant="contained"
               endIcon={<Send />}
               fullWidth
               sx={{
@@ -428,8 +429,8 @@ const Register = () => {
         </DialogActions>
       </form>
 
-      <DialogActions sx={{ 
-        justifyContent: "center", 
+      <DialogActions sx={{
+        justifyContent: "center",
         p: 2.5,
         bgcolor: isDarkMode
           ? alpha(theme.palette.background.default, 0.5)
@@ -440,7 +441,7 @@ const Register = () => {
         <Typography variant="body2" color="text.secondary">
           Already have an account?
         </Typography>
-        <Button 
+        <Button
           onClick={() => navigate("/login")}
           sx={{
             textTransform: "none",

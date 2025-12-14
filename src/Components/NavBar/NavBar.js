@@ -33,6 +33,7 @@ import {
   Close,
   ExpandLess,
   GarageRounded as LocalParking,
+  Dashboard,
 } from "@mui/icons-material";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
@@ -94,7 +95,7 @@ const NavBar = () => {
   return (
     <>
       <AppBar
-        position="fixed"
+        position="static"
         sx={{
           background: appBarBg,
           backdropFilter: "blur(32px)",
@@ -108,7 +109,7 @@ const NavBar = () => {
         }}
       >
         <Container maxWidth="lg">
-          <Toolbar disableGutters sx={{ py: 1 }}>
+          <Toolbar disableGutters sx={{ py: 1, position: "relative" }}>
             {/* Desktop Logo */}
             <Box
               onClick={() => setSelectedTab("null")}
@@ -143,155 +144,65 @@ const NavBar = () => {
                 display: { xs: "none", md: "flex" },
                 alignItems: "center",
                 gap: 1,
+                position: "absolute",
+                left: "50%",
+                transform: "translateX(-50%)",
+                ml: 3,
               }}
             >
-              <Button
-                onClick={() => setSelectedTab("/map")}
-                component={Link}
-                to="/map"
-                startIcon={<Map />}
-                sx={{
-                  color: "text.primary",
-                  fontWeight: 500,
-                  borderRadius: 2,
-                  px: 3,
-                  py: 1,
-                  transition: "all 0.3s ease",
-                  position: "relative",
-                  overflow: "hidden",
-                  background: selectedTab === "/map" ? buttonHoverBg : "transparent",
-                  "&:before": {
-                    content: '""',
-                    position: "absolute",
-                    bottom: 0,
-                    left: "50%",
-                    width: 0,
-                    height: 2,
-                    background: `linear-gradient(45deg, ${muiTheme.palette.primary.main}, ${muiTheme.palette.info.main})`,
+              {[
+                { label: "Map", path: "/map", icon: <Map /> },
+                {
+                  label: "Upload",
+                  path: "/upload",
+                  icon: <CloudUpload />,
+                  isActive: (tab) => tab.includes("/upload"),
+                },
+                { label: "Rooms", path: "/rooms", icon: <LocalParking /> },
+                { label: "About", path: "/about", icon: <Info /> },
+              ].map((item) => (
+                <Button
+                  key={item.label}
+                  onClick={() => setSelectedTab(item.path)}
+                  component={Link}
+                  to={item.path}
+                  startIcon={item.icon}
+                  sx={{
+                    color: "text.primary",
+                    fontWeight: 500,
+                    borderRadius: 2,
+                    px: 3,
+                    py: 1,
                     transition: "all 0.3s ease",
-                    transform: "translateX(-50%)",
-                  },
-                  "&:hover": {
-                    color: muiTheme.palette.primary.main,
-                    background: buttonHoverBg,
-                    transform: "translateY(-1px)",
-                    "&:before": { width: "80%" },
-                  },
-                }}
-              >
-                Map
-              </Button>
-
-              <Button
-                onClick={() => setSelectedTab("/upload")}
-                component={Link}
-                to="/upload"
-                startIcon={<CloudUpload />}
-                sx={{
-                  color: "text.primary",
-                  fontWeight: 500,
-                  borderRadius: 2,
-                  px: 3,
-                  py: 1,
-                  transition: "all 0.3s ease",
-                  position: "relative",
-                  overflow: "hidden",
-                  background: selectedTab.includes("/upload") ? buttonHoverBg : "transparent",
-                  "&:before": {
-                    content: '""',
-                    position: "absolute",
-                    bottom: 0,
-                    left: "50%",
-                    width: 0,
-                    height: 2,
-                    background: `linear-gradient(45deg, ${muiTheme.palette.primary.main}, ${muiTheme.palette.info.main})`,
-                    transition: "all 0.3s ease",
-                    transform: "translateX(-50%)",
-                  },
-                  "&:hover": {
-                    color: muiTheme.palette.primary.main,
-                    background: buttonHoverBg,
-                    transform: "translateY(-1px)",
-                    "&:before": { width: "80%" },
-                  },
-                }}
-              >
-                Upload
-              </Button>
-
-              <Button
-                onClick={() => setSelectedTab("/rooms")}
-                component={Link}
-                to="/rooms"
-                startIcon={<LocalParking />}
-                sx={{
-                  color: "text.primary",
-                  fontWeight: 500,
-                  borderRadius: 2,
-                  px: 3,
-                  py: 1,
-                  transition: "all 0.3s ease",
-                  position: "relative",
-                  overflow: "hidden",
-                  background: selectedTab === "/rooms" ? buttonHoverBg : "transparent",
-                  "&:before": {
-                    content: '""',
-                    position: "absolute",
-                    bottom: 0,
-                    left: "50%",
-                    width: 0,
-                    height: 2,
-                    background: `linear-gradient(45deg, ${muiTheme.palette.primary.main}, ${muiTheme.palette.info.main})`,
-                    transition: "all 0.3s ease",
-                    transform: "translateX(-50%)",
-                  },
-                  "&:hover": {
-                    color: muiTheme.palette.primary.main,
-                    background: buttonHoverBg,
-                    transform: "translateY(-1px)",
-                    "&:before": { width: "80%" },
-                  },
-                }}
-              >
-                Rooms
-              </Button>
-
-              <Button
-                onClick={() => setSelectedTab("/about")}
-                component={Link}
-                to="/about"
-                startIcon={<Info />}
-                sx={{
-                  color: "text.primary",
-                  fontWeight: 500,
-                  borderRadius: 2,
-                  px: 3,
-                  py: 1,
-                  transition: "all 0.3s ease",
-                  position: "relative",
-                  overflow: "hidden",
-                  background: selectedTab === "/about" ? buttonHoverBg : "transparent",
-                  "&:before": {
-                    content: '""',
-                    position: "absolute",
-                    bottom: 0,
-                    left: "50%",
-                    width: 0,
-                    height: 2,
-                    background: `linear-gradient(45deg, ${muiTheme.palette.primary.main}, ${muiTheme.palette.info.main})`,
-                    transition: "all 0.3s ease",
-                    transform: "translateX(-50%)",
-                  },
-                  "&:hover": {
-                    color: muiTheme.palette.primary.main,
-                    background: buttonHoverBg,
-                    transform: "translateY(-1px)",
-                    "&:before": { width: "80%" },
-                  },
-                }}
-              >
-                About
-              </Button>
+                    position: "relative",
+                    overflow: "hidden",
+                    background: (item.isActive ? item.isActive(selectedTab) : selectedTab === item.path)
+                      ? buttonHoverBg
+                      : "transparent",
+                    "&:before": {
+                      content: '""',
+                      position: "absolute",
+                      bottom: 0,
+                      left: "50%",
+                      width: 0,
+                      height: 2,
+                      background: `linear-gradient(45deg, ${muiTheme.palette.primary.main}, ${muiTheme.palette.info.main})`,
+                      transition: "all 0.3s ease",
+                      transform: "translateX(-50%)",
+                    },
+                    "&:hover": {
+                      color: muiTheme.palette.primary.main,
+                      background: buttonHoverBg,
+                      transform: "translateY(-1px)",
+                      "&:before": { width: "80%" },
+                    },
+                  }}
+                >
+                  <Box component="span" sx={{ display: { xs: "none", lg: "block" } }}>
+                    {item.label}
+                  </Box>
+                </Button>
+              ))}
 
               {/* Options Dropdown (desktop hover) */}
               <Box sx={{ position: "relative" }} onMouseLeave={() => setOptionsOpen(false)}>
@@ -311,7 +222,9 @@ const NavBar = () => {
                     "&:hover": { background: buttonHoverBg, transform: "translateY(-1px)" },
                   }}
                 >
-                  Options
+                  <Box component="span" sx={{ display: { xs: "none", lg: "block" } }}>
+                    Options
+                  </Box>
                 </Button>
 
                 <Box
@@ -406,6 +319,7 @@ const NavBar = () => {
                 display: { xs: "none", md: "flex" },
                 alignItems: "center",
                 gap: 2,
+                ml: "auto",
               }}
             >
               {currentUser ? (
@@ -417,13 +331,13 @@ const NavBar = () => {
                   }}>
                   <Button
                     onMouseEnter={() => setDropDownOpen(true)}
-                    startIcon={<AccountCircle />}
+                    startIcon={<AccountCircle sx={{ ml: 0.5 }} />}
                     endIcon={<ExpandMore />}
                     sx={{
                       color: muiTheme.palette.text.primary,
                       fontWeight: 500,
                       borderRadius: 2,
-                      px: 3,
+                      px: "auto",
                       py: 1,
                       background: buttonHoverBg,
                       border: `1px solid ${menuBorder}`,
@@ -458,7 +372,8 @@ const NavBar = () => {
                     }}
                   >
                     {[
-                      { path: "/dashboard", label: "Dashboard", icon: <Person /> },
+                      { path: "/dashboard", label: "Dashboard", icon: <Dashboard /> },
+                      { path: "/profile", label: "Profile", icon: <Person /> },
                       { path: "/logout", label: "Logout", icon: <Logout /> },
                     ].map((item, index) => (
                       <Button
@@ -550,7 +465,11 @@ const NavBar = () => {
           {/* Header */}
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 4 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <AccountCircle sx={{ fontSize: 32 }} />
+              {currentUser.photoURL ? (
+                <img src={currentUser.photoURL} alt="Profile" style={{ width: 32, height: 32, borderRadius: "50%" }} />
+              ) : (
+                <AccountCircle sx={{ fontSize: 32 }} />
+              )}
               <Typography variant="h6" fontWeight="600" sx={{ color: "white" }}>
                 {currentUser ? currentUser.fullName : "Welcome"}
               </Typography>
@@ -626,7 +545,7 @@ const NavBar = () => {
               </ListItemIcon>
               <ListItemText primary="Rooms" primaryTypographyProps={{ fontWeight: 500 }} />
             </ListItemButton>
-            
+
             <ListItemButton
               component={Link}
               to="/about"
@@ -735,9 +654,26 @@ const NavBar = () => {
                   }}
                 >
                   <ListItemIcon sx={{ color: "white", minWidth: 40 }}>
-                    <Person />
+                    <Dashboard />
                   </ListItemIcon>
                   <ListItemText primary="Dashboard" primaryTypographyProps={{ fontWeight: 500 }} />
+                </ListItemButton>
+                <ListItemButton
+                  component={Link}
+                  to="/profile"
+                  onClick={toggleDrawer}
+                  sx={{
+                    color: "white",
+                    borderRadius: 2,
+                    mb: 1,
+                    transition: "all 0.3s ease",
+                    "&:hover": { background: "rgba(255,255,255,0.08)", transform: "translateX(5px)" },
+                  }}
+                >
+                  <ListItemIcon sx={{ color: "white", minWidth: 40 }}>
+                    <Person />
+                  </ListItemIcon>
+                  <ListItemText primary="Profile" primaryTypographyProps={{ fontWeight: 500 }} />
                 </ListItemButton>
               </>
             )}
@@ -781,9 +717,6 @@ const NavBar = () => {
           </Box>
         </Box>
       </Drawer>
-
-      {/* Spacer for fixed AppBar */}
-      <Toolbar />
     </>
   );
 };

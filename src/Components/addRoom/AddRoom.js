@@ -52,16 +52,18 @@ import uploadFileProgress from "../../firebase/uploadFileProgress";
 const AddRoom = () => {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
-  
+
   const {
     state: { images, location },
     dispatch,
   } = useValue();
-  
+
   const { currentUser } = useContext(Context);
   const [uploading, setUploading] = useState(false);
   const [saveForFuture, setSaveForFuture] = useState(false);
   const [imageUrls, setImageUrls] = useState([]);
+  const [video, setVideo] = useState(null); // Local state for video preview
+  const [videoUrl, setVideoUrl] = useState(""); // Local state for video Firebase URL
   const [progress, setProgress] = useState({});
   const navigate = useNavigate();
   const [viewport, setViewport] = useState({
@@ -72,7 +74,7 @@ const AddRoom = () => {
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (!currentUser) { 
+    if (!currentUser) {
       navigate("/login");
     }
   }, [currentUser, navigate]);
@@ -91,6 +93,8 @@ const AddRoom = () => {
     size: "standard",
     securityFeatures: [],
     accessHours: "24/7",
+    availableFrom: "",
+    availableTo: "",
   });
 
   // Available options
@@ -99,7 +103,7 @@ const AddRoom = () => {
   ];
 
   const amenityOptions = [
-    "Covered", "24/7 Access", "Security Camera", "Lighted", "Gated", "EV Charging", 
+    "Covered", "24/7 Access", "Security Camera", "Lighted", "Gated", "EV Charging",
     "Handicap Accessible", "Near Elevator", "Valet Available", "Monthly Discount"
   ];
 
@@ -115,67 +119,130 @@ const AddRoom = () => {
     }));
   };
 
-  // Handle image upload
+  // Handle file upload
   const onDrop = useCallback((acceptedFiles) => {
-    if (images.length + acceptedFiles.length > 3) {
-      dispatch({
-        type: "UPDATE_ALERT",
-        payload: {
-          open: true,
-          severity: "error",
-          message: "Maximum 3 images allowed",
-        },
-      });
-      return;
+    // Separate images and videos
+    const imageFiles = acceptedFiles.filter(file => file.type.startsWith('image/'));
+    const videoFiles = acceptedFiles.filter(file => file.type.startsWith('video/'));
+
+    // Validate Video
+    if (videoFiles.length > 0) {
+      if (video || videoFiles.length > 1) {
+        dispatch({
+          type: "UPDATE_ALERT",
+          payload: { open: true, severity: "error", message: "Only 1 video allowed" },
+        }); // Don't return here, enable processing valid images 
+      } else {
+        const file = videoFiles[0];
+        if (file.size > 15 * 1024 * 1024) { // 15MB
+          dispatch({
+            type: "UPDATE_ALERT",
+            payload: { open: true, severity: "error", message: "Video must be under 15MB" },
+          });
+        } else {
+          const videoName = uuidv4() + "." + file.name.split(".").pop();
+          const videoPreview = URL.createObjectURL(file);
+          setVideo({ file, preview: videoPreview, name: videoName });
+
+          // Upload Video to Firebase
+          uploadFileProgress(
+            file,
+            `rooms/${currentUser?.uid || 'anonymous'}/videos`,
+            videoName,
+            (uploadProgress) => {
+              setProgress(prev => ({
+                ...prev,
+                [videoName]: uploadProgress
+              }));
+            }
+          ).then((finalUrl) => {
+            setVideoUrl(finalUrl);
+          }).catch((error) => {
+            console.error("Video upload error:", error);
+            dispatch({
+              type: "UPDATE_ALERT",
+              payload: { open: true, severity: "error", message: "Failed to upload video" },
+            });
+          });
+        }
+      }
     }
 
-    acceptedFiles.forEach((file) => {
-      const imageName = uuidv4() + "." + file.name.split(".").pop();
-      const imageURL = URL.createObjectURL(file);
-      
-      // Add to images array immediately for preview
-      dispatch({ type: "UPDATE_IMAGES", payload: imageURL });
-      
-      // Upload to Firebase
-      uploadFileProgress(
-        file,
-        `rooms/${currentUser?.uid || 'anonymous'}`,
-        imageName,
-        (uploadProgress) => {
-          setProgress(prev => ({
-            ...prev,
-            [imageName]: uploadProgress
-          }));
-        }
-      ).then((finalUrl) => {
-        // upload completed HERE
-        setImageUrls(prev => [...prev, finalUrl]);
-      }).catch((error) => {
-        console.error("Upload error:", error);
+    // Validate Images
+    if (imageFiles.length > 0) {
+      if (images.length + imageFiles.length > 3) {
         dispatch({
           type: "UPDATE_ALERT",
           payload: {
             open: true,
             severity: "error",
-            message: "Failed to upload image",
+            message: "Maximum 3 images allowed",
           },
         });
+        // Proceed to add as many as possible? Or block? 
+        // Current strict logic: return. 
+        // I'll stick to strict but maybe allow partial? 
+        // Just strict for now to match previous logic.
+        return;
+      }
+
+      imageFiles.forEach((file) => {
+        const imageName = uuidv4() + "." + file.name.split(".").pop();
+        const imageURL = URL.createObjectURL(file);
+
+        // Add to images array immediately for preview
+        dispatch({ type: "UPDATE_IMAGES", payload: imageURL });
+
+        // Upload to Firebase
+        uploadFileProgress(
+          file,
+          `rooms/${currentUser?.uid || 'anonymous'}`,
+          imageName,
+          (uploadProgress) => {
+            setProgress(prev => ({
+              ...prev,
+              [imageName]: uploadProgress
+            }));
+          }
+        ).then((finalUrl) => {
+          setImageUrls(prev => [...prev, finalUrl]);
+        }).catch((error) => {
+          console.error("Upload error:", error);
+          dispatch({
+            type: "UPDATE_ALERT",
+            payload: {
+              open: true,
+              severity: "error",
+              message: "Failed to upload image",
+            },
+          });
+        });
       });
-    });
-  }, [images.length, currentUser, dispatch]);
+    }
+
+  }, [images.length, currentUser, dispatch, video]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { 'image/*': [] },
-    maxFiles: 3 - images.length,
+    accept: {
+      'image/*': [],
+      'video/*': []
+    },
+    // maxFiles removed to handle mixed types manually
   });
 
   // Remove image
   const removeImage = (index) => {
-    dispatch({ 
-      type: "DELETE_IMAGE", 
-      payload: index 
+    dispatch({
+      type: "DELETE_IMAGE",
+      payload: index
     });
+  };
+
+  // Remove video
+  const removeVideo = () => {
+    setVideo(null);
+    setVideoUrl("");
   };
 
   // Handle map viewport change
@@ -183,9 +250,9 @@ const AddRoom = () => {
     setViewport(newViewport);
     dispatch({
       type: "UPDATE_LOCATION",
-      payload: { 
-        lng: newViewport.longitude, 
-        lat: newViewport.latitude 
+      payload: {
+        lng: newViewport.longitude,
+        lat: newViewport.latitude
       },
     });
   };
@@ -194,9 +261,9 @@ const AddRoom = () => {
   const handleMarkerDrag = (event) => {
     dispatch({
       type: "UPDATE_LOCATION",
-      payload: { 
-        lng: event.lngLat.lng, 
-        lat: event.lngLat.lat 
+      payload: {
+        lng: event.lngLat.lng,
+        lat: event.lngLat.lat
       },
     });
   };
@@ -205,9 +272,9 @@ const AddRoom = () => {
   const handleGeolocate = (event) => {
     dispatch({
       type: "UPDATE_LOCATION",
-      payload: { 
-        lng: event.coords.longitude, 
-        lat: event.coords.latitude 
+      payload: {
+        lng: event.coords.longitude,
+        lat: event.coords.latitude
       },
     });
     setViewport({
@@ -240,6 +307,17 @@ const AddRoom = () => {
     if (!location.lng || !location.lat) {
       return "Please select a location on the map";
     }
+    if (!formData.availableFrom) {
+      return "Please select availability start date and time";
+    }
+    if (!formData.availableTo) {
+      return "Please select availability end date and time";
+    }
+    const startDate = new Date(formData.availableFrom);
+    const endDate = new Date(formData.availableTo);
+    if (endDate <= startDate) {
+      return "Availability end date must be after start date";
+    }
     return null;
   };
 
@@ -260,7 +338,7 @@ const AddRoom = () => {
 
     try {
       setUploading(true);
-      
+
       const uniqueRoomId = uuidv4();
       const fullAddress = `${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}`;
 
@@ -282,7 +360,12 @@ const AddRoom = () => {
         size: formData.size,
         securityFeatures: formData.securityFeatures,
         accessHours: formData.accessHours,
+        availableFrom: formData.availableFrom,
+        availableTo: formData.availableTo,
+        availableFrom: formData.availableFrom,
+        availableTo: formData.availableTo,
         images: imageUrls,
+        video: videoUrl || null,
         createdBy: currentUser?.uid,
         ownerName: currentUser?.fullName || "Anonymous",
         ownerEmail: currentUser?.email,
@@ -334,7 +417,12 @@ const AddRoom = () => {
         size: "standard",
         securityFeatures: [],
         accessHours: "24/7",
+        availableFrom: "",
+        availableTo: "",
       });
+      // also reset video state
+      setVideo(null);
+      setVideoUrl("");
 
       navigate("/");
     } catch (error) {
@@ -344,8 +432,8 @@ const AddRoom = () => {
         payload: {
           open: true,
           severity: "error",
-          message: currentUser?.uid 
-            ? "Failed to list parking spot. Please try again." 
+          message: currentUser?.uid
+            ? "Failed to list parking spot. Please try again."
             : "Please log in to list a parking spot",
         },
       });
@@ -373,12 +461,10 @@ const AddRoom = () => {
   return (
     <Box
       sx={{
-        minHeight: "100vh",
-        pt: { xs: 4, md: 9 },
-        px: { xs: 2, md: 4 },
-        background: isDarkMode
-          ? `linear-gradient(135deg, ${theme.palette.background.default} 0%, ${alpha(theme.palette.primary.dark, 0.1)} 100%)`
-          : `linear-gradient(135deg, ${theme.palette.background.default} 0%, ${alpha(theme.palette.primary.light, 0.05)} 100%)`,
+        minHeight: "auto",
+        pt: 2,
+        pb: 3,
+        background: theme.palette.customStyles?.heroBackground || theme.palette.background.default,
       }}
     >
       <Container maxWidth="xl">
@@ -432,7 +518,7 @@ const AddRoom = () => {
                   <LocationOn sx={{ mr: 1, verticalAlign: "middle" }} />
                   Address Information
                 </Typography>
-                
+
                 <Grid container spacing={2}>
                   <Grid item xs={12}>
                     <TextField
@@ -546,6 +632,34 @@ const AddRoom = () => {
                       </Select>
                     </FormControl>
                   </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Available From"
+                      type="datetime-local"
+                      value={formData.availableFrom}
+                      onChange={(e) => handleChange("availableFrom", e.target.value)}
+                      required
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      helperText="When will the parking spot be available?"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Available Until"
+                      type="datetime-local"
+                      value={formData.availableTo}
+                      onChange={(e) => handleChange("availableTo", e.target.value)}
+                      required
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                      helperText="When will the availability end?"
+                    />
+                  </Grid>
                 </Grid>
               </Box>
 
@@ -583,7 +697,7 @@ const AddRoom = () => {
                   <Security sx={{ mr: 1, verticalAlign: "middle" }} />
                   Amenities & Features
                 </Typography>
-                
+
                 <Box sx={{ mb: 3 }}>
                   <Typography variant="subtitle2" gutterBottom>
                     Amenities
@@ -643,7 +757,7 @@ const AddRoom = () => {
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                   Drag the marker to adjust the exact location
                 </Typography>
-                
+
                 <Box
                   sx={{
                     height: 300,
@@ -659,8 +773,8 @@ const AddRoom = () => {
                       handleViewportChange(evt.viewState);
                     }}
                     mapboxAccessToken={process.env.REACT_APP_MAP_TOKEN}
-                    mapStyle={isDarkMode 
-                      ? "mapbox://styles/mapbox/dark-v11" 
+                    mapStyle={isDarkMode
+                      ? "mapbox://styles/mapbox/dark-v11"
                       : "mapbox://styles/mapbox/streets-v12"
                     }
                     style={{ width: '100%', height: '100%' }}
@@ -694,120 +808,161 @@ const AddRoom = () => {
               <Box>
                 <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
                   <CloudUpload sx={{ mr: 1, verticalAlign: "middle" }} />
-                  Upload Photos ({images.length}/3)
+                  Upload Media
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Upload clear photos of your parking spot. Maximum 3 images.
+                  Photos: Max 3. Video: Max 1 (15MB).
                 </Typography>
+
+                {/* Dropzone */}
+                <Box
+                  {...getRootProps()}
+                  sx={{
+                    p: 3,
+                    mb: 3,
+                    border: `2px dashed ${isDragActive ? theme.palette.primary.main : theme.palette.divider}`,
+                    borderRadius: 2,
+                    bgcolor: isDragActive ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      bgcolor: alpha(theme.palette.primary.main, 0.05),
+                      borderColor: theme.palette.primary.main,
+                    }
+                  }}
+                >
+                  <input {...getInputProps()} />
+                  <CloudUpload sx={{ fontSize: 48, color: theme.palette.text.secondary, mb: 1 }} />
+                  <Typography variant="body1" color="text.primary" fontWeight={600}>
+                    {isDragActive ? "Drop files here..." : "Click or Drag & Drop"}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    JPG, PNG, MP4, WebM allowed
+                  </Typography>
+                </Box>
+
+                {/* Video Preview */}
+                {video && (
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>Video Preview:</Typography>
+                    <Card
+                      sx={{
+                        position: "relative",
+                        borderRadius: 2,
+                        overflow: "hidden",
+                        maxWidth: 300
+                      }}
+                    >
+                      <CardMedia
+                        component="video"
+                        controls
+                        src={video.preview}
+                        sx={{ height: 180, bgcolor: 'black' }}
+                      />
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          top: 8,
+                          right: 8,
+                          bgcolor: alpha(theme.palette.error.main, 0.9),
+                          borderRadius: "50%",
+                          zIndex: 2,
+                        }}
+                      >
+                        <IconButton
+                          size="small"
+                          onClick={removeVideo}
+                          sx={{ color: "white" }}
+                        >
+                          <Close fontSize="small" />
+                        </IconButton>
+                      </Box>
+                      {progress[video.name] && progress[video.name] < 100 && (
+                        <Box
+                          sx={{
+                            position: "absolute",
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            bgcolor: alpha(theme.palette.common.black, 0.7),
+                            color: "white",
+                            textAlign: "center",
+                            py: 0.5,
+                          }}
+                        >
+                          <Typography variant="caption">
+                            Uploading {Math.round(progress[video.name])}%
+                          </Typography>
+                        </Box>
+                      )}
+                    </Card>
+                  </Box>
+                )}
 
                 {/* Image Preview Grid */}
                 {images.length > 0 && (
-                  <Grid container spacing={2} sx={{ mb: 2 }}>
-                    {images.map((image, index) => (
-                      <Grid item xs={4} key={index}>
-                        <Card
-                          sx={{
-                            position: "relative",
-                            borderRadius: 2,
-                            overflow: "hidden",
-                          }}
-                        >
-                          <CardMedia
-                            component="img"
-                            height="120"
-                            image={image}
-                            alt={`Parking spot ${index + 1}`}
-                          />
-                          <Box
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>Images ({images.length}/3):</Typography>
+                    <Grid container spacing={2} sx={{ mb: 2 }}>
+                      {images.map((image, index) => (
+                        <Grid item xs={4} key={index}>
+                          <Card
                             sx={{
-                              position: "absolute",
-                              top: 8,
-                              right: 8,
-                              bgcolor: alpha(theme.palette.error.main, 0.9),
-                              borderRadius: "50%",
+                              position: "relative",
+                              borderRadius: 2,
+                              overflow: "hidden",
                             }}
                           >
-                            <IconButton
-                              size="small"
-                              onClick={() => removeImage(image)}
-                              sx={{ color: "white" }}
-                            >
-                              <Close fontSize="small" />
-                            </IconButton>
-                          </Box>
-                          {progress[image] && progress[image] < 100 && (
+                            <CardMedia
+                              component="img"
+                              height="120"
+                              image={image}
+                              alt={`Parking spot ${index + 1}`}
+                            />
                             <Box
                               sx={{
                                 position: "absolute",
-                                bottom: 0,
-                                left: 0,
-                                right: 0,
-                                bgcolor: alpha(theme.palette.common.black, 0.7),
-                                color: "white",
-                                textAlign: "center",
-                                py: 0.5,
+                                top: 8,
+                                right: 8,
+                                bgcolor: alpha(theme.palette.error.main, 0.9),
+                                borderRadius: "50%",
                               }}
                             >
-                              <Typography variant="caption">
-                                Uploading {progress[image]}%
-                              </Typography>
+                              <IconButton
+                                size="small"
+                                onClick={() => removeImage(image)}
+                                sx={{ color: "white" }}
+                              >
+                                <Close fontSize="small" />
+                              </IconButton>
                             </Box>
-                          )}
-                        </Card>
-                      </Grid>
-                    ))}
-                  </Grid>
-                )}
-
-                {/* Dropzone */}
-                {images.length < 3 && (
-                  <Paper
-                    {...getRootProps()}
-                    elevation={0}
-                    sx={{
-                      p: 4,
-                      border: `2px dashed ${isDragActive ? theme.palette.primary.main : alpha(theme.palette.divider, 0.5)}`,
-                      borderRadius: 2,
-                      bgcolor: isDragActive 
-                        ? alpha(theme.palette.primary.main, 0.05) 
-                        : alpha(theme.palette.background.paper, 0.5),
-                      cursor: "pointer",
-                      textAlign: "center",
-                      transition: "all 0.3s ease",
-                      "&:hover": {
-                        borderColor: theme.palette.primary.main,
-                        bgcolor: alpha(theme.palette.primary.main, 0.08),
-                      },
-                    }}
-                  >
-                    <input {...getInputProps()} />
-                    <CloudUpload
-                      sx={{
-                        fontSize: 48,
-                        color: theme.palette.primary.main,
-                        mb: 2,
-                      }}
-                    />
-                    {isDragActive ? (
-                      <Typography variant="h6" color="primary">
-                        Drop the files here...
-                      </Typography>
-                    ) : (
-                      <>
-                        <Typography variant="h6" gutterBottom>
-                          Drag & drop images here
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          or click to browse files
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
-                          Supports: JPG, PNG up to 5MB each
-                        </Typography>
-                      </>
-                    )}
-                  </Paper>
+                            {progress[image] && progress[image] < 100 && (
+                              <Box
+                                sx={{
+                                  position: "absolute",
+                                  bottom: 0,
+                                  left: 0,
+                                  right: 0,
+                                  bgcolor: alpha(theme.palette.common.black, 0.7),
+                                  color: "white",
+                                  textAlign: "center",
+                                  py: 0.5,
+                                }}
+                              >
+                                <Typography variant="caption">
+                                  Uploading {Math.round(progress[image])}%
+                                </Typography>
+                              </Box>
+                            )}
+                          </Card>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </Box>
                 )}
               </Box>
+
 
               {/* Save for Future Checkbox */}
               <Box sx={{ mt: 4, pt: 3, borderTop: `1px solid ${alpha(theme.palette.divider, 0.2)}` }}>
@@ -836,15 +991,15 @@ const AddRoom = () => {
           </Grid>
 
           {/* Submit Section */}
-          <Box sx={{ 
-            mt: 6, 
-            pt: 4, 
+          <Box sx={{
+            mt: 6,
+            pt: 4,
             borderTop: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
-            textAlign: "center" 
+            textAlign: "center"
           }}>
-            <Alert 
-              severity="info" 
-              sx={{ 
+            <Alert
+              severity="info"
+              sx={{
                 mb: 3,
                 bgcolor: alpha(theme.palette.info.main, 0.1),
                 border: `1px solid ${alpha(theme.palette.info.main, 0.2)}`,
@@ -886,7 +1041,7 @@ const AddRoom = () => {
           </Box>
         </Paper>
       </Container>
-    </Box>
+    </Box >
   );
 };
 

@@ -39,7 +39,6 @@ function Reserve() {
           ? "linear-gradient(135deg, #1a1a23 0%, #0f0f15 100%)"
           : "linear-gradient(135deg, #f8fbff 0%, #f0f8ff 100%)",
         position: "relative",
-        overflow: "hidden",
       }}
     >
       {/* Background decorative elements */}

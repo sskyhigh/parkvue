@@ -30,6 +30,11 @@ import {
   Tooltip,
   Fade,
   CardActions,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Collapse,
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -46,6 +51,14 @@ import {
   CheckCircle,
   Warning,
   Info,
+  FilterList as FilterIcon,
+  ExpandMore,
+  ExpandLess,
+  RestartAlt,
+  Chat as ChatIcon,
+  ArrowBackIos,
+  ArrowForwardIos,
+  PlayCircle,
 } from "@mui/icons-material";
 import { Context } from "../../context/ContextProvider";
 
@@ -54,15 +67,68 @@ const ROOMS_PER_PAGE = 12;
 const Rooms = () => {
   const theme = useTheme();
   const navigate = useNavigate();
-  const { currentUser } = useContext(Context);
+  const { currentUser, dispatch } = useContext(Context);
 
   const [rooms, setRooms] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [photoIndex, setPhotoIndex] = useState(0);
+
+  // Derive media list
+  const mediaList = useMemo(() => {
+    if (!selectedRoom) return [];
+    const list = [];
+    if (selectedRoom.video) list.push({ type: 'video', src: selectedRoom.video });
+    if (selectedRoom.images && Array.isArray(selectedRoom.images)) {
+      selectedRoom.images.forEach(img => list.push({ type: 'image', src: img }));
+    }
+    // Fallback if empty
+    if (list.length === 0) list.push({ type: 'image', src: "/placeholder-park.jpg" });
+    return list;
+  }, [selectedRoom]);
+
+  useEffect(() => {
+    setPhotoIndex(0);
+  }, [selectedRoom]);
+
+  const handleNextMedia = () => {
+    setPhotoIndex((prev) => (prev + 1) % mediaList.length);
+  };
+
+  const handlePrevMedia = () => {
+    setPhotoIndex((prev) => (prev - 1 + mediaList.length) % mediaList.length);
+  };
 
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
+
+  // Filter states
+  const [filterStatus, setFilterStatus] = useState("all"); // 'all', 'available', 'reserved'
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterVehicle, setFilterVehicle] = useState("");
+  const [filterAmenity, setFilterAmenity] = useState("");
+  const [filterSecurity, setFilterSecurity] = useState("");
+  const [filterCity, setFilterCity] = useState("");
+
+  // Filter options
+  const vehicleTypeOptions = [
+    "Car", "SUV", "Truck", "Motorcycle", "Van", "Electric Vehicle", "Compact Car", "Sedan"
+  ];
+
+  const amenityOptions = [
+    "Covered", "24/7 Access", "Security Camera", "Lighted", "Gated", "EV Charging",
+    "Handicap Accessible", "Near Elevator", "Valet Available", "Monthly Discount"
+  ];
+
+  const securityFeatureOptions = [
+    "Security Cameras", "Lighting", "Gated Entry", "Attendant On-site", "Alarm System", "Security Patrol"
+  ];
+
+  const uniqueCities = useMemo(() => {
+    const cities = rooms.map(r => r.city).filter(Boolean);
+    return [...new Set(cities)].sort();
+  }, [rooms]);
 
   // Fetch rooms
   useEffect(() => {
@@ -104,11 +170,11 @@ const Rooms = () => {
 
   const handleBookClick = () => {
     if (selectedRoom) {
-      navigate(`/booking/${selectedRoom.id}`, { 
-        state: { 
-          room: selectedRoom, 
-          self: selectedRoom.ownerEmail === currentUser.email ? true : false 
-        } 
+      navigate(`/booking/${selectedRoom.id}`, {
+        state: {
+          room: selectedRoom,
+          self: selectedRoom.ownerEmail === currentUser.email ? true : false
+        }
       });
     }
   };
@@ -139,12 +205,52 @@ const Rooms = () => {
 
   // derived: filtered + ordered (available first) list
   const filteredOrdered = useMemo(() => {
-    const filtered = rooms.filter((r) => matchesQuery(r, query));
+    let filtered = rooms.filter((r) => matchesQuery(r, query));
+
+    // Apply filters
+    if (filterStatus === 'available') {
+      filtered = filtered.filter(r => r.available !== false);
+    } else if (filterStatus === 'reserved') {
+      filtered = filtered.filter(r => r.available === false);
+    }
+
+    if (filterVehicle) {
+      filtered = filtered.filter(r => r.vehicleTypes && r.vehicleTypes.includes(filterVehicle));
+    }
+
+    if (filterAmenity) {
+      filtered = filtered.filter(r => r.amenities && r.amenities.includes(filterAmenity));
+    }
+
+    if (filterSecurity) {
+      filtered = filtered.filter(r => r.securityFeatures && r.securityFeatures.includes(filterSecurity));
+    }
+
+    if (filterCity) {
+      filtered = filtered.filter(r => r.city === filterCity);
+    }
+
     // stable partition: available first, reserved last
     const available = filtered.filter((r) => r.available !== false);
     const reserved = filtered.filter((r) => r.available === false);
     return [...available, ...reserved];
-  }, [rooms, query]);
+  }, [rooms, query, filterStatus, filterVehicle, filterAmenity, filterSecurity, filterCity]);
+
+  // counts for badges (ignoring status filter)
+  const counts = useMemo(() => {
+    let filtered = rooms.filter(r => matchesQuery(r, query));
+
+    if (filterVehicle) filtered = filtered.filter(r => r.vehicleTypes && r.vehicleTypes.includes(filterVehicle));
+    if (filterAmenity) filtered = filtered.filter(r => r.amenities && r.amenities.includes(filterAmenity));
+    if (filterSecurity) filtered = filtered.filter(r => r.securityFeatures && r.securityFeatures.includes(filterSecurity));
+    if (filterCity) filtered = filtered.filter(r => r.city === filterCity);
+
+    return {
+      total: filtered.length,
+      available: filtered.filter(r => r.available !== false).length,
+      reserved: filtered.filter(r => r.available === false).length
+    };
+  }, [rooms, query, filterVehicle, filterAmenity, filterSecurity, filterCity]);
 
   // pagination
   const pageCount = Math.max(1, Math.ceil(filteredOrdered.length / ROOMS_PER_PAGE));
@@ -199,10 +305,10 @@ const Rooms = () => {
   return (
     <Box
       sx={{
-        minHeight: "100dvh",
+        minHeight: "auto",
+        pt: 2,
+        pb: 3,
         background: theme.palette.customStyles?.heroBackground || theme.palette.background.default,
-        pt: { xs: 10, md: 8 },
-        pb: 6,
         ...fadeIn,
         animation: "fadeIn 0.5s ease-out",
       }}
@@ -275,10 +381,23 @@ const Rooms = () => {
             </Box>
             <Stack direction="row" spacing={1} sx={{ mt: { xs: 2, md: 3 } }}>
               <Button
+                variant={showFilters ? "contained" : "outlined"}
+                startIcon={showFilters ? <ExpandLess /> : <FilterIcon />}
+                onClick={() => setShowFilters(!showFilters)}
+                sx={{ whiteSpace: "nowrap", borderRadius: 2 }}
+              >
+                Filters
+              </Button>
+              <Button
                 variant="outlined"
                 startIcon={<SearchOff />}
                 onClick={() => {
                   setQuery("");
+                  setFilterStatus("all");
+                  setFilterVehicle("");
+                  setFilterAmenity("");
+                  setFilterSecurity("");
+                  setFilterCity("");
                   setPage(1);
                 }}
                 sx={{ whiteSpace: "nowrap", borderRadius: 2 }}
@@ -287,26 +406,114 @@ const Rooms = () => {
               </Button>
             </Stack>
           </Stack>
-          
+
+          <Collapse in={showFilters}>
+            <Box sx={{ mt: 3, pt: 3, borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Filter Options</Typography>
+                <Button
+                  size="small"
+                  startIcon={<RestartAlt />}
+                  onClick={() => {
+                    setFilterVehicle("");
+                    setFilterAmenity("");
+                    setFilterSecurity("");
+                    setFilterCity("");
+                  }}
+                >
+                  Reset Filters
+                </Button>
+              </Stack>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Vehicle Type</InputLabel>
+                    <Select
+                      value={filterVehicle}
+                      label="Vehicle Type"
+                      onChange={(e) => setFilterVehicle(e.target.value)}
+                    >
+                      <MenuItem value=""><em>All Types</em></MenuItem>
+                      {vehicleTypeOptions.map((v) => (
+                        <MenuItem key={v} value={v}>{v}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Amenity</InputLabel>
+                    <Select
+                      value={filterAmenity}
+                      label="Amenity"
+                      onChange={(e) => setFilterAmenity(e.target.value)}
+                    >
+                      <MenuItem value=""><em>All Amenities</em></MenuItem>
+                      {amenityOptions.map((a) => (
+                        <MenuItem key={a} value={a}>{a}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Security</InputLabel>
+                    <Select
+                      value={filterSecurity}
+                      label="Security"
+                      onChange={(e) => setFilterSecurity(e.target.value)}
+                    >
+                      <MenuItem value=""><em>All Features</em></MenuItem>
+                      {securityFeatureOptions.map((s) => (
+                        <MenuItem key={s} value={s}>{s}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>City</InputLabel>
+                    <Select
+                      value={filterCity}
+                      label="City"
+                      onChange={(e) => setFilterCity(e.target.value)}
+                    >
+                      <MenuItem value=""><em>All Cities</em></MenuItem>
+                      {uniqueCities.map((c) => (
+                        <MenuItem key={c} value={c}>{c}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </Grid>
+            </Box>
+          </Collapse>
+
           {/* Stats Row */}
           <Stack direction="row" spacing={2} sx={{ mt: 3, flexWrap: 'wrap', gap: 1 }}>
             <Chip
               icon={<CheckCircle sx={{ fontSize: 16 }} />}
-              label={`${filteredOrdered.filter(r => r.available !== false).length} Available`}
+              label={`${counts.available} Available`}
               color="success"
-              variant="outlined"
+              variant={filterStatus === 'available' ? "filled" : "outlined"}
+              onClick={() => setFilterStatus(filterStatus === 'available' ? 'all' : 'available')}
+              sx={{ cursor: 'pointer' }}
             />
             <Chip
               icon={<Warning sx={{ fontSize: 16 }} />}
-              label={`${filteredOrdered.filter(r => r.available === false).length} Reserved`}
+              label={`${counts.reserved} Reserved`}
               color="default"
-              variant="outlined"
+              variant={filterStatus === 'reserved' ? "filled" : "outlined"}
+              onClick={() => setFilterStatus(filterStatus === 'reserved' ? 'all' : 'reserved')}
+              sx={{ cursor: 'pointer' }}
             />
             <Chip
               icon={<Info sx={{ fontSize: 16 }} />}
-              label={`${filteredOrdered.length} Total Spaces`}
+              label={`${counts.total} Total Spaces`}
               color="primary"
-              variant="outlined"
+              variant={filterStatus === 'all' ? "filled" : "outlined"}
+              onClick={() => setFilterStatus('all')}
+              sx={{ cursor: 'pointer' }}
             />
           </Stack>
         </Paper>
@@ -462,6 +669,23 @@ const Rooms = () => {
                                 </Typography>
                               </Stack>
 
+                              {/* Availability */}
+                              {room.availableFrom && room.availableTo && (
+                                <Stack direction="row" alignItems="flex-start" spacing={1}>
+                                  <CalendarTodayIcon sx={{ fontSize: 18, color: "success.main", mt: 0.25 }} />
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                    sx={{
+                                      flex: 1,
+                                      lineHeight: 1.3,
+                                    }}
+                                  >
+                                    Available: {prettyDate(room.availableFrom)} - {prettyDate(room.availableTo)}
+                                  </Typography>
+                                </Stack>
+                              )}
+
                               {/* Tags */}
                               <Stack direction="row" spacing={0.5} sx={{ flexWrap: "wrap", gap: 0.5 }}>
                                 {(room.vehicleTypes || []).slice(0, 2).map((v, i) => (
@@ -591,6 +815,7 @@ const Rooms = () => {
 
       {/* Enhanced Quick-view Dialog */}
       <Dialog
+        sx={{ zIndex: 900 }}
         open={openDialog}
         onClose={handleCloseDialog}
         maxWidth="md"
@@ -651,39 +876,103 @@ const Rooms = () => {
           <DialogContent dividers sx={{ p: 0 }}>
             <Grid container>
               {/* Images Column */}
+              {/* Images Column with Slider */}
               <Grid item xs={12} md={6}>
-                <Box sx={{ p: 3 }}>
+                <Box sx={{ p: 3, height: '100%' }}>
                   <Box
-                    component="img"
-                    src={selectedRoom.images?.[0] || "/placeholder-park.jpg"}
-                    alt={selectedRoom.title}
                     sx={{
+                      position: 'relative',
                       width: "100%",
-                      height: 280,
-                      objectFit: "cover",
+                      height: 300,
+                      bgcolor: '#000',
                       borderRadius: 2,
+                      overflow: 'hidden',
                       mb: 2,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
                     }}
-                  />
-                  <Stack direction="row" spacing={1}>
-                    {(selectedRoom.images || []).slice(1, 4).map((src, i) => (
+                  >
+                    {/* Media Display */}
+                    {mediaList[photoIndex]?.type === 'video' ? (
+                      <CardMedia
+                        component="video"
+                        controls
+                        src={mediaList[photoIndex].src}
+                        sx={{ width: '100%', height: '100%' }}
+                      />
+                    ) : (
+                      <CardMedia
+                        component="img"
+                        src={mediaList[photoIndex]?.src}
+                        alt={selectedRoom.title}
+                        sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    )}
+
+                    {/* Navigation Buttons */}
+                    {mediaList.length > 1 && (
+                      <>
+                        <IconButton
+                          onClick={handlePrevMedia}
+                          sx={{
+                            position: 'absolute',
+                            left: 8,
+                            bgcolor: alpha(theme.palette.common.black, 0.5),
+                            color: 'white',
+                            '&:hover': { bgcolor: alpha(theme.palette.common.black, 0.7) }
+                          }}
+                        >
+                          <ArrowBackIos fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          onClick={handleNextMedia}
+                          sx={{
+                            position: 'absolute',
+                            right: 8,
+                            bgcolor: alpha(theme.palette.common.black, 0.5),
+                            color: 'white',
+                            '&:hover': { bgcolor: alpha(theme.palette.common.black, 0.7) }
+                          }}
+                        >
+                          <ArrowForwardIos fontSize="small" />
+                        </IconButton>
+                      </>
+                    )}
+                  </Box>
+
+                  {/* Thumbnails */}
+                  <Stack direction="row" spacing={1} sx={{ overflowX: 'auto', pb: 1 }}>
+                    {mediaList.map((item, i) => (
                       <Box
                         key={i}
-                        component="img"
-                        src={src}
-                        alt={`img-${i}`}
+                        onClick={() => setPhotoIndex(i)}
                         sx={{
+                          position: 'relative',
                           width: 80,
                           height: 60,
-                          objectFit: "cover",
-                          borderRadius: 1,
-                          cursor: "pointer",
-                          transition: "transform 0.2s",
-                          '&:hover': {
-                            transform: 'scale(1.05)',
-                          }
+                          borderRadius: 2,
+                          overflow: 'hidden',
+                          cursor: 'pointer',
+                          opacity: i === photoIndex ? 1 : 0.6,
+                          border: i === photoIndex ? `2px solid ${theme.palette.primary.main}` : 'none',
+                          transition: "all 0.2s",
+                          flexShrink: 0,
                         }}
-                      />
+                      >
+                        {item.type === 'video' ? (
+                          <Box sx={{ width: '100%', height: '100%', bgcolor: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <PlayCircle sx={{ color: 'white' }} />
+                          </Box>
+                        ) : (
+                          <Box
+                            component="img"
+                            src={item.src}
+                            alt={`thumb-${i}`}
+                            sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        )}
+                      </Box>
                     ))}
                   </Stack>
                 </Box>
@@ -766,6 +1055,32 @@ const Rooms = () => {
                             {(selectedRoom.vehicleTypes || []).join(", ") || "All vehicles"}
                           </Typography>
                         </Stack>
+
+                        {selectedRoom.availableFrom && selectedRoom.availableTo && (
+                          <Stack direction="row" spacing={2}>
+                            <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1 }}>
+                              <CalendarTodayIcon color="primary" sx={{ fontSize: 20 }} />
+                              <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500 }}>
+                                Availability:
+                              </Typography>
+                            </Stack>
+                            <Typography variant="body2" color="text.secondary" sx={{ flex: 2 }}>
+                              {new Date(selectedRoom.availableFrom).toLocaleString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: 'numeric',
+                                minute: '2-digit'
+                              })} - {new Date(selectedRoom.availableTo).toLocaleString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: 'numeric',
+                                minute: '2-digit'
+                              })}
+                            </Typography>
+                          </Stack>
+                        )}
                       </Stack>
                     </Box>
 
@@ -802,7 +1117,7 @@ const Rooms = () => {
                     >
                       <Stack direction="row" alignItems="center" spacing={2}>
                         <Avatar sx={{ bgcolor: alpha(theme.palette.secondary.main, 0.1) }}>
-                          <PersonIcon />
+                          {selectedRoom.ownerName ? selectedRoom.ownerName.charAt(0).toUpperCase() : <PersonIcon />}
                         </Avatar>
                         <Box>
                           <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
@@ -812,6 +1127,32 @@ const Rooms = () => {
                             Listed on {prettyDate(selectedRoom.createdAt)}
                           </Typography>
                         </Box>
+                        {currentUser?.uid !== selectedRoom?.createdBy && (
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<ChatIcon />}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!currentUser) return navigate('/login');
+                              setOpenDialog(false);
+                              dispatch({
+                                type: 'UPDATE_CHAT',
+                                payload: {
+                                  open: true,
+                                  user: {
+                                    uid: selectedRoom.createdBy,
+                                    name: selectedRoom.ownerName,
+                                    photoURL: selectedRoom.photoURL ? selectedRoom.photoURL : "/dev.png"
+                                  }
+                                }
+                              });
+                            }}
+                            sx={{ ml: 'auto', borderRadius: 2 }}
+                          >
+                            Chat
+                          </Button>
+                        )}
                       </Stack>
                     </Paper>
                   </Stack>

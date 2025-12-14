@@ -10,7 +10,7 @@ const Notification = () => {
 
     const handleClose = (event, reason) => {
         if (reason === 'clickaway') return; //user chooses to close alert
-        dispatch({ type: 'UPDATE_ALERT', payload: {...alert, open: false } });
+        dispatch({ type: 'UPDATE_ALERT', payload: { ...alert, open: false } });
     };
     return (
         <Snackbar //toggle
@@ -18,6 +18,7 @@ const Notification = () => {
             autoHideDuration={2000} //6sec. duration
             onClose={handleClose}
             anchorOrigin={{ vertical: 'top', horizontal: 'center' }} //position
+            sx={{ zIndex: 9999 }} // Ensure it appears above Dialogs
         >
             {/* Alert message properties */}
             <Alert

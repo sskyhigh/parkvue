@@ -76,7 +76,7 @@ const ClusterMap = () => {
   });
 
   // Center map on selected room
-    useEffect(() => {
+  useEffect(() => {
     if (selectedRoom?.lat && selectedRoom?.lng) {
       setViewState(prev => ({
         ...prev,
@@ -98,7 +98,7 @@ const ClusterMap = () => {
           id: doc.id,
           ...doc.data(),
         }));
-        
+
         // Filter out rooms without coordinates
         const validRooms = roomsData.filter(room => room.lat && room.lng);
         setRooms(validRooms);
@@ -158,7 +158,7 @@ const ClusterMap = () => {
   // Custom marker component
   const CustomMarker = ({ room, onClick }) => {
     const isAvailable = room.available !== false;
-    
+
     return (
       <Marker
         longitude={room.lng}
@@ -189,7 +189,7 @@ const ClusterMap = () => {
               borderTop: `12px solid ${isAvailable ? theme.palette.primary.main : theme.palette.error.main}`,
             }}
           />
-          
+
           {/* Marker body */}
           <Avatar
             sx={{
@@ -213,10 +213,9 @@ const ClusterMap = () => {
   return (
     <Box
       sx={{
-        height: "100dvh",
+        height: "100%",
         position: "relative",
         width: "100%",
-        mt: { xs: 3, md: 8 },
         background: theme.palette.customStyles?.heroBackground || theme.palette.background.default,
       }}
     >
@@ -303,8 +302,8 @@ const ClusterMap = () => {
                 onClick={(e) => {
                   e.stopPropagation();
                   handleClosePopup();
-                  navigate(`/booking/${selectedRoom.id}`, { 
-                    state: { room: selectedRoom } 
+                  navigate(`/booking/${selectedRoom.id}`, {
+                    state: { room: selectedRoom }
                   });
                 }}
               >
@@ -344,7 +343,7 @@ const ClusterMap = () => {
                       filter: selectedRoom.available !== false ? "none" : "grayscale(0.7) brightness(0.4)",
                     }}
                   />
-                  
+
                   {/* Price badge */}
                   <Chip
                     label={`$${Number(selectedRoom.price || 0).toFixed(2)}`}
@@ -359,7 +358,7 @@ const ClusterMap = () => {
                       height: 28,
                     }}
                   />
-                  
+
                   {/* Availability badge */}
                   <Chip
                     icon={selectedRoom.available !== false ? <CheckCircle fontSize="small" /> : <Warning fontSize="small" />}
@@ -392,7 +391,7 @@ const ClusterMap = () => {
                       >
                         {selectedRoom.title || "Untitled Space"}
                       </Typography>
-                      
+
                       {/* Location with icon */}
                       <Stack direction="row" alignItems="center" spacing={1}>
                         <LocationIcon
@@ -474,7 +473,7 @@ const ClusterMap = () => {
                         onClick={(e) => {
                           e.stopPropagation();
                           handleClosePopup();
-                          navigate(`/booking/${selectedRoom.id}`, { 
+                          navigate(`/booking/${selectedRoom.id}`, {
                             state: { room: selectedRoom }
                           });
                         }}
