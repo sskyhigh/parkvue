@@ -231,8 +231,7 @@ const UserProfile = () => {
         <Box
             sx={{
                 minHeight: 'auto',
-                pt: { xs: 2, md: 3 },
-                pb: { xs: 8, md: 10 },
+                pt: 2,
                 background: theme.palette.background.default,
             }}
         >

@@ -385,11 +385,9 @@ export default function UserDashboard() {
 
   return (
     <Box sx={{
-      minHeight: "100dvh",
-      pt: { xs: 2, md: 3 },
-      pb: { xs: 8, md: 10 },
-      bgcolor: theme.palette.background.default,
-      background: `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.05)} 0%, ${alpha(theme.palette.secondary.light, 0.05)} 100%)`
+      minHeight: "auto",
+      pt: 2,
+      background: theme.palette.background.default,
     }}>
       <Container maxWidth="xl">
         {/* Header Section */}
