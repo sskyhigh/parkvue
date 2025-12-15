@@ -4,10 +4,15 @@ import {
   Schedule,
   TrendingUp,
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { useContext } from 'react';
+import { Context } from '../../context/ContextProvider';
 
 function UploadListing() {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
+  const navigate = useNavigate();
+  const { currentUser } = useContext(Context);
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const steps = [
@@ -267,6 +272,7 @@ function UploadListing() {
         <Box sx={{ textAlign: "center", mt: 8 }}>
           <Box
             component="button"
+            onClick={() => currentUser ? navigate('/upload') : navigate('/login')}
             sx={{
               background: isDarkMode
                 ? theme.customStyles?.neonGradient || "linear-gradient(45deg, #6C63FF, #FF6584)"
@@ -289,7 +295,7 @@ function UploadListing() {
                   : "0 12px 35px rgba(0, 172, 202, 0.4)",
                 background: isDarkMode
                   ? "linear-gradient(45deg, #FF6584, #6C63FF)"
-                  : "linear-gradient(45deg, #00bcca, #00acca)",
+                  : "linear-gradient(45deg, #00bcca, #211ec0ff)",
               },
               "&:active": {
                 transform: "translateY(-1px)",

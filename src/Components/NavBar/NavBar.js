@@ -17,6 +17,7 @@ import {
   ListItemIcon,
   ListItemText,
   useTheme,
+  Avatar,
 } from "@mui/material";
 import { alpha as muiAlpha } from "@mui/material/styles";
 import {
@@ -108,7 +109,7 @@ const NavBar = () => {
           },
         }}
       >
-        <Container maxWidth="lg">
+        <Container maxWidth="xl">
           <Toolbar disableGutters sx={{ py: 1, position: "relative" }}>
             {/* Desktop Logo */}
             <Box
@@ -116,7 +117,7 @@ const NavBar = () => {
               sx={{
                 display: { xs: "none", md: "flex" },
                 alignItems: "center",
-                ml: { sm: 0, lg: 5 },
+                ml: 0,
                 mr: 2,
                 transition: "transform 0.3s ease",
                 "&:hover": { transform: "scale(1.05)" },
@@ -331,7 +332,17 @@ const NavBar = () => {
                   }}>
                   <Button
                     onMouseEnter={() => setDropDownOpen(true)}
-                    startIcon={<AccountCircle sx={{ ml: 0.5 }} />}
+                    startIcon={
+                      currentUser?.photoURL ? (
+                        <Avatar
+                          src={currentUser.photoURL}
+                          alt="User"
+                          sx={{ width: 28, height: 28, ml: 0.5 }}
+                        />
+                      ) : (
+                        <AccountCircle sx={{ ml: 0.5 }} />
+                      )
+                    }
                     endIcon={<ExpandMore />}
                     sx={{
                       color: muiTheme.palette.text.primary,
@@ -454,6 +465,7 @@ const NavBar = () => {
         open={drawerOpen}
         onClose={toggleDrawer}
         sx={{
+          zIndex: 12000, // Ensure drawer and backdrop cover floating chat buttons
           "& .MuiDrawer-paper": {
             background: muiTheme.customStyles?.neonGradient ?? muiTheme.palette.primary.main,
             color: muiTheme.palette.getContrastText(muiTheme.palette.primary.main),

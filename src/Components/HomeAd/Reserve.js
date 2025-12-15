@@ -4,10 +4,12 @@ import {
   CalendarToday,
   Star,
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 
 function Reserve() {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
+  const navigate = useNavigate();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const steps = [
@@ -263,6 +265,7 @@ function Reserve() {
         <Box sx={{ textAlign: "center", mt: 8 }}>
           <Box
             component="button"
+            onClick={() => navigate('/register')}
             sx={{
               background: isDarkMode
                 ? theme.customStyles?.neonGradient || "linear-gradient(45deg, #6C63FF, #FF6584)"
@@ -285,7 +288,7 @@ function Reserve() {
                   : "0 12px 35px rgba(0, 172, 202, 0.4)",
                 background: isDarkMode
                   ? "linear-gradient(45deg, #FF6584, #6C63FF)"
-                  : "linear-gradient(45deg, #00bcca, #00acca)",
+                  : "linear-gradient(45deg, #00bcca, #211ec0ff)",
               },
               "&:active": {
                 transform: "translateY(-1px)",

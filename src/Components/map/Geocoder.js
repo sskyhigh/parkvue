@@ -4,7 +4,7 @@ import { useValue } from "../../context/ContextProvider";
 import { useControl } from "react-map-gl";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 
-const Geocoder = () => {
+const Geocoder = ({ onResult }) => {
   const { dispatch } = useValue();
 
   // useMemo so we don't recreate this every render
@@ -27,13 +27,16 @@ const Geocoder = () => {
         type: "UPDATE_LOCATION",
         payload: { lng: coords[0], lat: coords[1] },
       });
+      if (onResult) {
+        onResult(coords);
+      }
     };
 
     ctrl.on("result", handleResult);
     return () => {
       ctrl.off("result", handleResult); // cleanup to prevent leaks
     };
-  }, [ctrl, dispatch]);
+  }, [ctrl, dispatch, onResult]);
 
   return null;
 };

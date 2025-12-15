@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext, useCallback } from "react";
+import React, { useEffect, useState, useContext, useCallback, useRef } from "react";
 import {
   Box,
   Button,
@@ -72,13 +72,6 @@ const AddRoom = () => {
     zoom: 12,
   });
 
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!currentUser) {
-      navigate("/login");
-    }
-  }, [currentUser, navigate]);
-
   // Form fields state
   const [formData, setFormData] = useState({
     address: "",
@@ -97,6 +90,83 @@ const AddRoom = () => {
     availableTo: "",
   });
 
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!currentUser) {
+      navigate("/login");
+    }
+  }, [currentUser, navigate]);
+
+  const lastSourceRef = useRef(null); // 'form', 'map', 'api', 'geocoder'
+
+  // Reverse Geocoding (Map -> Form)
+  useEffect(() => {
+    if (!location.lng || !location.lat) return;
+    if (lastSourceRef.current === 'form' || lastSourceRef.current === 'api') return;
+
+    const fetchAddress = async () => {
+      try {
+        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${location.lng},${location.lat}.json?access_token=${process.env.REACT_APP_MAP_TOKEN}&types=address,poi`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.features?.[0]) {
+          const feature = data.features[0];
+          let city = "", state = "", zip = "";
+          feature.context?.forEach(c => {
+            if (c.id.includes('place')) city = c.text;
+            if (c.id.includes('region')) state = c.text;
+            if (c.id.includes('postcode')) zip = c.text;
+          });
+
+          lastSourceRef.current = 'api';
+          setFormData(prev => ({
+            ...prev,
+            address: feature.place_name.split(',')[0],
+            city: city,
+            state: state,
+            zipCode: zip
+          }));
+        }
+      } catch (e) { console.error("Reverse geocoding error:", e); }
+    };
+
+    // Debounce slightly to avoid rapid updates during drag
+    const timer = setTimeout(fetchAddress, 800);
+    return () => clearTimeout(timer);
+  }, [location.lng, location.lat]);
+
+  // Forward Geocoding (Form -> Map)
+  useEffect(() => {
+    // If update came from map/api, don't forward geocode back
+    if (lastSourceRef.current === 'map' || lastSourceRef.current === 'api' || lastSourceRef.current === 'geocoder') return;
+
+    const query = `${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}`;
+    if (query.replace(/,/g, '').trim().length < 8) return;
+
+    const timer = setTimeout(async () => {
+      try {
+        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${process.env.REACT_APP_MAP_TOKEN}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.features?.[0]) {
+          const [lng, lat] = data.features[0].center;
+          lastSourceRef.current = 'api';
+
+          // Check if different enough to warrant update
+          if (Math.abs(lng - location.lng) > 0.0001 || Math.abs(lat - location.lat) > 0.0001) {
+            dispatch({
+              type: "UPDATE_LOCATION",
+              payload: { lng, lat }
+            });
+            setViewport(prev => ({ ...prev, longitude: lng, latitude: lat, zoom: 15 }));
+          }
+        }
+      } catch (e) { console.error("Forward geocoding error:", e); }
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [formData.address, formData.city, formData.state, formData.zipCode, dispatch, location.lng, location.lat]);
+
   // Available options
   const vehicleTypeOptions = [
     "Car", "SUV", "Truck", "Motorcycle", "Van", "Electric Vehicle", "Compact Car", "Sedan"
@@ -113,6 +183,7 @@ const AddRoom = () => {
 
   // Handle form field changes
   const handleChange = (field, value) => {
+    lastSourceRef.current = 'form';
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -247,6 +318,20 @@ const AddRoom = () => {
 
   // Handle map viewport change
   const handleViewportChange = (newViewport) => {
+    // Only consider it a map interaction if it's a drag/move
+    // However, setViewport is also called by our geocoding effect.
+    // If lastSource is 'api', we shouldn't overwrite it to 'map' here?
+    // Actually handleViewportChange calls dispatch. 
+    // If we are just panning, we want that to be 'map'.
+    // If 'api' moved it (via setViewport), we might inadvertently trigger this?
+    // But 'onMove' triggers this. Sync updates don't trigger 'onMove' usually unless props change?
+    // Prop change updates internals but not 'onMove' event. 'onMove' is user interaction or transition.
+
+    // We'll set it to map if it's not api/form (i.e. user pan)
+    if (lastSourceRef.current !== 'api') {
+      lastSourceRef.current = 'map';
+    }
+
     setViewport(newViewport);
     dispatch({
       type: "UPDATE_LOCATION",
@@ -259,6 +344,7 @@ const AddRoom = () => {
 
   // Handle location marker drag
   const handleMarkerDrag = (event) => {
+    lastSourceRef.current = 'map';
     dispatch({
       type: "UPDATE_LOCATION",
       payload: {
@@ -270,6 +356,7 @@ const AddRoom = () => {
 
   // Handle geolocation
   const handleGeolocate = (event) => {
+    lastSourceRef.current = 'map';
     dispatch({
       type: "UPDATE_LOCATION",
       payload: {
@@ -565,6 +652,7 @@ const AddRoom = () => {
                       fullWidth
                       label="Country"
                       value="United States"
+                      disabled
                     />
                   </Grid>
                 </Grid>
@@ -610,7 +698,7 @@ const AddRoom = () => {
                       type="number"
                       value={formData.price}
                       onChange={(e) => handleChange("price", e.target.value)}
-                      placeholder="15.00"
+                      placeholder="10.00"
                       required
                       InputProps={{
                         startAdornment: "$",
@@ -799,7 +887,7 @@ const AddRoom = () => {
                       trackUserLocation
                       onGeolocate={handleGeolocate}
                     />
-                    <Geocoder />
+                    <Geocoder onResult={() => { lastSourceRef.current = 'geocoder'; }} />
                   </ReactMapGL>
                 </Box>
               </Box>
