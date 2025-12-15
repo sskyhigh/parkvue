@@ -18,13 +18,13 @@ const Notification = () => {
             autoHideDuration={2000} //6sec. duration
             onClose={handleClose}
             anchorOrigin={{ vertical: 'top', horizontal: 'center' }} //position
-            sx={{ zIndex: 9999 }} // Ensure it appears above Dialogs
+            sx={{ zIndex: 99999 }} // Ensure it appears above Dialogs
         >
             {/* Alert message properties */}
             <Alert
                 onClose={handleClose}
                 severity={alert.severity}
-                sx={{ width: '100%' }}
+                sx={{ width: '100%', zIndex: 99999 }} 
                 variant="filled"
                 elevation={6} //shadow design
             >

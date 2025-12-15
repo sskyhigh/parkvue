@@ -59,6 +59,12 @@ export default function UserDashboard() {
   const navigate = useNavigate();
   const { dispatch } = useValue();
   const { currentUser } = useContext(Context) || {};
+  
+  useEffect(() => {
+    if (!currentUser) {
+      navigate("/login");
+    }
+  }, [currentUser, navigate]);
 
   // local state
   const [myRooms, setMyRooms] = useState([]);
@@ -425,46 +431,48 @@ export default function UserDashboard() {
               </Typography>
             </Stack>
 
-            <Stack direction="row" spacing={2} alignItems="center">
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 2,
-                  minWidth: 120,
-                  background: alpha(theme.palette.common.white, 0.15),
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: 2
-                }}
-              >
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <MonetizationOn sx={{ fontSize: 20 }} />
-                  <Box>
-                    <Typography variant="caption" sx={{ opacity: 0.8 }}>Total Earnings</Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                      ${userStats.totalEarnings}
-                    </Typography>
-                  </Box>
-                </Stack>
-              </Paper>
+            <Stack direction="column" spacing={2} alignItems={{ xs: 'flex-start', md: 'flex-end' }}>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    minWidth: 120,
+                    background: alpha(theme.palette.common.white, 0.15),
+                    backdropFilter: 'blur(10px)',
+                    borderRadius: 2
+                  }}
+                >
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <MonetizationOn sx={{ fontSize: 20 }} />
+                    <Box>
+                      <Typography variant="caption" sx={{ opacity: 0.8 }}>Total Earnings</Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                        ${userStats.totalEarnings}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Paper>
 
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 2,
-                  minWidth: 120,
-                  background: alpha(theme.palette.common.white, 0.15),
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: 2
-                }}
-              >
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <PeopleAlt sx={{ fontSize: 20 }} />
-                  <Box>
-                    <Typography variant="caption" sx={{ opacity: 0.8 }}>Active Bookings</Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 700 }}>{myReservations.length}</Typography>
-                  </Box>
-                </Stack>
-              </Paper>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    minWidth: 120,
+                    background: alpha(theme.palette.common.white, 0.15),
+                    backdropFilter: 'blur(10px)',
+                    borderRadius: 2
+                  }}
+                >
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <PeopleAlt sx={{ fontSize: 20 }} />
+                    <Box>
+                      <Typography variant="caption" sx={{ opacity: 0.8 }}>Active Bookings</Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 700 }}>{myReservations.length}</Typography>
+                    </Box>
+                  </Stack>
+                </Paper>
+              </Stack>
 
               <Button
                 variant="contained"
@@ -474,6 +482,7 @@ export default function UserDashboard() {
                   bgcolor: 'white',
                   color: theme.palette.primary.main,
                   fontWeight: 700,
+                  width: '100%',
                   '&:hover': {
                     bgcolor: alpha(theme.palette.common.white, 0.9)
                   }

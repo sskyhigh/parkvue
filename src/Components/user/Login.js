@@ -2,10 +2,7 @@
 import { useContext, useRef, useState, useEffect } from "react";
 import {
   Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
+  Paper,
   IconButton,
   TextField,
   Box,
@@ -157,22 +154,19 @@ const Login = () => {
   };
 
   return (
-    <Dialog
-      open={location.pathname === "/login"}
-      onClose={handleClose}
-      sx={{ zIndex: 900 }}
-      BackdropProps={{
-        sx: {
-          // Customize the backdrop
-          background: isDarkMode
-            ? alpha(theme.palette.background.paper, 0.95) // Dark overlay for dark mode
-            : alpha(theme.palette.background.paper, 0.2), // Light overlay for light mode
-          backdropFilter: "blur(1px)", // Optional: add blur effect to backdrop
-        }
+    <Box
+      sx={{
+        minHeight: 'auto',
+        display: 'flex',
+        alignItems: 'start',
+        justifyContent: 'center',
+        pt: { xs: 2, sm: 4, md: 6},
+        bgcolor: 'background.default'
       }}
-      PaperProps={{
-        elevation: 0,
-        sx: {
+    >
+      <Paper
+        elevation={0}
+        sx={{
           width: { xs: "90%", sm: 500 },
           borderRadius: 2,
           boxShadow: isDarkMode
@@ -188,212 +182,212 @@ const Login = () => {
           border: isDarkMode
             ? `1px solid ${alpha(theme.palette.divider, 0.3)}`
             : `1px solid ${alpha(theme.palette.divider, 0.5)}`,
-        }
-      }}
-    >
-      <DialogTitle
-        sx={{
-          pb: 2,
-          pt: 3,
-          background: isDarkMode
-            ? `linear-gradient(135deg, ${alpha(theme.palette.background.default, 0.8)} 0%, ${alpha(theme.palette.background.paper, 0.9)} 100%)`
-            : "linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%)",
-          borderBottom: "1px solid",
-          borderColor: "divider",
-          position: "relative",
-          textAlign: "center"
         }}
       >
-        <Typography
-          fontSize="2.25rem"
-          fontWeight="600"
-          color="primary.main"
-          gutterBottom
-        >
-          Welcome Back
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Sign in to your account
-        </Typography>
-        <IconButton
+        <Box
           sx={{
-            position: "absolute",
-            top: 16,
-            right: 16,
-            color: isDarkMode ? "grey.300" : "grey.600",
-            bgcolor: isDarkMode ? alpha(theme.palette.background.paper, 0.8) : "white",
-            boxShadow: 1,
-            border: isDarkMode ? `1px solid ${alpha(theme.palette.divider, 0.2)}` : "none",
-            "&:hover": {
-              bgcolor: isDarkMode ? alpha(theme.palette.background.paper, 0.9) : "grey.50",
-              transform: "rotate(90deg)",
-              transition: "transform 0.2s"
-            }
+            pb: 2,
+            pt: 3,
+            background: isDarkMode
+              ? `linear-gradient(135deg, ${alpha(theme.palette.background.default, 0.8)} 0%, ${alpha(theme.palette.background.paper, 0.9)} 100%)`
+              : "linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%)",
+            borderBottom: "1px solid",
+            borderColor: "divider",
+            position: "relative",
+            textAlign: "center"
           }}
-          onClick={() => navigate("/")}
         >
-          <Close />
-        </IconButton>
-      </DialogTitle>
+          <Typography
+            fontSize="2.25rem"
+            fontWeight="600"
+            color="primary.main"
+            gutterBottom
+          >
+            Welcome Back
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Sign in to your account
+          </Typography>
+          <IconButton
+            sx={{
+              position: "absolute",
+              top: 16,
+              right: 16,
+              color: isDarkMode ? "grey.300" : "grey.600",
+              bgcolor: isDarkMode ? alpha(theme.palette.background.paper, 0.8) : "white",
+              boxShadow: 1,
+              border: isDarkMode ? `1px solid ${alpha(theme.palette.divider, 0.2)}` : "none",
+              "&:hover": {
+                bgcolor: isDarkMode ? alpha(theme.palette.background.paper, 0.9) : "grey.50",
+                transform: "rotate(90deg)",
+                transition: "transform 0.2s"
+              }
+            }}
+            onClick={() => navigate("/")}
+          >
+            <Close />
+          </IconButton>
+        </Box>
 
-      <form onSubmit={handleSubmit} noValidate>
-        <DialogContent sx={{ py: 3 }}>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
-            <TextField
-              autoFocus
-              variant="outlined"
-              id="email"
-              label="Email Address"
-              type="email"
-              fullWidth
-              inputRef={emailRef}
-              required
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: 2,
-                  background: isDarkMode
-                    ? alpha(theme.palette.background.paper, 0.6)
-                    : alpha(theme.palette.background.paper, 0.8),
-                  "&:hover fieldset": {
-                    borderColor: "primary.light",
+        <form onSubmit={handleSubmit} noValidate>
+          <Box sx={{ py: 3, px: 3 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+              <TextField
+                autoFocus
+                variant="outlined"
+                id="email"
+                label="Email Address"
+                type="email"
+                fullWidth
+                inputRef={emailRef}
+                required
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 2,
+                    background: isDarkMode
+                      ? alpha(theme.palette.background.paper, 0.6)
+                      : alpha(theme.palette.background.paper, 0.8),
+                    "&:hover fieldset": {
+                      borderColor: "primary.light",
+                    },
+                    "& fieldset": {
+                      borderColor: alpha(theme.palette.divider, isDarkMode ? 0.3 : 0.2),
+                    },
                   },
-                  "& fieldset": {
-                    borderColor: alpha(theme.palette.divider, isDarkMode ? 0.3 : 0.2),
-                  },
-                },
-                "& .MuiInputLabel-root": {
-                  color: isDarkMode ? "grey.300" : "text.secondary",
-                }
-              }}
-            />
+                  "& .MuiInputLabel-root": {
+                    color: isDarkMode ? "grey.300" : "text.secondary",
+                  }
+                }}
+              />
 
-            <PasswordField
-              passwordRef={passwordRef}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: 2,
-                  background: isDarkMode
-                    ? alpha(theme.palette.background.paper, 0.6)
-                    : alpha(theme.palette.background.paper, 0.8),
-                  "&:hover fieldset": {
-                    borderColor: "primary.light",
+              <PasswordField
+                passwordRef={passwordRef}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 2,
+                    background: isDarkMode
+                      ? alpha(theme.palette.background.paper, 0.6)
+                      : alpha(theme.palette.background.paper, 0.8),
+                    "&:hover fieldset": {
+                      borderColor: "primary.light",
+                    },
+                    "& fieldset": {
+                      borderColor: alpha(theme.palette.divider, isDarkMode ? 0.3 : 0.2),
+                    },
                   },
-                  "& fieldset": {
-                    borderColor: alpha(theme.palette.divider, isDarkMode ? 0.3 : 0.2),
-                  },
-                },
-                "& .MuiInputLabel-root": {
-                  color: isDarkMode ? "grey.300" : "text.secondary",
-                }
-              }}
-            />
-          </Box>
-        </DialogContent>
-
-        <DialogActions sx={{ px: 3 }}>
-          {loading ? (
-            <Box sx={{ display: "flex", justifyContent: "center", width: "100%" }}>
-              <PulseLoader color={isDarkMode ? theme.palette.primary.light : "#005fff"} size={32} />
+                  "& .MuiInputLabel-root": {
+                    color: isDarkMode ? "grey.300" : "text.secondary",
+                  }
+                }}
+              />
             </Box>
-          ) : (
-            <Button
-              type="submit"
-              variant="contained"
-              endIcon={<Send />}
-              fullWidth
-              sx={{
-                py: 1.5,
-                borderRadius: 2,
-                fontSize: "1rem",
-                fontWeight: "600",
-                textTransform: "none",
-                background: theme.customStyles?.neonGradient || "linear-gradient(45deg, #6C63FF, #FF6584)",
-                boxShadow: isDarkMode
-                  ? "0 4px 15px rgba(108, 99, 255, 0.4)"
-                  : "0 4px 12px rgba(0, 95, 255, 0.2)",
-                "&:hover": {
+          </Box>
+
+          <Box sx={{ px: 3 }}>
+            {loading ? (
+              <Box sx={{ display: "flex", justifyContent: "center", width: "100%" }}>
+                <PulseLoader color={isDarkMode ? theme.palette.primary.light : "#005fff"} size={32} />
+              </Box>
+            ) : (
+              <Button
+                type="submit"
+                variant="contained"
+                endIcon={<Send />}
+                fullWidth
+                sx={{
+                  py: 1.5,
+                  borderRadius: 2,
+                  fontSize: "1rem",
+                  fontWeight: "600",
+                  textTransform: "none",
+                  background: theme.customStyles?.neonGradient || "linear-gradient(45deg, #6C63FF, #FF6584)",
                   boxShadow: isDarkMode
-                    ? "0 6px 20px rgba(108, 99, 255, 0.6)"
-                    : "0 6px 16px rgba(0, 95, 255, 0.3)",
-                  transform: "translateY(-1px)",
-                },
-                transition: "all 0.2s ease"
-              }}
-            >
-              Sign In
-            </Button>
-          )}
-        </DialogActions>
+                    ? "0 4px 15px rgba(108, 99, 255, 0.4)"
+                    : "0 4px 12px rgba(0, 95, 255, 0.2)",
+                  "&:hover": {
+                    boxShadow: isDarkMode
+                      ? "0 6px 20px rgba(108, 99, 255, 0.6)"
+                      : "0 6px 16px rgba(0, 95, 255, 0.3)",
+                    transform: "translateY(-1px)",
+                  },
+                  transition: "all 0.2s ease"
+                }}
+              >
+                Sign In
+              </Button>
+            )}
+          </Box>
 
-        <Box sx={{ px: 3, py: 2, textAlign: "center" }}>
-          <GoogleOneTapLogin />
-        </Box>
-
-        <Box sx={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 1,
-          p: 2.5,
-          bgcolor: isDarkMode
-            ? alpha(theme.palette.background.default, 0.5)
-            : "grey.50",
-          borderTop: "1px solid",
-          borderColor: "divider"
-        }}>
-          <Box sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 1
-          }}>
-            <Typography variant="body2" color="text.secondary">
-              Forgot your password?
-            </Typography>
-            <Button
-              onClick={handlePasswordReset}
-              sx={{
-                textTransform: "none",
-                fontWeight: "600",
-                color: "primary.main",
-                minWidth: "auto",
-                "&:hover": {
-                  bgcolor: "transparent",
-                  color: "primary.light",
-                }
-              }}
-            >
-              Reset it
-            </Button>
+          <Box sx={{ px: 3, py: 2, textAlign: "center" }}>
+            <GoogleOneTapLogin />
           </Box>
 
           <Box sx={{
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 1
+            flexDirection: "column",
+            gap: 1,
+            p: 2.5,
+            bgcolor: isDarkMode
+              ? alpha(theme.palette.background.default, 0.5)
+              : "grey.50",
+            borderTop: "1px solid",
+            borderColor: "divider"
           }}>
-            <Typography variant="body2" color="text.secondary">
-              Don't have an account?
-            </Typography>
-            <Button
-              onClick={() => navigate("/register")}
-              sx={{
-                textTransform: "none",
-                fontWeight: "600",
-                color: "primary.main",
-                minWidth: "auto",
-                "&:hover": {
-                  bgcolor: "transparent",
-                  color: "primary.light",
-                }
-              }}
-            >
-              Sign Up
-            </Button>
+            <Box sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 1
+            }}>
+              <Typography variant="body2" color="text.secondary">
+                Forgot your password?
+              </Typography>
+              <Button
+                onClick={handlePasswordReset}
+                sx={{
+                  textTransform: "none",
+                  fontWeight: "600",
+                  color: "primary.main",
+                  minWidth: "auto",
+                  "&:hover": {
+                    bgcolor: "transparent",
+                    color: "primary.light",
+                  }
+                }}
+              >
+                Reset it
+              </Button>
+            </Box>
+
+            <Box sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 1
+            }}>
+              <Typography variant="body2" color="text.secondary">
+                Don't have an account?
+              </Typography>
+              <Button
+                onClick={() => navigate("/register")}
+                sx={{
+                  textTransform: "none",
+                  fontWeight: "600",
+                  color: "primary.main",
+                  minWidth: "auto",
+                  "&:hover": {
+                    bgcolor: "transparent",
+                    color: "primary.light",
+                  }
+                }}
+              >
+                Sign Up
+              </Button>
+            </Box>
           </Box>
-        </Box>
-      </form>
-    </Dialog>
+        </form>
+      </Paper>
+    </Box>
   );
 };
 

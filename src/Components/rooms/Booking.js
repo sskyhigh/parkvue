@@ -360,7 +360,7 @@ const Booking = () => {
 
         <Grid container spacing={4}>
           {/* Left: Room Details */}
-          <Grid item xs={12} md={7}>
+          <Grid item xs={12} md={self ? 12 : 7}>
             <Paper
               elevation={0}
               sx={{

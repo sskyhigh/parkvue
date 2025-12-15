@@ -1,17 +1,28 @@
 import "./HomeBanner.css";
 import appstore from "../../img/ios.png";
 import playstore from "../../img/play.png";
-import { 
-  Typography, 
-  Box, 
-  Grid, 
-  Container, 
-  Chip, 
-  useTheme, 
+import {
+  Typography,
+  Box,
+  Grid,
+  Container,
+  Chip,
+  useTheme,
   alpha,
   IconButton,
-  keyframes
+  keyframes,
+  Skeleton,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { db } from "../../firebase/config";
+import {
+  collection,
+  query as fsQuery,
+  orderBy,
+  limit as fsLimit,
+  where as fsWhere,
+  getDocs,
+} from "firebase/firestore";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 
@@ -26,6 +37,10 @@ function HomeBanner() {
   const isDarkMode = theme.palette.mode === 'dark';
   const [currentSlide, setCurrentSlide] = useState(0);
   const [carImages, setCarImages] = useState([]);
+  const [slides, setSlides] = useState([]); // { src, room }
+  const [isPaused, setIsPaused] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   // Mock image paths - you can replace this with actual API call to your backend
   const mockCarImages = [
@@ -41,18 +56,69 @@ function HomeBanner() {
   ];
 
   useEffect(() => {
-    // In a real app, you would fetch these from your API
-    // For now, using mock images
-    setCarImages(mockCarImages);
+    // fetch recent rooms and build slides
+    let mounted = true;
+    const fetchRecentRooms = async () => {
+      try {
+        const roomsRef = collection(db, "rooms");
+        const q = fsQuery(
+          roomsRef,
+          fsWhere("available", "==", true),
+          orderBy("createdAt", "desc"),
+          fsLimit(9)
+        );
+        const snap = await getDocs(q);
+        if (!mounted) return;
+        const rooms = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        const roomSlides = [];
+        rooms.forEach((r) => {
+          if (r.images && r.images.length > 0) {
+            roomSlides.push({ src: r.images[0], room: r });
+          }
+        });
+
+        if (roomSlides.length > 0) {
+          setSlides(roomSlides);
+          setCarImages(roomSlides.map((s) => s.src));
+        } else {
+          // fallback to static images
+          setSlides(mockCarImages.map((s) => ({ src: s, room: null })));
+          setCarImages(mockCarImages);
+        }
+      } catch (err) {
+        console.error("Error fetching rooms:", err);
+        // fallback to static images on error
+        setSlides(mockCarImages.map((s) => ({ src: s, room: null })));
+        setCarImages(mockCarImages);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchRecentRooms();
+    return () => { mounted = false; };
   }, []);
 
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % carImages.length);
+    setCurrentSlide((prev) => (prev + 1) % Math.max(1, carImages.length));
   };
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + carImages.length) % carImages.length);
+    setCurrentSlide((prev) => (prev - 1 + Math.max(1, carImages.length)) % Math.max(1, carImages.length));
   };
+
+  // autoplay every 5s
+  useEffect(() => {
+    if (isPaused || carImages.length === 0) return;
+    const id = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % carImages.length);
+    }, 9000);
+    return () => clearInterval(id);
+  }, [isPaused, carImages.length]);
+
+  // reset currentSlide if slides change and index out of range
+  useEffect(() => {
+    if (currentSlide >= carImages.length) setCurrentSlide(0);
+  }, [carImages.length]);
 
   return (
     <Box
@@ -96,9 +162,9 @@ function HomeBanner() {
       />
 
       <Container maxWidth="lg">
-        <Grid container spacing={4} alignItems="center" sx={{ minHeight: "100vh" }}>
+        <Grid container spacing={5} sx={{ minHeight: "100vh", pt: { xs: 1, md: 12 }}}>
           {/* Text Content - Left Side */}
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={5.8}>
             <Box
               sx={{
                 color: isDarkMode ? theme.palette.text.primary : "white",
@@ -245,7 +311,7 @@ function HomeBanner() {
               >
                 <Box>
                   <Typography variant="h4" fontWeight="700" color={isDarkMode ? theme.palette.text.primary : "white"}>
-                    10K+
+                    1K+
                   </Typography>
                   <Typography variant="body2" color={isDarkMode ? theme.palette.text.secondary : "rgba(255,255,255,0.8)"}>
                     Happy Users
@@ -253,7 +319,7 @@ function HomeBanner() {
                 </Box>
                 <Box>
                   <Typography variant="h4" fontWeight="700" color={isDarkMode ? theme.palette.text.primary : "white"}>
-                    5K+
+                    500+
                   </Typography>
                   <Typography variant="body2" color={isDarkMode ? theme.palette.text.secondary : "rgba(255,255,255,0.8)"}>
                     Parking Spots
@@ -272,11 +338,11 @@ function HomeBanner() {
           </Grid>
 
           {/* Slideshow - Right Side */}
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={6.2}>
             <Box
               sx={{
                 position: "relative",
-                height: { xs: "400px", md: "600px" },
+                height: { xs: "400px", md: "550px" },
                 borderRadius: 4,
                 overflow: "hidden",
                 boxShadow: isDarkMode
@@ -285,23 +351,94 @@ function HomeBanner() {
                 animation: `${slideIn} 0.8s ease-out`,
               }}
             >
-              {/* Slideshow Image */}
-              {carImages.length > 0 && (
-                <Box
-                  component="img"
-                  src={carImages[currentSlide]}
-                  alt={`Car ${currentSlide + 1}`}
-                  sx={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    transition: "transform 0.5s ease",
-                    "&:hover": {
-                      transform: "scale(1.05)",
-                    },
-                  }}
+              {/* Loading State */}
+              {isLoading ? (
+                <Skeleton
+                  variant="rectangular"
+                  width="100%"
+                  height="100%"
+                  sx={{ borderRadius: 4 }}
                 />
-              )}
+              ) : (
+                <>
+                  {/* Slideshow (flex sliding) */}
+                  <Box
+                    onMouseEnter={() => setIsPaused(true)}
+                    onMouseLeave={() => setIsPaused(false)}
+                    sx={{
+                      width: "100%",
+                      height: "100%",
+                      position: "relative",
+                    }}
+                  >
+                <Box
+                  sx={{
+                    position: "relative",
+                    height: "100%",
+                    width: "100%",
+                    overflow: "hidden",
+                  }}
+                >
+                  {carImages.map((img, idx) => {
+                    const slide = slides[idx] || { src: img, room: null };
+                    const offset = (idx - currentSlide) * 100;
+                    return (
+                      <Box
+                        key={idx}
+                        onClick={() => {
+                          if (slide.room && slide.room.id) {
+                            navigate(`/booking/${slide.room.id}`, { state: { room: slide.room } });
+                          }
+                        }}
+                        sx={{
+                          position: "absolute",
+                          left: 0,
+                          top: 0,
+                          width: "100%",
+                          height: "100%",
+                          transform: `translateX(${offset}%)`,
+                          transition: "transform 650ms cubic-bezier(0.22, 1, 0.36, 1)",
+                          cursor: slide.room ? "pointer" : "default",
+                        }}
+                      >
+                        <Box
+                          component="img"
+                          src={slide.src}
+                          alt={`Slide ${idx + 1}`}
+                          sx={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            display: "block",
+                          }}
+                        />
+                        <Box
+                          sx={{
+                            position: "absolute",
+                            inset: 0,
+                            background: "linear-gradient(to top, rgba(0,0,0,0.65), rgba(0,0,0,0.15) 40%, transparent)",
+                            pointerEvents: "none",
+                          }}
+                        />
+                        {slide.room && (
+                          <Chip
+                            label={slide.room.city || slide.room.title || "Listing"}
+                            size="small"
+                            sx={{
+                              position: "absolute",
+                              left: 12,
+                              top: 12,
+                              bgcolor: alpha(theme.palette.primary.main, 0.9),
+                              color: "white",
+                              fontWeight: 700,
+                            }}
+                          />
+                        )}
+                      </Box>
+                    );
+                  })}
+                </Box>
+              </Box>
 
               {/* Image Overlay Gradient */}
               <Box
@@ -319,49 +456,51 @@ function HomeBanner() {
               {/* Navigation Buttons */}
               <IconButton
                 onClick={prevSlide}
+                aria-label="previous"
                 sx={{
                   position: "absolute",
-                  left: 16,
+                  left: 12,
                   top: "50%",
                   transform: "translateY(-50%)",
                   color: "white",
-                  bgcolor: alpha("#000", 0.5),
-                  backdropFilter: "blur(10px)",
-                  "&:hover": {
-                    bgcolor: alpha("#000", 0.7),
-                    transform: "translateY(-50%) scale(1.1)",
-                  },
-                  transition: "all 0.3s ease",
+                  bgcolor: alpha("#000", 0.45),
+                  width: 48,
+                  height: 48,
+                  borderRadius: 2,
+                  backdropFilter: "blur(6px)",
+                  boxShadow: "0 6px 18px rgba(0,0,0,0.4)",
+                  "&:hover": { bgcolor: alpha("#000", 0.7), transform: "translateY(-50%) scale(1.05)" },
                 }}
               >
-                <ChevronLeft fontSize="large" />
+                <ChevronLeft fontSize="medium" />
               </IconButton>
 
               <IconButton
                 onClick={nextSlide}
+                aria-label="next"
                 sx={{
                   position: "absolute",
-                  right: 16,
+                  right: 12,
                   top: "50%",
                   transform: "translateY(-50%)",
                   color: "white",
-                  bgcolor: alpha("#000", 0.5),
-                  backdropFilter: "blur(10px)",
-                  "&:hover": {
-                    bgcolor: alpha("#000", 0.7),
-                    transform: "translateY(-50%) scale(1.1)",
-                  },
-                  transition: "all 0.3s ease",
+                  bgcolor: alpha("#000", 0.45),
+                  width: 48,
+                  height: 48,
+                  borderRadius: 2,
+                  backdropFilter: "blur(6px)",
+                  boxShadow: "0 6px 18px rgba(0,0,0,0.4)",
+                  "&:hover": { bgcolor: alpha("#000", 0.7), transform: "translateY(-50%) scale(1.05)" },
                 }}
               >
-                <ChevronRight fontSize="large" />
+                <ChevronRight fontSize="medium" />
               </IconButton>
 
               {/* Slide Indicator Dots */}
               <Box
                 sx={{
                   position: "absolute",
-                  bottom: 20,
+                  bottom: 18,
                   left: "50%",
                   transform: "translateX(-50%)",
                   display: "flex",
@@ -373,38 +512,37 @@ function HomeBanner() {
                     key={index}
                     onClick={() => setCurrentSlide(index)}
                     sx={{
-                      width: 10,
-                      height: 10,
+                      width: currentSlide === index ? 12 : 8,
+                      height: currentSlide === index ? 12 : 8,
                       borderRadius: "50%",
-                      bgcolor: currentSlide === index ? "white" : alpha("#fff", 0.5),
+                      bgcolor: currentSlide === index ? "white" : alpha("#fff", 0.45),
                       cursor: "pointer",
-                      transition: "all 0.3s ease",
-                      "&:hover": {
-                        bgcolor: "white",
-                        transform: "scale(1.2)",
-                      },
+                      transition: "all 220ms ease",
+                      boxShadow: currentSlide === index ? "0 4px 12px rgba(0,0,0,0.35)" : "none",
                     }}
                   />
                 ))}
               </Box>
 
-              {/* Image Counter */}
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: 20,
-                  right: 20,
-                  color: "white",
-                  bgcolor: alpha("#000", 0.5),
-                  backdropFilter: "blur(10px)",
-                  px: 2,
-                  py: 1,
-                  borderRadius: 2,
-                  fontSize: "0.9rem",
-                }}
-              >
-                {currentSlide + 1} / {carImages.length}
-              </Box>
+                  {/* Image Counter */}
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: 20,
+                      right: 20,
+                      color: "white",
+                      bgcolor: alpha("#000", 0.5),
+                      backdropFilter: "blur(10px)",
+                      px: 2,
+                      py: 1,
+                      borderRadius: 2,
+                      fontSize: "0.9rem",
+                    }}
+                  >
+                    {currentSlide + 1} / {carImages.length}
+                  </Box>
+                </>
+              )}
             </Box>
           </Grid>
         </Grid>
@@ -419,6 +557,7 @@ function HomeBanner() {
           transform: "translateX(-50%)",
           color: isDarkMode ? theme.palette.text.primary : "white",
           textAlign: "center",
+          display: { xs: "none", md: "block" },
         }}
       >
         <Typography variant="caption" sx={{ opacity: 0.8, display: "block", mb: 1 }}>

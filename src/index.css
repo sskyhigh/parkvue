@@ -1,7 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&display=swap');
+
 body {
   background-color: aliceblue;
   margin: 0;
 }
+
 .text h1 {
   font-size: 3.5rem;
   letter-spacing: 2px;
@@ -18,7 +21,7 @@ body {
   background-color: var(--background)
 }
 
-.container{
+.container {
   max-width: 1140px;
   margin: auto;
 }
@@ -37,15 +40,15 @@ h1 {
   margin-bottom: 30px;
 }
 
-.accordion-simple > .active {
+.accordion-simple>.active {
   display: block;
 }
 
-.accordion__faq .inactive{
+.accordion__faq .inactive {
   display: none;
 }
 
-.accordion__faq > div{
+.accordion__faq>div {
   background-color: var(--white);
   margin-bottom: 20px;
   padding: 0px 15px;
@@ -53,22 +56,23 @@ h1 {
   cursor: pointer;
 }
 
-.accordion__title{
+.accordion__title {
   color: var(--text-secondary);
   padding-bottom: 20px;
   font-weight: 500;
 }
 
-.accordion__faq-heading{
+.accordion__faq-heading {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-.accordion__faq-heading .active{
+
+.accordion__faq-heading .active {
   color: var(--text-primary);
 }
 
-.accordion__faq-heading h3{
+.accordion__faq-heading h3 {
   color: var(--text-secondary);
   font-weight: 600;
 }

@@ -552,87 +552,128 @@ const Rooms = () => {
                   <Grid item xs={12} sm={6} md={4} lg={3} key={room.id}>
                     <Fade in timeout={300}>
                       <Card
+                        elevation={0}
                         sx={{
                           height: "100%",
                           display: "flex",
                           flexDirection: "column",
-                          borderRadius: 2,
+                          borderRadius: 4,
+                          bgcolor: "background.paper",
                           border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                          transition: "all 0.3s ease",
+                          transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
                           position: "relative",
                           overflow: "hidden",
+                          boxShadow: `0 4px 20px -10px ${alpha(theme.palette.text.primary, 0.1)}`,
                           animation: `fadeIn 0.5s ease-out ${index * 0.05}s both`,
                           '&:hover': {
-                            transform: 'translateY(-4px)',
-                            boxShadow: theme.shadows[8],
+                            transform: 'translateY(-8px)',
+                            boxShadow: `0 20px 40px -15px ${alpha(theme.palette.primary.main, 0.2)}`,
+                            '& .room-image': {
+                              transform: 'scale(1.05)',
+                            }
                           }
                         }}
                       >
-                        {/* Availability Badge */}
-                        <Badge
-                          badgeContent={isAvailable ? "Available" : "Reserved"}
-                          color={isAvailable ? "success" : "error"}
+                        {/* Status Badge */}
+                        <Box
                           sx={{
                             position: "absolute",
-                            top: 25,
-                            left: 50,
+                            top: 16,
+                            left: 16,
                             zIndex: 2,
-                            '& .MuiBadge-badge': {
-                              fontSize: '0.7rem',
-                              fontWeight: 600,
-                              height: 24,
-                              minWidth: 80,
-                            }
+                            px: 1.5,
+                            py: 0.5,
+                            borderRadius: 100,
+                            bgcolor: isAvailable ? alpha(theme.palette.success.main, 0.9) : alpha(theme.palette.error.main, 0.9),
+                            color: '#fff',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                            backdropFilter: 'blur(4px)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 0.5,
                           }}
-                        />
+                        >
+                          {isAvailable ? <CheckCircle sx={{ fontSize: 14 }} /> : <Warning sx={{ fontSize: 14 }} />}
+                          {isAvailable ? "AVAILABLE" : "RESERVED"}
+                        </Box>
 
                         {/* Price Tag */}
                         <Box
                           sx={{
                             position: "absolute",
-                            top: 12,
-                            right: 12,
-                            bgcolor: alpha(theme.palette.primary.main, 0.95),
-                            color: 'white',
-                            px: 1.5,
-                            py: 0.5,
-                            borderRadius: 2,
-                            fontWeight: 700,
-                            fontSize: "0.95rem",
+                            top: 10,
+                            right: 10,
                             zIndex: 2,
                           }}
                         >
-                          ${Number(room.price || 0).toFixed(2)}
+                          <Box sx={{
+                            bgcolor: alpha(theme.palette.primary.main, 0.95),
+                            color: theme.palette.text.primary,
+                            px: 2,
+                            py: 0.4,
+                            borderRadius: 50,
+                            fontWeight: 800,
+                            fontSize: "1rem",
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
+                            display: 'flex',
+                            alignItems: 'baseline',
+                            gap: 0.5
+                          }}>
+                            <Typography variant="caption" sx={{ fontSize: '0.75rem', color: theme.palette.text.secondary }}>$</Typography>
+                            {Number(room.price || 0).toFixed(0)}
+                            <Typography variant="caption" sx={{ fontSize: '0.7rem', color: theme.palette.text.secondary, ml: 0.5 }}>/day</Typography>
+                          </Box>
                         </Box>
 
                         <CardActionArea
                           onClick={() => handleOpenDialog(room)}
-                          sx={{ flex: 1 }}
+                          sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'stretch',
+                            flex: 1
+                          }}
                         >
-                          {/* Room Image */}
-                          <CardMedia
-                            component="img"
-                            height="180"
-                            image={img || "/placeholder-park.jpg"}
-                            alt={room.title}
-                            sx={{
-                              objectFit: "cover",
-                              filter: !isAvailable ? 'grayscale(0.8) brightness(0.2)' : 'none',
-                            }}
-                          />
+                          {/* Image Container with Fixed Aspect Ratio */}
+                          <Box sx={{ position: 'relative', overflow: 'hidden', height: 220 }}>
+                            <CardMedia
+                              component="img"
+                              className="room-image"
+                              image={img || "/placeholder-park.jpg"}
+                              alt={room.title}
+                              sx={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: "cover",
+                                transition: "transform 0.6s ease",
+                                filter: !isAvailable ? 'grayscale(0.8)' : 'none',
+                              }}
+                            />
+                            {/* Gradient Overlay */}
+                            <Box sx={{
+                              position: 'absolute',
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
+                              height: '40%',
+                              background: 'linear-gradient(to top, rgba(0,0,0,0.4), transparent)',
+                              pointerEvents: 'none',
+                            }} />
+                          </Box>
 
-                          <CardContent sx={{ p: 2.5, flex: 1 }}>
-                            <Stack spacing={1.5}>
-                              {/* Title and Rating */}
-                              <Box>
+                          <CardContent sx={{ p: 3, flex: 1, display: 'flex', flexDirection: 'column' }}>
+                            <Box sx={{ mb: 2 }}>
+                              <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 1 }}>
                                 <Typography
                                   variant="h6"
                                   sx={{
                                     fontWeight: 700,
+                                    fontSize: '1.1rem',
                                     color: theme.palette.text.primary,
-                                    mb: 0.5,
-                                    lineHeight: 1.2,
-                                    height: '2.4em',
+                                    lineHeight: 1.3,
+                                    height: '2.6em', // Fixed height for 2 lines
                                     overflow: 'hidden',
                                     display: '-webkit-box',
                                     WebkitLineClamp: 2,
@@ -641,118 +682,110 @@ const Rooms = () => {
                                 >
                                   {room.title || "Untitled Space"}
                                 </Typography>
-                                <Stack direction="row" alignItems="center" spacing={0.5}>
-                                  <StarIcon sx={{ color: "warning.main", fontSize: 16 }} />
-                                  <Typography variant="caption" color="text.secondary">
-                                    {room.rating ? room.rating.toFixed(1) : "No rating"}
-                                  </Typography>
-                                </Stack>
-                              </Box>
+                                {room.rating > 0 && (
+                                  <Chip
+                                    size="small"
+                                    icon={<StarIcon sx={{ fontSize: '14px !important', color: theme.palette.warning.main }} />}
+                                    label={room.rating.toFixed(1)}
+                                    sx={{
+                                      height: 24,
+                                      bgcolor: alpha(theme.palette.warning.main, 0.1),
+                                      color: theme.palette.warning.dark,
+                                      fontWeight: 700,
+                                      border: 'none',
+                                      flexShrink: 0,
+                                      ml: 1
+                                    }}
+                                  />
+                                )}
+                              </Stack>
 
-                              {/* Location */}
-                              <Stack direction="row" alignItems="flex-start" spacing={1}>
-                                <PlaceIcon sx={{ fontSize: 18, color: "primary.main", mt: 0.25 }} />
+                              <Stack direction="row" spacing={1} alignItems="center">
+                                <PlaceIcon sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
                                 <Typography
                                   variant="body2"
                                   color="text.secondary"
-                                  sx={{
-                                    flex: 1,
-                                    lineHeight: 1.3,
-                                    height: '2.6em',
-                                    overflow: 'hidden',
-                                    display: '-webkit-box',
-                                    WebkitLineClamp: 2,
-                                    WebkitBoxOrient: 'vertical',
-                                  }}
+                                  noWrap
+                                  sx={{ fontWeight: 500 }}
                                 >
-                                  {room.city ? `${room.city}, ${room.state || ""}` : room.fullAddress || "Location not specified"}
+                                  {room.city ? `${room.city}, ${room.state || ""}` : "Location hidden"}
                                 </Typography>
                               </Stack>
+                            </Box>
 
-                              {/* Availability */}
-                              {room.availableFrom && room.availableTo && (
-                                <Stack direction="row" alignItems="flex-start" spacing={1}>
-                                  <CalendarTodayIcon sx={{ fontSize: 18, color: "success.main", mt: 0.25 }} />
+                            <Divider sx={{ my: 1.5, borderStyle: 'dashed' }} />
+
+                            {/* Features / Tags - Fixed Height Area */}
+                            <Box sx={{ height: 24, mb: 0 }}>
+                              <Stack direction="row" spacing={1}>
+                                {(room.vehicleTypes || []).slice(0, 2).map((v, i) => (
                                   <Typography
-                                    variant="body2"
-                                    color="text.secondary"
+                                    key={i}
+                                    variant="caption"
                                     sx={{
-                                      flex: 1,
-                                      lineHeight: 1.3,
+                                      bgcolor: alpha(theme.palette.primary.main, 0.08),
+                                      color: theme.palette.primary.main,
+                                      px: 1,
+                                      py: 0.5,
+                                      borderRadius: 1,
+                                      fontWeight: 600,
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: 0.5
                                     }}
                                   >
-                                    Available: {prettyDate(room.availableFrom)} - {prettyDate(room.availableTo)}
+                                    <CarIcon sx={{ fontSize: 12 }} /> {v}
                                   </Typography>
-                                </Stack>
-                              )}
-
-                              {/* Tags */}
-                              <Stack direction="row" spacing={0.5} sx={{ flexWrap: "wrap", gap: 0.5 }}>
-                                {(room.vehicleTypes || []).slice(0, 2).map((v, i) => (
-                                  <Chip
-                                    key={i}
-                                    label={v}
-                                    size="small"
-                                    icon={<CarIcon sx={{ fontSize: 14 }} />}
-                                    variant="outlined"
-                                  />
                                 ))}
-                                {(room.amenities || []).slice(0, 2).map((a, i) => (
-                                  <Chip
-                                    key={`a-${i}`}
-                                    label={a}
-                                    size="small"
-                                    icon={<SpeedIcon sx={{ fontSize: 14 }} />}
-                                    color="secondary"
-                                    variant="outlined"
-                                  />
-                                ))}
+                                {(room.vehicleTypes || []).length > 2 && (
+                                  <Typography variant="caption" color="text.secondary" sx={{ py: 0.5 }}>
+                                    +{room.vehicleTypes.length - 2} more
+                                  </Typography>
+                                )}
                               </Stack>
-                            </Stack>
+                            </Box>
+
+                            {/* Date Availability */}
+                            {room.availableFrom && (
+                              <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2, color: theme.palette.text.secondary }}>
+                                <CalendarTodayIcon sx={{ fontSize: 14 }} />
+                                <Typography variant="caption" sx={{ fontWeight: 500 }}>
+                                  {prettyDate(room.availableFrom)} — {prettyDate(room.availableTo)}
+                                </Typography>
+                              </Stack>
+                            )}
                           </CardContent>
                         </CardActionArea>
 
-                        {/* Footer Actions */}
-                        <CardActions sx={{ p: 2, pt: 0, mt: 'auto' }}>
-                          <Stack direction="row" spacing={1} justifyContent="space-between" alignItems="center" sx={{ width: '100%' }}>
-                            <Tooltip title="Date listed">
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                                sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-                              >
-                                <CalendarTodayIcon sx={{ fontSize: 14 }} />
-                                {prettyDate(room.createdAt)}
-                              </Typography>
-                            </Tooltip>
-
-                            <Stack direction="row" spacing={1}>
-                              <Button
-                                size="small"
-                                variant="outlined"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleOpenDialog(room);
-                                }}
-                                sx={{ borderRadius: 2 }}
-                              >
-                                View
-                              </Button>
-                              <Button
-                                size="small"
-                                variant="contained"
-                                disabled={!isAvailable}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigate(`/booking/${room.id}`, { state: { room } });
-                                }}
-                                sx={{ borderRadius: 2 }}
-                              >
-                                Book Now
-                              </Button>
-                            </Stack>
-                          </Stack>
-                        </CardActions>
+                        {/* Card Actions */}
+                        <Box sx={{ p: 2, pt: 0, mt: 'auto' }}>
+                          <Button
+                            fullWidth
+                            variant="contained"
+                            disableElevation
+                            disabled={!isAvailable}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/booking/${room.id}`, { state: { room } });
+                            }}
+                            sx={{
+                              borderRadius: 3,
+                              py: 1.2,
+                              fontSize: '0.9rem',
+                              textTransform: 'none',
+                              fontWeight: 600,
+                              background: isAvailable
+                                ? `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`
+                                : theme.palette.action.disabledBackground,
+                              boxShadow: isAvailable ? `0 8px 16px -4px ${alpha(theme.palette.primary.main, 0.3)}` : 'none',
+                              '&:hover': {
+                                boxShadow: isAvailable ? `0 12px 20px -4px ${alpha(theme.palette.primary.main, 0.4)}` : 'none',
+                              }
+                            }}
+                          >
+                            {isAvailable ? "Book Space" : "Currently Unavailable"}
+                          </Button>
+                        </Box>
                       </Card>
                     </Fade>
                   </Grid>
@@ -815,7 +848,6 @@ const Rooms = () => {
 
       {/* Enhanced Quick-view Dialog */}
       <Dialog
-        sx={{ zIndex: 900 }}
         open={openDialog}
         onClose={handleCloseDialog}
         maxWidth="md"

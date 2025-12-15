@@ -273,13 +273,15 @@ const ClusterMap = () => {
               onClose={handleClosePopup}
               closeButton={false} // Remove default close button
               closeOnClick={false}
-              offset={[0, -10]} // Reduced offset
+              offset={[0, -41]} // Reduced offset
+              zIndex={2001}
               style={{
                 padding: 0,
                 background: "none",
                 border: "none",
                 boxShadow: "none",
                 maxWidth: "none",
+                zIndex: 2001,
               }}
             >
               <Paper
@@ -291,6 +293,7 @@ const ClusterMap = () => {
                   border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
                   bgcolor: theme.palette.background.paper,
                   position: "relative",
+                  zIndex: 10000,
                   cursor: "pointer",
                   transition: "box-shadow 0.2s ease",
                   "&:hover": {

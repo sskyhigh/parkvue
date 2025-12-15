@@ -1,10 +1,10 @@
 import "./App.css";
-import React from "react";
+import React, { useEffect } from "react";
 import NavBar from "./Components/NavBar/NavBar";
 import HomeBanner from "./Components/HomeBanner/HomeBanner";
 import Reserve from "./Components/HomeAd/Reserve";
 import UploadListing from "./Components/HomeAd/UploadListing";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import { useTheme, Box } from "@mui/material";
 
 import { Toaster } from "react-hot-toast";
@@ -27,6 +27,12 @@ import { FloatingButtonsHolder } from "./Components/chatbot/FloatingChatHolder";
 
 const App = () => {
   const muiTheme = useTheme();
+  const location = useLocation();
+  const pathname = location.pathname;
+  
+  useEffect(() => {
+    document.title = pathname === "/" ? "ParkVue" : `ParkVue - ${pathname.slice(1).charAt(0).toUpperCase() + pathname.slice(2)}`;
+  }, [pathname]);
 
   return (
     <div className="App" style={{ background: muiTheme.palette.background.default, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>

@@ -13,6 +13,7 @@ import {
   HelpOutline,
 } from '@mui/icons-material';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const faqData = [
   {
@@ -49,6 +50,7 @@ function FAQ() {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
   const [expanded, setExpanded] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (panel) => (event, isExpanded) => {
     setExpanded(isExpanded ? panel : false);
@@ -278,6 +280,7 @@ function FAQ() {
           </Typography>
           <Box
             component="button"
+            onClick={() => navigate('/about')}
             sx={{
               background: isDarkMode
                 ? theme.customStyles?.neonGradient || "linear-gradient(45deg, #6C63FF, #FF6584)"
@@ -300,7 +303,7 @@ function FAQ() {
                   : "0 10px 30px rgba(0, 172, 202, 0.4)",
                 background: isDarkMode
                   ? "linear-gradient(45deg, #FF6584, #6C63FF)"
-                  : "linear-gradient(45deg, #00bcca, #00acca)",
+                  : "linear-gradient(45deg, #00bcca, #211ec0ff)",
               },
             }}
           >
