@@ -28,10 +28,12 @@ import {
     Delete as DeleteIcon,
     Person as PersonIcon,
     ArrowBack as ArrowBackIcon,
+    Check as CheckIcon,
+    DoneAll as DoneAllIcon,
 } from "@mui/icons-material";
 import { Context } from "../../context/ContextProvider";
 import { rtdb } from "../../firebase/config";
-import { ref, onValue, push, serverTimestamp, update, remove, runTransaction } from "firebase/database";
+import { ref, onValue, push, serverTimestamp, update, remove, runTransaction, set, onDisconnect } from "firebase/database";
 
 const UserChat = ({ isOpen, onClose }) => {
     const theme = useTheme();
@@ -44,6 +46,9 @@ const UserChat = ({ isOpen, onClose }) => {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
     const [clearHistoryDialog, setClearHistoryDialog] = useState(false);
+
+    const [isRecipientOnline, setIsRecipientOnline] = useState(false);
+    const [recipientLastRead, setRecipientLastRead] = useState(null);
 
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
@@ -68,6 +73,20 @@ const UserChat = ({ isOpen, onClose }) => {
         }
     }, [state.chat, currentUser]);
 
+    // Set presence
+    useEffect(() => {
+        if (!currentUser?.uid) return;
+        const presenceRef = ref(rtdb, `presence/${currentUser.uid}`);
+        const connectedRef = ref(rtdb, '.info/connected');
+        const unsubscribe = onValue(connectedRef, (snap) => {
+            if (snap.val() === true) {
+                set(presenceRef, true);
+                onDisconnect(presenceRef).remove();
+            }
+        });
+        return () => unsubscribe();
+    }, [currentUser]);
+
     // Load chat list
     useEffect(() => {
         if (!currentUser?.uid) return;
@@ -89,6 +108,16 @@ const UserChat = ({ isOpen, onClose }) => {
         return () => unsubscribe();
     }, [currentUser]);
 
+    // Listen to recipient online status
+    useEffect(() => {
+        if (!activeChat?.recipientId) return;
+        const presenceRef = ref(rtdb, `presence/${activeChat.recipientId}`);
+        const unsubscribe = onValue(presenceRef, (snap) => {
+            setIsRecipientOnline(!!snap.val());
+        });
+        return () => unsubscribe();
+    }, [activeChat?.recipientId]);
+
     // Load messages for active chat
     useEffect(() => {
         if (!activeChat?.chatId) return;
@@ -105,6 +134,11 @@ const UserChat = ({ isOpen, onClose }) => {
                     update(ref(rtdb, `user_chats/${currentUser.uid}/${activeChat.chatId}`), {
                         unreadCount: 0
                     });
+
+                    // Update last read timestamp
+                    update(ref(rtdb, `chatMetadata/${activeChat.chatId}/${currentUser.uid}`), {
+                        lastReadTimestamp: serverTimestamp()
+                    });
                 }
             } else {
                 setMessages([]);
@@ -113,6 +147,16 @@ const UserChat = ({ isOpen, onClose }) => {
 
         return () => unsubscribe();
     }, [activeChat, currentUser]);
+
+    // Listen to recipient's last read
+    useEffect(() => {
+        if (!activeChat?.chatId || !activeChat?.recipientId) return;
+        const lastReadRef = ref(rtdb, `chatMetadata/${activeChat.chatId}/${activeChat.recipientId}/lastReadTimestamp`);
+        const unsubscribe = onValue(lastReadRef, (snap) => {
+            setRecipientLastRead(snap.val());
+        });
+        return () => unsubscribe();
+    }, [activeChat?.chatId, activeChat?.recipientId]);
 
     const scrollToBottom = () => {
         setTimeout(() => {
@@ -312,9 +356,12 @@ const UserChat = ({ isOpen, onClose }) => {
                                 {view === "chat" ? `Chat with ${activeChat?.recipientName?.split(" ")[0]}` : "Chats"}
                             </Typography>
                             {view === "chat" && (
-                                <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                                    Online via Parkvue
-                                </Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: isRecipientOnline ? 'green' : 'red' }} />
+                                    <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                                        {isRecipientOnline ? 'Online' : 'Offline'}
+                                    </Typography>
+                                </Box>
                             )}
                         </Box>
                     </Box>
@@ -446,9 +493,18 @@ const UserChat = ({ isOpen, onClose }) => {
                                         }}
                                     >
                                         <Typography variant="body2">{msg.text}</Typography>
-                                        <Typography variant="caption" sx={{ display: 'block', mt: 0.5, opacity: 0.7, fontSize: '0.65rem', textAlign: 'right' }}>
-                                            {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}
-                                        </Typography>
+                                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                                            <Typography variant="caption" sx={{ opacity: 0.7, fontSize: '0.65rem' }}>
+                                                {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '...'}
+                                            </Typography>
+                                            {msg.senderId === currentUser?.uid && (
+                                                recipientLastRead && msg.timestamp && msg.timestamp <= recipientLastRead ? (
+                                                    <DoneAllIcon sx={{ fontSize: '0.85rem', color: theme.palette.primary.main }} />
+                                                ) : (
+                                                    <CheckIcon sx={{ fontSize: '0.85rem', color: 'gray' }} />
+                                                )
+                                            )}
+                                        </Box>
                                     </Paper>
                                 </Box>
                             ))}

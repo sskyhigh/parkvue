@@ -12,6 +12,9 @@ import {
   updateDoc,
   setDoc,
   getDoc,
+  increment,
+  serverTimestamp,
+  runTransaction,
 } from "firebase/firestore";
 import {
   getAuth,
@@ -59,6 +62,9 @@ export {
   updatePassword,
   setDoc,
   getDoc,
+  increment,
+  serverTimestamp,
+  runTransaction,
   sendPasswordResetEmail,
 };
 export const storage = getStorage(app);

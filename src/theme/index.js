@@ -8,7 +8,7 @@ const base = {
     fontFamily: "'Open Sans', sans-serif",
     h1: { fontWeight: 800 },
     h2: { fontWeight: 800 },
-    h3: { fontWeight: 700 },
+    h3: { fontWeight: 700 },  
     h4: { fontWeight: 700 },
     h5: { fontWeight: 600 },
     h6: { fontWeight: 600 },
@@ -31,7 +31,7 @@ export const darkTheme = createTheme({
     },
     primary: { main: "#009fb4ff" },  // accent color
     secondary: { main: "#FF6584" }, // secondary accent
-    info: { main: "#4DD0E1" }, // modern cyan-ish
+    info: { main: "#018091ff" }, // modern cyan-ish
   },
   customStyles: {
     cardGlass: {
@@ -59,7 +59,7 @@ export const lightTheme = createTheme({
     },
     primary: { main: "#0fbbffff" },
     secondary: { main: "#FF6584" },
-    info: { main: "#00bcd4" },
+    info: { main: "#02c9e4ff" },
   },
   customStyles: {
     cardGlass: {

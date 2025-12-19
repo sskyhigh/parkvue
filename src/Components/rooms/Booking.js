@@ -11,6 +11,9 @@ import {
   query,
   where,
   getDocs,
+  getDoc,
+  setDoc,
+  increment,
 } from "firebase/firestore";
 import {
   Box,
@@ -117,6 +120,8 @@ const Booking = () => {
   const [bookingEnd, setBookingEnd] = useState("");
   const [duration, setDuration] = useState(0);
   const [totalPrice, setTotalPrice] = useState(0);
+  const [serviceFee, setServiceFee] = useState(0);
+  const [totalWithFee, setTotalWithFee] = useState(0);
 
   // Calculate duration and total price when booking dates change
   useEffect(() => {
@@ -135,15 +140,43 @@ const Booking = () => {
         const hourlyRate = (room.price || 0) / 24;
         const calculatedTotal = durationHours * hourlyRate;
         setTotalPrice(calculatedTotal);
+
+        // Calculate service fee and total with fee
+        const calculatedServiceFee = calculatedTotal * 0.1;
+        setServiceFee(calculatedServiceFee);
+        setTotalWithFee(calculatedTotal + calculatedServiceFee);
       } else {
         setDuration(0);
         setTotalPrice(0);
+        setServiceFee(0);
+        setTotalWithFee(0);
       }
     } else {
       setDuration(0);
       setTotalPrice(0);
+      setServiceFee(0);
+      setTotalWithFee(0);
     }
   }, [bookingStart, bookingEnd, room]);
+
+  // Increment view count
+  useEffect(() => {
+    const incrementView = async () => {
+      if (!currentUser?.uid || !room?.id) return;
+      try {
+        const viewRef = doc(db, 'rooms', room.id, 'views', currentUser.uid);
+        const viewSnap = await getDoc(viewRef);
+        if (!viewSnap.exists()) {
+          await setDoc(viewRef, { viewedAt: serverTimestamp() });
+          const roomRef = doc(db, 'rooms', room.id);
+          await updateDoc(roomRef, { viewCount: increment(1) });
+        }
+      } catch (error) {
+        console.error('Error incrementing view:', error);
+      }
+    };
+    incrementView();
+  }, [currentUser, room]);
 
   if (!room) return <NotFound information={"parking space"} />;
 
@@ -212,7 +245,7 @@ const Booking = () => {
         bookingStart: bookingStart,
         bookingEnd: bookingEnd,
         duration: duration,
-        totalPrice: totalPrice,
+        totalPrice: totalWithFee,
         paymentMethod: "card",
         paymentDetails: {
           cardBrand,
@@ -246,7 +279,7 @@ const Booking = () => {
 
         // Calculate new total earnings
         const currentEarnings = userData.totalEarnings || 0;
-        const newTotalEarnings = currentEarnings + parseFloat(totalPrice);
+        const newTotalEarnings = currentEarnings + (totalWithFee - serviceFee);
 
         // Update the user's document
         await updateDoc(userRef, {
@@ -445,14 +478,14 @@ const Booking = () => {
                       <Chip
                         icon={<Person fontSize="small" />}
                         label={`Owner: ${room.ownerName || "Anonymous"}`}
-                        variant="outlined"
-                        size="small"
+                        color="default"
+                        variant="primary"
                       />
                       <Chip
                         icon={<AttachMoney fontSize="small" />}
                         label={`$${priceNice}`}
                         color="primary"
-                        sx={{ fontWeight: 700 }}
+                        sx={{ fontWeight: 600 }}
                       />
                     </Stack>
                   </Box>
@@ -867,10 +900,10 @@ const Booking = () => {
                         sx={{ mb: 1 }}
                       >
                         <Typography variant="body2" color="text.secondary">
-                          Service Fee
+                          Service Fee (10%)
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          $0.00
+                          ${serviceFee.toFixed(2)}
                         </Typography>
                       </Stack>
                       <Divider sx={{ my: 1.5 }} />
@@ -890,7 +923,7 @@ const Booking = () => {
                             color: theme.palette.primary.main,
                           }}
                         >
-                          ${totalPrice > 0 ? totalPrice.toFixed(2) : priceNice}
+                          ${totalWithFee.toFixed(2)}
                         </Typography>
                       </Stack>
                     </Paper>
@@ -927,7 +960,7 @@ const Booking = () => {
                       {processing ? (
                         <CircularProgress size={24} color="inherit" />
                       ) : (
-                        `Pay $${totalPrice > 0 ? totalPrice.toFixed(2) : priceNice} & Confirm Booking`
+                        `Pay $${totalWithFee > 0 ? totalWithFee.toFixed(2) : priceNice} & Confirm Booking`
                       )}
                     </Button>
 

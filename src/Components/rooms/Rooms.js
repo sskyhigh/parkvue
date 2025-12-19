@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useContext } from "react";
-import { collection, getDocs, db } from "../../firebase/config";
+import { collection, getDocs, db, doc, getDoc, updateDoc, setDoc, increment, serverTimestamp } from "../../firebase/config";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
@@ -26,10 +26,7 @@ import {
   Container,
   alpha,
   Divider,
-  Badge,
-  Tooltip,
   Fade,
-  CardActions,
   Select,
   MenuItem,
   FormControl,
@@ -154,9 +151,25 @@ const Rooms = () => {
   }, []);
 
   // helpers
+  const incrementView = async (roomId) => {
+    if (!currentUser?.uid) return;
+    try {
+      const viewRef = doc(db, 'rooms', roomId, 'views', currentUser.uid);
+      const viewSnap = await getDoc(viewRef);
+      if (!viewSnap.exists()) {
+        await setDoc(viewRef, { viewedAt: serverTimestamp() });
+        const roomRef = doc(db, 'rooms', roomId);
+        await updateDoc(roomRef, { viewCount: increment(1) });
+      }
+    } catch (error) {
+      console.error('Error incrementing view:', error);
+    }
+  };
+
   const handleOpenDialog = (room) => {
     setSelectedRoom(room);
     setOpenDialog(true);
+    incrementView(room.id);
   };
 
   const handleCloseDialog = () => {
@@ -682,22 +695,6 @@ const Rooms = () => {
                                 >
                                   {room.title || "Untitled Space"}
                                 </Typography>
-                                {room.rating > 0 && (
-                                  <Chip
-                                    size="small"
-                                    icon={<StarIcon sx={{ fontSize: '14px !important', color: theme.palette.warning.main }} />}
-                                    label={room.rating.toFixed(1)}
-                                    sx={{
-                                      height: 24,
-                                      bgcolor: alpha(theme.palette.warning.main, 0.1),
-                                      color: theme.palette.warning.dark,
-                                      fontWeight: 700,
-                                      border: 'none',
-                                      flexShrink: 0,
-                                      ml: 1
-                                    }}
-                                  />
-                                )}
                               </Stack>
 
                               <Stack direction="row" spacing={1} alignItems="center">
@@ -715,7 +712,38 @@ const Rooms = () => {
 
                             <Divider sx={{ my: 1.5, borderStyle: 'dashed' }} />
 
-                            {/* Features / Tags - Fixed Height Area */}
+                            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+                              <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                <SpeedIcon sx={{ fontSize: 14 }} />
+                                {room.viewCount ? (room.viewCount >= 1000 ? `${(room.viewCount / 1000).toFixed(1)}K` : room.viewCount) : 0} views
+                              </Typography>
+                              {room.ratingCount > 0 ? (
+                                <Chip
+                                  size="small"
+                                  icon={<StarIcon sx={{ fontSize: '14px !important', color: theme.palette.warning.main }} />}
+                                  label={`${room.averageRating.toFixed(1)} (${room.ratingCount})`}
+                                  sx={{
+                                    height: 24,
+                                    bgcolor: alpha(theme.palette.warning.main, 0.1),
+                                    color: theme.palette.warning.dark,
+                                    fontWeight: 700,
+                                    border: 'none'
+                                  }}
+                                />
+                              ) : (
+                                <Chip
+                                  size="small"
+                                  label="Not rated yet"
+                                  sx={{
+                                    height: 24,
+                                    bgcolor: alpha(theme.palette.grey[300], 0.1),
+                                    color: theme.palette.text.secondary,
+                                    fontWeight: 500,
+                                    border: 'none'
+                                  }}
+                                />
+                              )}
+                            </Stack>
                             <Box sx={{ height: 24, mb: 0 }}>
                               <Stack direction="row" spacing={1}>
                                 {(room.vehicleTypes || []).slice(0, 2).map((v, i) => (

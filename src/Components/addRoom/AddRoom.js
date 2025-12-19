@@ -458,7 +458,6 @@ const AddRoom = () => {
         ownerEmail: currentUser?.email,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        rating: 0,
         reviews: [],
         bookings: [],
       };
