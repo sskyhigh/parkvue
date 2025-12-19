@@ -32,8 +32,9 @@ import {
     DoneAll as DoneAllIcon,
 } from "@mui/icons-material";
 import { Context } from "../../context/ContextProvider";
-import { rtdb } from "../../firebase/config";
+import { rtdb, db } from "../../firebase/config";
 import { ref, onValue, push, serverTimestamp, update, remove, runTransaction, set, onDisconnect } from "firebase/database";
+import { collection, getDocs, query as firebaseQuery, where } from "firebase/firestore";
 
 const UserChat = ({ isOpen, onClose }) => {
     const theme = useTheme();
@@ -49,6 +50,7 @@ const UserChat = ({ isOpen, onClose }) => {
 
     const [isRecipientOnline, setIsRecipientOnline] = useState(false);
     const [recipientLastRead, setRecipientLastRead] = useState(null);
+    const [chatPhotos, setChatPhotos] = useState({});
 
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
@@ -66,12 +68,12 @@ const UserChat = ({ isOpen, onClose }) => {
                     chatId,
                     recipientId: recipient.uid,
                     recipientName: recipient.name || "User",
-                    recipientPhoto: recipient.photoURL
+                    recipientPhoto: chatPhotos[recipient.uid] || null
                 });
                 setView("chat");
             }
         }
-    }, [state.chat, currentUser]);
+    }, [state.chat, currentUser, chatPhotos]);
 
     // Set presence
     useEffect(() => {
@@ -92,7 +94,7 @@ const UserChat = ({ isOpen, onClose }) => {
         if (!currentUser?.uid) return;
 
         const userChatsRef = ref(rtdb, `user_chats/${currentUser.uid}`);
-        const unsubscribe = onValue(userChatsRef, (snapshot) => {
+        const unsubscribe = onValue(userChatsRef, async (snapshot) => {
             const data = snapshot.val();
             if (data) {
                 const chatList = Object.entries(data).map(([key, val]) => ({
@@ -100,8 +102,31 @@ const UserChat = ({ isOpen, onClose }) => {
                     ...val
                 })).sort((a, b) => b.lastUpdated - a.lastUpdated);
                 setChats(chatList);
+
+                // Fetch photos for unique recipients
+                const uniqueUids = [...new Set(chatList.map(chat => chat.recipientId))];
+                const photoPromises = uniqueUids.map(async (uid) => {
+                    try {
+                        const userQuery = firebaseQuery(collection(db, 'users'), where('uid', '==', uid));
+                        const userSnapshot = await getDocs(userQuery);
+                        if (!userSnapshot.empty) {
+                            const userData = userSnapshot.docs[0].data();
+                            return { uid, photoURL: userData.photoURL || null };
+                        }
+                    } catch (error) {
+                        console.error('Error fetching photo for uid:', uid, error);
+                    }
+                    return { uid, photoURL: null };
+                });
+                const photoResults = await Promise.all(photoPromises);
+                const photoMap = {};
+                photoResults.forEach(({ uid, photoURL }) => {
+                    photoMap[uid] = photoURL;
+                });
+                setChatPhotos(photoMap);
             } else {
                 setChats([]);
+                setChatPhotos({});
             }
         });
 
@@ -242,7 +267,6 @@ const UserChat = ({ isOpen, onClose }) => {
                 ...updateData,
                 recipientId: activeChat.recipientId,
                 recipientName: activeChat.recipientName || "Unknown User",
-                recipientPhoto: activeChat.recipientPhoto || null,
                 unreadCount: 0 // I read my own message
             });
 
@@ -345,10 +369,10 @@ const UserChat = ({ isOpen, onClose }) => {
                                 height: 36,
                             }}
                         >
-                            {activeChat?.recipientPhoto ? (
+                            {view === "chat" && activeChat?.recipientPhoto ? (
                                 <img src={activeChat.recipientPhoto} alt="" style={{ width: '100%', height: '100%' }} />
                             ) : (
-                                view === "chat" ? <PersonIcon fontSize="small" /> : <ChatIcon fontSize="small" />
+                                <ChatIcon fontSize="small" />
                             )}
                         </Avatar>
                         <Box>
@@ -416,7 +440,10 @@ const UserChat = ({ isOpen, onClose }) => {
                                         <ListItem
                                             button
                                             onClick={() => {
-                                                setActiveChat(chat);
+                                                setActiveChat({
+                                                    ...chat,
+                                                    recipientPhoto: chatPhotos[chat.recipientId] || null
+                                                });
                                                 setView("chat");
                                             }}
                                             alignItems="flex-start"
@@ -426,7 +453,7 @@ const UserChat = ({ isOpen, onClose }) => {
                                         >
                                             <ListItemAvatar>
                                                 <Badge badgeContent={chat.unreadCount} color="error">
-                                                    <Avatar>
+                                                    <Avatar src={chatPhotos[chat.recipientId]}>
                                                         <PersonIcon />
                                                     </Avatar>
                                                 </Badge>

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useContext } from "react";
-import { collection, getDocs, db, doc, getDoc, updateDoc, setDoc, increment, serverTimestamp } from "../../firebase/config";
+import { collection, getDocs, db, doc, getDoc, updateDoc, setDoc, increment, serverTimestamp, query as firebaseQuery, where } from "../../firebase/config";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
@@ -138,7 +138,25 @@ const Rooms = () => {
           id: doc.id,
           ...doc.data(),
         }));
-        if (mounted) setRooms(roomData);
+
+        // Fetch photoURLs for each room's owner
+        const roomsWithPhotos = await Promise.all(roomData.map(async (room) => {
+          if (room.createdBy) {
+            try {
+              const userQuery = firebaseQuery(collection(db, 'users'), where('uid', '==', room.createdBy));
+              const userSnapshot = await getDocs(userQuery);
+              if (!userSnapshot.empty) {
+                const userData = userSnapshot.docs[0].data();
+                return { ...room, photoURL: userData.photoURL || null };
+              }
+            } catch (error) {
+              console.error('Error fetching photo for room:', room.id, error);
+            }
+          }
+          return room;
+        }));
+
+        if (mounted) setRooms(roomsWithPhotos);
         setLoading(false);
       } catch (err) {
         console.error("Failed to fetch rooms", err);
@@ -1176,8 +1194,8 @@ const Rooms = () => {
                       }}
                     >
                       <Stack direction="row" alignItems="center" spacing={2}>
-                        <Avatar sx={{ bgcolor: alpha(theme.palette.secondary.main, 0.1) }}>
-                          {selectedRoom.ownerName ? selectedRoom.ownerName.charAt(0).toUpperCase() : <PersonIcon />}
+                        <Avatar src={selectedRoom.photoURL} sx={{ bgcolor: alpha(theme.palette.secondary.main, 0.1) }}>
+                          <PersonIcon />
                         </Avatar>
                         <Box>
                           <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
@@ -1203,7 +1221,7 @@ const Rooms = () => {
                                   user: {
                                     uid: selectedRoom.createdBy,
                                     name: selectedRoom.ownerName,
-                                    photoURL: selectedRoom.photoURL ? selectedRoom.photoURL : "/dev.png"
+                                    photoURL: selectedRoom.photoURL || "/dev.png"
                                   }
                                 }
                               });
