@@ -36,6 +36,14 @@ import { auth, db, doc, updateDoc, collection, query, where, getDocs } from '../
 import { PulseLoader } from 'react-spinners';
 import uploadFileProgress from '../../firebase/uploadFileProgress';
 
+const DIALOG_TYPES = {
+    NONE: null,
+    NAME: 'name',
+    PASSWORD: 'password',
+    LOCATION: 'location',
+    DESCRIPTION: 'description',
+};
+
 const UserProfile = () => {
     const { dispatch } = useValue();
     const { currentUser, setCurrentUser } = useContext(Context);
@@ -43,17 +51,15 @@ const UserProfile = () => {
     const isDarkMode = theme.palette.mode === 'dark';
     const navigate = useNavigate();
 
-    const [openNameDialog, setOpenNameDialog] = useState(false);
-    const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
-    const [openLocationDialog, setOpenLocationDialog] = useState(false);
-    const [openDescriptionDialog, setOpenDescriptionDialog] = useState(false);
-    const [loading, setLoading] = useState(true);
+    const [openDialog, setOpenDialog] = useState(DIALOG_TYPES.NONE);
+    const [loading, setLoading] = useState(false);
     const [emailVerified, setEmailVerified] = useState(auth.currentUser?.emailVerified || false);
     const [sendingVerification, setSendingVerification] = useState(false);
     const [dismissedWarning, setDismissedWarning] = useState(false);
     const [uploadingPhoto, setUploadingPhoto] = useState(false);
     const [userData, setUserData] = useState(null);
     const [userDocId, setUserDocId] = useState(null);
+    const [profileLoaded, setProfileLoaded] = useState(false);
 
     const nameRef = useRef();
     const passwordRef = useRef();
@@ -86,6 +92,8 @@ const UserProfile = () => {
                     }
                 } catch (error) {
                     console.error('Error fetching user data:', error);
+                } finally {
+                    setProfileLoaded(true);
                 }
             };
             fetchUserData();
@@ -115,13 +123,17 @@ const UserProfile = () => {
     }, [emailVerified]);
 
     const isProfileComplete = () => {
-        return (
-            currentUser?.fullName &&
-            currentUser?.photoURL &&
-            userData?.address &&
-            userData?.city &&
-            userData?.state &&
-            userData?.description
+    const fields = [
+        currentUser?.fullName,
+        currentUser?.photoURL,
+        userData?.address,
+        userData?.city,
+        userData?.state,
+        userData?.description,
+    ];
+
+        return fields.every(
+            v => typeof v === "string" ? v.trim() !== "" : Boolean(v)
         );
     };
 
@@ -201,7 +213,7 @@ const UserProfile = () => {
                         message: 'Profile updated successfully',
                     },
                 });
-                setOpenNameDialog(false);
+                setOpenDialog(DIALOG_TYPES.NONE);
             }
         } catch (error) {
             console.error(error);
@@ -258,7 +270,7 @@ const UserProfile = () => {
                         message: 'Password updated successfully',
                     },
                 });
-                setOpenPasswordDialog(false);
+                setOpenDialog(DIALOG_TYPES.NONE);
             }
         } catch (error) {
             console.error(error);
@@ -368,7 +380,7 @@ const UserProfile = () => {
                     message: 'Location updated successfully',
                 },
             });
-            setOpenLocationDialog(false);
+            setOpenDialog(DIALOG_TYPES.NONE);
         } catch (error) {
             console.error(error);
             dispatch({
@@ -422,7 +434,7 @@ const UserProfile = () => {
                     message: 'Description updated successfully',
                 },
             });
-            setOpenDescriptionDialog(false);
+            setOpenDialog(DIALOG_TYPES.NONE);
         } catch (error) {
             console.error(error);
             dispatch({
@@ -438,6 +450,14 @@ const UserProfile = () => {
         }
     };
 
+    const openDialogHandler = (dialogType) => () => {
+        setOpenDialog(dialogType);
+    };
+
+    const closeDialogHandler = () => {
+        setOpenDialog(DIALOG_TYPES.NONE);
+    };
+
     if (!currentUser) return null;
 
     return (
@@ -449,7 +469,7 @@ const UserProfile = () => {
             }}
         >
             <Container maxWidth="md">
-                <Collapse in={!loading && !isProfileComplete() && !dismissedWarning}>
+                <Collapse in={profileLoaded && !isProfileComplete() && !dismissedWarning}>
                     <Alert
                         severity="warning"
                         action={
@@ -564,7 +584,7 @@ const UserProfile = () => {
                                     </Box>
                                     <Button
                                         startIcon={<Edit />}
-                                        onClick={() => setOpenNameDialog(true)}
+                                        onClick={openDialogHandler(DIALOG_TYPES.NAME)}
                                         sx={{
                                             borderRadius: 2,
                                             textTransform: 'none',
@@ -693,7 +713,7 @@ const UserProfile = () => {
                                     </Box>
                                     <Button
                                         startIcon={<Edit />}
-                                        onClick={() => setOpenPasswordDialog(true)}
+                                        onClick={openDialogHandler(DIALOG_TYPES.PASSWORD)}
                                         color="error"
                                         sx={{
                                             borderRadius: 2,
@@ -744,7 +764,7 @@ const UserProfile = () => {
                                     </Box>
                                     <Button
                                         startIcon={<Edit />}
-                                        onClick={() => setOpenLocationDialog(true)}
+                                        onClick={openDialogHandler(DIALOG_TYPES.LOCATION)}
                                         sx={{
                                             borderRadius: 2,
                                             textTransform: 'none',
@@ -794,7 +814,7 @@ const UserProfile = () => {
                                     </Box>
                                     <Button
                                         startIcon={<Edit />}
-                                        onClick={() => setOpenDescriptionDialog(true)}
+                                        onClick={openDialogHandler(DIALOG_TYPES.DESCRIPTION)}
                                         sx={{
                                             borderRadius: 2,
                                             textTransform: 'none',
@@ -809,10 +829,10 @@ const UserProfile = () => {
                 </Paper>
             </Container>
 
-            {/* Edit Name Dialog */}
+            {/* Consolidated Dialog Component */}
             <Dialog
-                open={openNameDialog}
-                onClose={() => setOpenNameDialog(false)}
+                open={openDialog !== DIALOG_TYPES.NONE}
+                onClose={closeDialogHandler}
                 sx={{ zIndex: 900 }}
                 PaperProps={{
                     sx: {
@@ -822,184 +842,130 @@ const UserProfile = () => {
                     }
                 }}
             >
-                <DialogTitle sx={{ fontWeight: 600 }}>Update Name</DialogTitle>
+                {/* Dialog Title based on type */}
+                <DialogTitle sx={{ fontWeight: 600 }}>
+                    {openDialog === DIALOG_TYPES.NAME && 'Update Name'}
+                    {openDialog === DIALOG_TYPES.PASSWORD && 'Change Password'}
+                    {openDialog === DIALOG_TYPES.LOCATION && 'Update Location'}
+                    {openDialog === DIALOG_TYPES.DESCRIPTION && 'Update Profile Description'}
+                </DialogTitle>
+                
                 <DialogContent>
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        label="Full Name"
-                        type="text"
-                        fullWidth
-                        defaultValue={currentUser.fullName}
-                        inputRef={nameRef}
-                        variant="outlined"
-                        sx={{ mt: 1 }}
-                    />
-                </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 2 }}>
-                    <Button onClick={() => setOpenNameDialog(false)} color="inherit" sx={{ borderRadius: 2 }}>
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={handleUpdateName}
-                        variant="contained"
-                        disabled={loading}
-                        sx={{ borderRadius: 2, px: 3 }}
-                    >
-                        {loading ? <PulseLoader size={8} color="#fff" /> : 'Save Changes'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                    {/* Name Dialog Content */}
+                    {openDialog === DIALOG_TYPES.NAME && (
+                        <TextField
+                            autoFocus
+                            margin="dense"
+                            label="Full Name"
+                            type="text"
+                            fullWidth
+                            defaultValue={currentUser.fullName}
+                            inputRef={nameRef}
+                            variant="outlined"
+                            sx={{ mt: 1 }}
+                        />
+                    )}
 
-            {/* Change Password Dialog */}
-            <Dialog
-                open={openPasswordDialog}
-                onClose={() => setOpenPasswordDialog(false)}
-                sx={{ zIndex: 900 }}
-                PaperProps={{
-                    sx: {
-                        borderRadius: 3,
-                        p: 1,
-                        minWidth: { xs: 300, sm: 400 }
-                    }
-                }}
-            >
-                <DialogTitle sx={{ fontWeight: 600 }}>Change Password</DialogTitle>
-                <DialogContent>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        Enter your new password below.
-                    </Typography>
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        label="New Password"
-                        type="password"
-                        fullWidth
-                        inputRef={passwordRef}
-                        variant="outlined"
-                        sx={{ mb: 2 }}
-                    />
-                    <TextField
-                        margin="dense"
-                        label="Confirm New Password"
-                        type="password"
-                        fullWidth
-                        inputRef={confirmPasswordRef}
-                        variant="outlined"
-                    />
-                </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 2 }}>
-                    <Button onClick={() => setOpenPasswordDialog(false)} color="inherit" sx={{ borderRadius: 2 }}>
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={handleUpdatePassword}
-                        variant="contained"
-                        color="primary"
-                        disabled={loading}
-                        sx={{ borderRadius: 2, px: 3 }}
-                    >
-                        {loading ? <PulseLoader size={8} color="#fff" /> : 'Update Password'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                    {/* Password Dialog Content */}
+                    {openDialog === DIALOG_TYPES.PASSWORD && (
+                        <>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                Enter your new password below.
+                            </Typography>
+                            <TextField
+                                autoFocus
+                                margin="dense"
+                                label="New Password"
+                                type="password"
+                                fullWidth
+                                inputRef={passwordRef}
+                                variant="outlined"
+                                sx={{ mb: 2 }}
+                            />
+                            <TextField
+                                margin="dense"
+                                label="Confirm New Password"
+                                type="password"
+                                fullWidth
+                                inputRef={confirmPasswordRef}
+                                variant="outlined"
+                            />
+                        </>
+                    )}
 
-            {/* Edit Location Dialog */}
-            <Dialog
-                open={openLocationDialog}
-                onClose={() => setOpenLocationDialog(false)}
-                sx={{ zIndex: 900 }}
-                PaperProps={{
-                    sx: {
-                        borderRadius: 3,
-                        p: 1,
-                        minWidth: { xs: 300, sm: 400 }
-                    }
-                }}
-            >
-                <DialogTitle sx={{ fontWeight: 600 }}>Update Location</DialogTitle>
-                <DialogContent>
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        label="Address"
-                        type="text"
-                        fullWidth
-                        defaultValue={userData?.address}
-                        inputRef={addressRef}
-                        variant="outlined"
-                        sx={{ mb: 2 }}
-                    />
-                    <TextField
-                        margin="dense"
-                        label="City"
-                        type="text"
-                        fullWidth
-                        defaultValue={userData?.city}
-                        inputRef={cityRef}
-                        variant="outlined"
-                        sx={{ mb: 2 }}
-                    />
-                    <TextField
-                        margin="dense"
-                        label="State"
-                        type="text"
-                        fullWidth
-                        defaultValue={userData?.state}
-                        inputRef={stateRef}
-                        variant="outlined"
-                    />
-                </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 2 }}>
-                    <Button onClick={() => setOpenLocationDialog(false)} color="inherit" sx={{ borderRadius: 2 }}>
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={handleUpdateLocation}
-                        variant="contained"
-                        disabled={loading}
-                        sx={{ borderRadius: 2, px: 3 }}
-                    >
-                        {loading ? <PulseLoader size={8} color="#fff" /> : 'Save Changes'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                    {/* Location Dialog Content */}
+                    {openDialog === DIALOG_TYPES.LOCATION && (
+                        <>
+                            <TextField
+                                autoFocus
+                                margin="dense"
+                                label="Address"
+                                type="text"
+                                fullWidth
+                                defaultValue={userData?.address}
+                                inputRef={addressRef}
+                                variant="outlined"
+                                sx={{ mb: 2 }}
+                            />
+                            <TextField
+                                margin="dense"
+                                label="City"
+                                type="text"
+                                fullWidth
+                                defaultValue={userData?.city}
+                                inputRef={cityRef}
+                                variant="outlined"
+                                sx={{ mb: 2 }}
+                            />
+                            <TextField
+                                margin="dense"
+                                label="State"
+                                type="text"
+                                fullWidth
+                                defaultValue={userData?.state}
+                                inputRef={stateRef}
+                                variant="outlined"
+                            />
+                        </>
+                    )}
 
-            {/* Edit Description Dialog */}
-            <Dialog
-                open={openDescriptionDialog}
-                onClose={() => setOpenDescriptionDialog(false)}
-                sx={{ zIndex: 900 }}
-                PaperProps={{
-                    sx: {
-                        borderRadius: 3,
-                        p: 1,
-                        minWidth: { xs: 300, sm: 400 }
-                    }
-                }}
-            >
-                <DialogTitle sx={{ fontWeight: 600 }}>Update Profile Description</DialogTitle>
-                <DialogContent>
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        label="Description"
-                        type="text"
-                        fullWidth
-                        multiline
-                        rows={4}
-                        defaultValue={userData?.description}
-                        inputRef={descriptionRef}
-                        variant="outlined"
-                        sx={{ mt: 1 }}
-                    />
+                    {/* Description Dialog Content */}
+                    {openDialog === DIALOG_TYPES.DESCRIPTION && (
+                        <TextField
+                            autoFocus
+                            margin="dense"
+                            label="Description"
+                            type="text"
+                            fullWidth
+                            multiline
+                            rows={4}
+                            defaultValue={userData?.description}
+                            inputRef={descriptionRef}
+                            variant="outlined"
+                            sx={{ mt: 1 }}
+                        />
+                    )}
                 </DialogContent>
+                
                 <DialogActions sx={{ px: 3, pb: 2 }}>
-                    <Button onClick={() => setOpenDescriptionDialog(false)} color="inherit" sx={{ borderRadius: 2 }}>
+                    <Button onClick={closeDialogHandler} color="inherit" sx={{ borderRadius: 2 }}>
                         Cancel
                     </Button>
                     <Button
-                        onClick={handleUpdateDescription}
+                        onClick={() => {
+                            switch (openDialog) {
+                                case DIALOG_TYPES.NAME:
+                                    return handleUpdateName();
+                                case DIALOG_TYPES.PASSWORD:
+                                    return handleUpdatePassword();
+                                case DIALOG_TYPES.LOCATION:
+                                    return handleUpdateLocation();
+                                case DIALOG_TYPES.DESCRIPTION:
+                                    return handleUpdateDescription();
+                                default:
+                                    return;
+                            }
+                        }}
                         variant="contained"
                         disabled={loading}
                         sx={{ borderRadius: 2, px: 3 }}
