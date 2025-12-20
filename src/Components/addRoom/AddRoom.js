@@ -355,6 +355,7 @@ const AddRoom = () => {
   };
 
   // Handle geolocation
+  // pinpoints location
   const handleGeolocate = (event) => {
     lastSourceRef.current = 'map';
     dispatch({
