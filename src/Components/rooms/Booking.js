@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { db } from "../../firebase/config";
 import { useValue, Context } from "../../context/ContextProvider";
 import {
@@ -38,6 +38,7 @@ import {
   ListItemIcon,
   ListItemText,
   Fade,
+  Skeleton,
 } from "@mui/material";
 import {
   Home,
@@ -102,10 +103,18 @@ const Booking = () => {
   const { dispatch } = useValue();
   const { currentUser } = useContext(Context);
   const { state } = useLocation();
-  const room = state?.room;
-  const self = state?.self || (currentUser && room && currentUser.uid === room.createdBy);
+  const { roomId } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const theme = useTheme();
+
+  // room data state
+  const [room, setRoom] = useState(
+    location.state?.room ?? undefined
+  );
+  const self = state?.self || (currentUser && room && currentUser.uid === room.createdBy);
+
+  const [loading, setLoading] = useState(!location.state?.room);
 
   // payment form state
   const [cardName, setCardName] = useState("");
@@ -122,6 +131,34 @@ const Booking = () => {
   const [totalPrice, setTotalPrice] = useState(0);
   const [serviceFee, setServiceFee] = useState(0);
   const [totalWithFee, setTotalWithFee] = useState(0);
+
+  // fetch room data if not passed via state
+  useEffect(() => {
+    const fetchRoomById = async () => {
+      if (room) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const roomRef = doc(db, "rooms", roomId);
+        const snap = await getDoc(roomRef);
+
+        if (snap.exists()) {
+          setRoom({ id: snap.id, ...snap.data() });
+        } else {
+          setRoom(null);
+        }
+      } catch (err) {
+        console.error("Failed to fetch room:", err);
+        setRoom(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRoomById();
+  }, [room, roomId]);
 
   // Calculate duration and total price when booking dates change
   useEffect(() => {
@@ -177,8 +214,6 @@ const Booking = () => {
     };
     incrementView();
   }, [currentUser, room]);
-
-  if (!room) return <NotFound information={"parking space"} />;
 
   // validate locally
   const validate = () => {
@@ -307,7 +342,7 @@ const Booking = () => {
   };
 
   // small UI helpers
-  const priceNice = typeof room.price === "number" ? room.price.toFixed(2) : room.price;
+    const priceNice = room ? (typeof room.price === "number" ? room.price.toFixed(2) : room.price) : '';
 
   // Define keyframe animations
   const fadeIn = {
@@ -349,6 +384,261 @@ const Booking = () => {
       },
     },
   };
+
+  // Skeleton Loader Component
+  const RoomDetailsSkeleton = ({ self = false }) => (
+  <Box
+    sx={{
+      minHeight: "auto",
+      background: theme.palette.customStyles?.heroBackground || theme.palette.background.default,
+      pt: 2,
+      pb: 3,
+    }}
+  >
+    <Container maxWidth="lg">
+      {/* Header Skeleton */}
+      <Box sx={{ mb: 4 }}>
+        <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 1 }}>
+          <Skeleton variant="circular" width={48} height={48} />
+          <Box sx={{ width: '100%' }}>
+            <Skeleton width="60%" height={40} />
+            <Skeleton width="40%" height={24} sx={{ mt: 1 }} />
+          </Box>
+        </Stack>
+        <Skeleton variant="rectangular" height={1} />
+      </Box>
+
+      <Grid container spacing={4}>
+        {/* Left: Room Details Skeleton */}
+        <Grid item xs={12} md={self ? 12 : 7}>
+          <Paper
+            elevation={0}
+            sx={{
+              borderRadius: 3,
+              overflow: "hidden",
+              border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+              bgcolor: "background.paper",
+            }}
+          >
+            {/* Room Image Skeleton */}
+            <Skeleton 
+              variant="rectangular" 
+              height={340} 
+              width="100%" 
+              sx={{ 
+                borderRadius: 0,
+                transform: 'none'
+              }}
+            />
+
+            <CardContent sx={{ p: 3 }}>
+              <Stack spacing={3}>
+                {/* Room Title and Status */}
+                <Box>
+                  <Skeleton width="80%" height={36} sx={{ mb: 2 }} />
+                  <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                    <Skeleton variant="rounded" width={110} height={32} />
+                    <Skeleton variant="rounded" width={140} height={32} sx={{ mx: 1 }} />
+                    <Skeleton variant="rounded" width={90} height={32} />
+                  </Stack>
+                </Box>
+
+                <Divider />
+
+                {/* Description */}
+                <Box>
+                  <Skeleton width="30%" height={28} sx={{ mb: 1.5 }} />
+                  <Skeleton width="100%" height={20} sx={{ mb: 0.5 }} />
+                  <Skeleton width="95%" height={20} sx={{ mb: 0.5 }} />
+                  <Skeleton width="90%" height={20} />
+                </Box>
+
+                <Divider />
+
+                {/* Video Tour Skeleton (if applicable) */}
+                <Box>
+                  <Skeleton width="35%" height={28} sx={{ mb: 1.5 }} />
+                  <Skeleton 
+                    variant="rectangular" 
+                    height={300} 
+                    width="100%"
+                    sx={{ borderRadius: 2 }}
+                  />
+                </Box>
+
+                <Divider />
+
+                {/* Property Details */}
+                <Box>
+                  <Skeleton width="40%" height={28} sx={{ mb: 2 }} />
+                  {[...Array(6)].map((_, i) => (
+                    <Stack key={i} direction="row" spacing={2} alignItems="center" sx={{ mb: 1.5 }}>
+                      <Skeleton variant="circular" width={24} height={24} />
+                      <Skeleton width={i === 0 ? "90%" : "70%"} height={20} />
+                    </Stack>
+                  ))}
+                </Box>
+
+                <Divider />
+
+                {/* Amenities */}
+                <Box>
+                  <Skeleton width="25%" height={24} sx={{ mb: 1.5 }} />
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                    {[...Array(8)].map((_, i) => (
+                      <Skeleton
+                        key={i}
+                        variant="rounded"
+                        width={80 + Math.random() * 40}
+                        height={32}
+                        sx={{ mb: 1, mr: 1 }}
+                      />
+                    ))}
+                  </Stack>
+                </Box>
+
+                {/* Upload Date */}
+                <Box>
+                  <Skeleton width="40%" height={16} />
+                </Box>
+              </Stack>
+            </CardContent>
+          </Paper>
+        </Grid>
+
+        {/* Right: Payment Form Skeleton (only if not self) */}
+        {!self && (
+          <Grid item xs={12} md={5}>
+            <Paper
+              elevation={0}
+              sx={{
+                borderRadius: 3,
+                p: 3,
+                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                bgcolor: "background.paper",
+              }}
+            >
+              <Box sx={{ mb: 3 }}>
+                <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1 }}>
+                  <Skeleton variant="circular" width={40} height={40} />
+                  <Skeleton width="60%" height={36} />
+                </Stack>
+                <Skeleton width="80%" height={20} />
+              </Box>
+
+              <Stack spacing={3}>
+                {/* Booking Duration Section */}
+                <Box sx={{ p: 2, bgcolor: alpha(theme.palette.info.main, 0.05), borderRadius: 2 }}>
+                  <Skeleton width="50%" height={28} sx={{ mb: 2 }} />
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
+                      <Skeleton width="60%" height={20} sx={{ mb: 1 }} />
+                      <Skeleton variant="rectangular" height={40} />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Skeleton width="60%" height={20} sx={{ mb: 1 }} />
+                      <Skeleton variant="rectangular" height={40} />
+                    </Grid>
+                  </Grid>
+                  <Skeleton 
+                    variant="rectangular" 
+                    height={60} 
+                    width="100%"
+                    sx={{ mt: 2, borderRadius: 1 }}
+                  />
+                </Box>
+
+                <Divider />
+
+                {/* Card Details */}
+                <Box>
+                  <Skeleton width="40%" height={20} sx={{ mb: 1 }} />
+                  <Skeleton variant="rectangular" height={40} />
+                </Box>
+
+                <Box>
+                  <Skeleton width="40%" height={20} sx={{ mb: 1 }} />
+                  <Skeleton variant="rectangular" height={40} />
+                  <Skeleton width="30%" height={16} sx={{ mt: 0.5 }} />
+                </Box>
+
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <Skeleton width="40%" height={20} sx={{ mb: 1 }} />
+                    <Skeleton variant="rectangular" height={40} />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Skeleton width="40%" height={20} sx={{ mb: 1 }} />
+                    <Skeleton variant="rectangular" height={40} />
+                  </Grid>
+                </Grid>
+
+                <Divider />
+
+                {/* Price Summary */}
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    p: 2,
+                    borderRadius: 2,
+                    bgcolor: alpha(theme.palette.primary.main, 0.03),
+                  }}
+                >
+                  <Stack direction="row" justifyContent="space-between" sx={{ mb: 2 }}>
+                    <Skeleton width="40%" height={24} />
+                    <Skeleton width="30%" height={24} />
+                  </Stack>
+                  <Stack direction="row" justifyContent="space-between" sx={{ mb: 1.5 }}>
+                    <Skeleton width="35%" height={20} />
+                    <Skeleton width="25%" height={20} />
+                  </Stack>
+                  <Stack direction="row" justifyContent="space-between" sx={{ mb: 1.5 }}>
+                    <Skeleton width="35%" height={20} />
+                    <Skeleton width="25%" height={20} />
+                  </Stack>
+                  <Skeleton variant="rectangular" height={1} sx={{ my: 1.5 }} />
+                  <Stack direction="row" justifyContent="space-between" sx={{ mb: 1 }}>
+                    <Skeleton width="40%" height={28} />
+                    <Skeleton width="30%" height={28} />
+                  </Stack>
+                </Paper>
+
+                {/* Submit Button */}
+                <Skeleton 
+                  variant="rectangular" 
+                  height={48} 
+                  width="100%"
+                  sx={{ borderRadius: 1 }}
+                />
+
+                {/* Security Note */}
+                <Box sx={{ textAlign: "center" }}>
+                  <Skeleton width="60%" height={16} sx={{ mx: "auto" }} />
+                </Box>
+
+                {/* Demo Note */}
+                <Skeleton 
+                  variant="rectangular" 
+                  height={60} 
+                  width="100%"
+                  sx={{ borderRadius: 2 }}
+                />
+              </Stack>
+            </Paper>
+          </Grid>
+        )}
+      </Grid>
+    </Container>
+  </Box>
+);
+
+if (loading) {
+  return <RoomDetailsSkeleton self={self} />;
+}
+
+if (!loading && !room) {
+  return <NotFound information="parking space" />;
+}
 
   return (
     <Box
