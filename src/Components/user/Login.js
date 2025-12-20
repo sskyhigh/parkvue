@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import { PulseLoader } from "react-spinners";
 import { Close, Send } from "@mui/icons-material";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import PasswordField from "./PasswordField";
 import GoogleOneTapLogin from "./GoogleOneTapLogin";
 import "../NavBar/NavBar.css";
@@ -33,17 +33,12 @@ const Login = () => {
   const emailRef = useRef();
   const passwordRef = useRef();
   const navigate = useNavigate();
-  const location = useLocation();
   const [loading, setLoading] = useState(false);
   const { currentUser, setCurrentUser } = useContext(Context);
 
   // Get theme from context and Material-UI
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
-
-  const handleClose = () => {
-    navigate("/"); // Close the dialog and navigate to the homepage
-  };
 
   useEffect(() => {
     if (currentUser) {

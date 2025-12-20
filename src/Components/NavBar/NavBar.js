@@ -477,7 +477,7 @@ const NavBar = () => {
           {/* Header */}
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 4 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              {currentUser.photoURL ? (
+              {currentUser?.photoURL ? (
                 <img src={currentUser.photoURL} alt="Profile" style={{ width: 32, height: 32, borderRadius: "50%" }} />
               ) : (
                 <AccountCircle sx={{ fontSize: 32 }} />

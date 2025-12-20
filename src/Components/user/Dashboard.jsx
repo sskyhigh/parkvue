@@ -38,6 +38,7 @@ import {
   MeetingRoom,
   CalendarMonth,
   PriceCheck,
+  Star as StarIcon,
 } from "@mui/icons-material";
 import { useValue, Context } from "../../context/ContextProvider";
 import {
@@ -49,6 +50,8 @@ import {
   deleteDoc,
   doc,
   serverTimestamp,
+  getDoc,
+  runTransaction,
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { useNavigate } from "react-router-dom";
@@ -79,6 +82,11 @@ export default function UserDashboard() {
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmPayload, setConfirmPayload] = useState(null);
+
+  const [ratingOpen, setRatingOpen] = useState(false);
+  const [ratingRoom, setRatingRoom] = useState(null);
+  const [selectedRating, setSelectedRating] = useState(0);
+  const [ratingSubmitting, setRatingSubmitting] = useState(false);
 
   const [userStats, setUserStats] = useState({
     totalEarnings: 0,
@@ -165,12 +173,26 @@ export default function UserDashboard() {
           reservations.map(async (r) => {
             try {
               const roomSnap = await getDocs(query(collection(db, "rooms"), where("id", "==", r.roomId)));
-              if (!roomSnap.empty) return { reservationId: r.id, ...r, room: { id: roomSnap.docs[0].id, ...roomSnap.docs[0].data() } };
+              let roomData = null;
+              if (!roomSnap.empty) {
+                roomData = { id: roomSnap.docs[0].id, ...roomSnap.docs[0].data() };
+              }
 
-              // fallback: attempt to read by doc id
-              return { reservationId: r.id, ...r, room: null };
+              // Check if user has rated this room
+              let hasRated = false;
+              let userRating = 0;
+              if (roomData) {
+                const ratingRef = doc(db, 'rooms', roomData.id, 'ratings', currentUser.uid);
+                const ratingSnap = await getDoc(ratingRef);
+                hasRated = ratingSnap.exists();
+                if (hasRated) {
+                  userRating = ratingSnap.data().rating;
+                }
+              }
+
+              return { reservationId: r.id, ...r, room: roomData, hasRated, userRating };
             } catch (err) {
-              return { reservationId: r.id, ...r, room: null };
+              return { reservationId: r.id, ...r, room: null, hasRated: false };
             }
           })
         );
@@ -240,6 +262,68 @@ export default function UserDashboard() {
       dispatch({ type: "UPDATE_ALERT", payload: { open: true, severity: "error", message: err.message || "Action failed" } });
     } finally {
       setConfirmPayload(null);
+    }
+  };
+
+  const openRating = (res) => {
+    setRatingRoom(res);
+    setSelectedRating(res.userRating || 0);
+    setRatingOpen(true);
+  };
+
+  const closeRating = () => {
+    setRatingOpen(false);
+    setRatingRoom(null);
+    setSelectedRating(0);
+  };
+
+  const submitRating = async () => {
+    if (!ratingRoom || !selectedRating) return;
+    setRatingSubmitting(true);
+    try {
+      await runTransaction(db, async (transaction) => {
+        const roomRef = doc(db, 'rooms', ratingRoom.room.id);
+        const roomSnap = await transaction.get(roomRef);
+        if (!roomSnap.exists()) throw new Error('Room not found');
+
+        const roomData = roomSnap.data();
+        const currentRatingCount = roomData.ratingCount || 0;
+        const currentAverageRating = roomData.averageRating || 0;
+
+        let newRatingCount = currentRatingCount;
+        let newAverageRating = currentAverageRating;
+
+        if (ratingRoom.hasRated) {
+          // Update existing rating: subtract old, add new
+          const oldRating = ratingRoom.userRating;
+          newAverageRating = ((currentAverageRating * currentRatingCount) - oldRating + selectedRating) / currentRatingCount;
+        } else {
+          // New rating
+          newRatingCount = currentRatingCount + 1;
+          newAverageRating = ((currentAverageRating * currentRatingCount) + selectedRating) / newRatingCount;
+        }
+
+        const ratingRef = doc(db, 'rooms', ratingRoom.room.id, 'ratings', currentUser.uid);
+        transaction.set(ratingRef, { rating: selectedRating, ratedAt: serverTimestamp() });
+
+        transaction.update(roomRef, {
+          ratingCount: newRatingCount,
+          averageRating: newAverageRating
+        });
+      });
+
+      // Update local state
+      setMyReservations(prev => prev.map(r => 
+        r.reservationId === ratingRoom.reservationId ? { ...r, hasRated: true, userRating: selectedRating } : r
+      ));
+
+      dispatch({ type: "UPDATE_ALERT", payload: { open: true, severity: "success", message: "Rating submitted successfully" } });
+      closeRating();
+    } catch (err) {
+      console.error(err);
+      dispatch({ type: "UPDATE_ALERT", payload: { open: true, severity: "error", message: err.message || "Failed to submit rating" } });
+    } finally {
+      setRatingSubmitting(false);
     }
   };
 
@@ -643,7 +727,7 @@ export default function UserDashboard() {
                               image={res.room.images[0]}
                               alt={res.room.title}
                               sx={{
-                                height: 96,
+                                height: 100,
                                 objectFit: 'cover',
                                 borderTopLeftRadius: '4px',
                                 borderBottomLeftRadius: '4px'
@@ -651,7 +735,7 @@ export default function UserDashboard() {
                             />
                           ) : (
                             <Box sx={{
-                              height: 96,
+                              height: 100,
                               bgcolor: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.secondary.light} 100%)`,
                               display: 'flex',
                               alignItems: 'center',
@@ -706,18 +790,35 @@ export default function UserDashboard() {
                                 >
                                   View Details
                                 </Button>
-                                <Button
-                                  size="small"
-                                  color="error"
-                                  variant="outlined"
-                                  onClick={() => confirmAction({ type: 'unreserve', extra: { reservationId: res.reservationId, roomId: res.room?.id } })}
-                                  sx={{
-                                    fontSize: '0.75rem',
-                                    py: 0.25
-                                  }}
-                                >
-                                  Cancel
-                                </Button>
+                                <Tooltip title={"Cancel This Reservation"}>
+                                  <Button
+                                    size="small"
+                                    color="error"
+                                    variant="outlined"
+                                    onClick={() => confirmAction({ type: 'unreserve', extra: { reservationId: res.reservationId, roomId: res.room?.id } })}
+                                    sx={{
+                                      fontSize: '0.75rem',
+                                      py: 0.25
+                                    }}
+                                  >
+                                    Release
+                                  </Button>
+                                </Tooltip>
+                                <Tooltip title={res.hasRated ? "Change Rating" : ""}>
+                                  <Button
+                                    size="small"
+                                    variant="contained"
+                                    onClick={() => openRating(res)}
+                                    sx={{
+                                      fontSize: '0.75rem',
+                                      py: 0.25,
+                                      bgcolor: theme.palette.secondary.main,
+                                      '&:hover': { bgcolor: theme.palette.secondary.dark }
+                                    }}
+                                  >
+                                    {res.hasRated ? `⭐ ${res.userRating}` : "Rate"}
+                                  </Button>
+                                </Tooltip>
                               </Stack>
                             </Stack>
                           </CardContent>
@@ -802,6 +903,70 @@ export default function UserDashboard() {
           </Button>
           <Button onClick={runConfirm} variant="contained" color={confirmPayload?.type === 'deleteRoom' ? 'error' : 'primary'}>
             Yes, Continue
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Rating dialog */}
+      <Dialog open={ratingOpen} onClose={closeRating} maxWidth="sm" sx={{ zIndex: 900 }}>
+        <DialogTitle sx={{
+          bgcolor: theme.palette.secondary.main,
+          color: 'white',
+          fontWeight: 700
+        }}>
+          Rate Your Experience
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
+          <Stack spacing={2}>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                {ratingRoom?.room?.title}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {ratingRoom?.room?.description}
+              </Typography>
+            </Box>
+            <Divider />
+            <Box>
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                How would you rate this parking space?
+              </Typography>
+              <Stack direction="row" spacing={1} justifyContent="center">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <IconButton
+                    key={star}
+                    onClick={() => setSelectedRating(star)}
+                    sx={{
+                      color: star <= selectedRating ? theme.palette.warning.main : theme.palette.grey[300],
+                      '&:hover': { color: theme.palette.warning.main }
+                    }}
+                  >
+                    <StarIcon fontSize="large" />
+                  </IconButton>
+                ))}
+              </Stack>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 1 }}>
+                {selectedRating > 0 ? `${selectedRating} star${selectedRating > 1 ? 's' : ''}` : 'Select a rating'}
+              </Typography>
+            </Box>
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, pt: 0 }}>
+          <Button onClick={closeRating} variant="outlined">
+            Cancel
+          </Button>
+          <Button 
+            onClick={submitRating} 
+            variant="contained" 
+            disabled={!selectedRating || ratingSubmitting}
+            loading={ratingSubmitting}
+            sx={{ 
+              ml: 1,
+              bgcolor: theme.palette.secondary.main,
+              '&:hover': { bgcolor: theme.palette.secondary.dark }
+            }}
+          >
+            Rate
           </Button>
         </DialogActions>
       </Dialog>

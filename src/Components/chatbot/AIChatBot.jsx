@@ -31,11 +31,12 @@ import badWords from "./badwords";
 
 // Google Generative AI (ESM clean import)
 import { GoogleGenAI } from "@google/genai";
-import config from "./config";
+import useParkvueAIConfig from "../chatbot/useParkvueAIConfig";
 
 const AIChatBot = ({ isOpenProp, setIsOpenProp, customToggle }) => {
     const theme = useTheme();
     const { currentUser } = useContext(Context);
+    const config = useParkvueAIConfig()
 
     // Initial local state if not controlled, or use prop
     const [localIsOpen, setLocalIsOpen] = useState(false);
@@ -190,7 +191,7 @@ const AIChatBot = ({ isOpenProp, setIsOpenProp, customToggle }) => {
             setMessages((prev) => [
                 ...prev,
                 {
-                    text: "I apologize, but I'm having trouble connecting to my AI service. Please try again in a moment.",
+                    text: "I apologize, but I'm having trouble connecting to my AI service. Please try again in a moment." + error?.message ? ` (Error: ${error.message})` : "",
                     sender: "system",
                 },
             ]);

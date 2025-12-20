@@ -14,6 +14,9 @@ import {
     TextField,
     useTheme,
     alpha,
+    Alert,
+    IconButton,
+    Collapse,
 } from '@mui/material';
 import {
     Edit,
@@ -21,12 +24,25 @@ import {
     Email,
     Security,
     Badge,
+    LocationOn,
+    Description,
+    Close,
+    PhotoCamera,
 } from '@mui/icons-material';
 import { useValue, Context } from '../../context/ContextProvider';
 import { useNavigate } from 'react-router-dom';
 import { updateProfile, updatePassword, sendEmailVerification } from 'firebase/auth';
-import { auth, db, doc, updateDoc } from '../../firebase/config';
+import { auth, db, doc, updateDoc, collection, query, where, getDocs } from '../../firebase/config';
 import { PulseLoader } from 'react-spinners';
+import uploadFileProgress from '../../firebase/uploadFileProgress';
+
+const DIALOG_TYPES = {
+    NONE: null,
+    NAME: 'name',
+    PASSWORD: 'password',
+    LOCATION: 'location',
+    DESCRIPTION: 'description',
+};
 
 const UserProfile = () => {
     const { dispatch } = useValue();
@@ -35,21 +51,54 @@ const UserProfile = () => {
     const isDarkMode = theme.palette.mode === 'dark';
     const navigate = useNavigate();
 
-    const [openNameDialog, setOpenNameDialog] = useState(false);
-    const [openPasswordDialog, setOpenPasswordDialog] = useState(false);
+    const [openDialog, setOpenDialog] = useState(DIALOG_TYPES.NONE);
     const [loading, setLoading] = useState(false);
     const [emailVerified, setEmailVerified] = useState(auth.currentUser?.emailVerified || false);
     const [sendingVerification, setSendingVerification] = useState(false);
+    const [dismissedWarning, setDismissedWarning] = useState(false);
+    const [uploadingPhoto, setUploadingPhoto] = useState(false);
+    const [userData, setUserData] = useState(null);
+    const [userDocId, setUserDocId] = useState(null);
+    const [profileLoaded, setProfileLoaded] = useState(false);
 
     const nameRef = useRef();
     const passwordRef = useRef();
     const confirmPasswordRef = useRef();
+    const addressRef = useRef();
+    const cityRef = useRef();
+    const stateRef = useRef();
+    const descriptionRef = useRef();
+    const fileInputRef = useRef();
 
     useEffect(() => {
         if (!currentUser) {
             navigate('/login');
+        } else {
+            // Fetch full user data from Firestore
+            const fetchUserData = async () => {
+                try {
+                    const q = query(collection(db, 'users'), where('uid', '==', currentUser.uid));
+                    const querySnapshot = await getDocs(q);
+                    if (!querySnapshot.empty) {
+                        const userDoc = querySnapshot.docs[0];
+                        const data = userDoc.data();
+                        setUserData(data);
+                        setUserDocId(userDoc.id);
+                        // Update currentUser if needed
+                        const updatedUser = { ...currentUser, ...data };
+                        setCurrentUser(updatedUser);
+                        sessionStorage.setItem('userData', JSON.stringify(updatedUser));
+                        localStorage.setItem('userData', JSON.stringify(updatedUser));
+                    }
+                } catch (error) {
+                    console.error('Error fetching user data:', error);
+                } finally {
+                    setProfileLoaded(true);
+                }
+            };
+            fetchUserData();
         }
-    }, [currentUser, navigate]);
+    }, [currentUser, navigate, setCurrentUser]);
 
     // Check email verification status
     useEffect(() => {
@@ -72,6 +121,21 @@ const UserProfile = () => {
 
         return () => clearInterval(interval);
     }, [emailVerified]);
+
+    const isProfileComplete = () => {
+    const fields = [
+        currentUser?.fullName,
+        currentUser?.photoURL,
+        userData?.address,
+        userData?.city,
+        userData?.state,
+        userData?.description,
+    ];
+
+        return fields.every(
+            v => typeof v === "string" ? v.trim() !== "" : Boolean(v)
+        );
+    };
 
     const handleSendVerification = async () => {
         try {
@@ -123,12 +187,14 @@ const UserProfile = () => {
 
                 // Also update in Firestore if you have a users collection syncing
                 // Assuming a 'users' collection exists based on Login.js
-                const userRef = doc(db, 'users', currentUser.uid || auth.currentUser.uid);
-                // Try to update firestore, but don't fail if it doesn't exist or permission denied
-                try {
-                    await updateDoc(userRef, { fullName: newName });
-                } catch (e) {
-                    console.warn("Could not update firestore user doc", e);
+                if (userDocId) {
+                    const userRef = doc(db, 'users', userDocId);
+                    // Try to update firestore, but don't fail if it doesn't exist or permission denied
+                    try {
+                        await updateDoc(userRef, { fullName: newName });
+                    } catch (e) {
+                        console.warn("Could not update firestore user doc", e);
+                    }
                 }
 
                 // Update local context - this will trigger re-render
@@ -147,7 +213,7 @@ const UserProfile = () => {
                         message: 'Profile updated successfully',
                     },
                 });
-                setOpenNameDialog(false);
+                setOpenDialog(DIALOG_TYPES.NONE);
             }
         } catch (error) {
             console.error(error);
@@ -204,7 +270,7 @@ const UserProfile = () => {
                         message: 'Password updated successfully',
                     },
                 });
-                setOpenPasswordDialog(false);
+                setOpenDialog(DIALOG_TYPES.NONE);
             }
         } catch (error) {
             console.error(error);
@@ -225,6 +291,173 @@ const UserProfile = () => {
         }
     };
 
+    const handlePhotoUpload = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        try {
+            setUploadingPhoto(true);
+            const imageName = `${Date.now()}-${file.name}`;
+            const subFolder = 'profilePictures';
+            const photoURL = await uploadFileProgress(file, subFolder, imageName, () => {});
+
+            if (auth.currentUser) {
+                await updateProfile(auth.currentUser, { photoURL });
+
+                // Update in Firestore
+                if (userDocId) {
+                    const userRef = doc(db, 'users', userDocId);
+                    await updateDoc(userRef, { photoURL });
+                }
+
+                // Update local state
+                const updatedUser = { ...currentUser, photoURL };
+                setCurrentUser(updatedUser);
+                sessionStorage.setItem('userData', JSON.stringify(updatedUser));
+                localStorage.setItem('userData', JSON.stringify(updatedUser));
+
+                dispatch({
+                    type: 'UPDATE_ALERT',
+                    payload: {
+                        open: true,
+                        severity: 'success',
+                        message: 'Profile picture updated successfully',
+                    },
+                });
+            }
+        } catch (error) {
+            console.error(error);
+            dispatch({
+                type: 'UPDATE_ALERT',
+                payload: {
+                    open: true,
+                    severity: 'error',
+                    message: error.message || 'Failed to update profile picture',
+                },
+            });
+        } finally {
+            setUploadingPhoto(false);
+        }
+    };
+
+    const handleUpdateLocation = async () => {
+        const address = addressRef.current.value;
+        const city = cityRef.current.value;
+        const state = stateRef.current.value;
+
+        if (!address || !city || !state) {
+            dispatch({
+                type: 'UPDATE_ALERT',
+                payload: {
+                    open: true,
+                    severity: 'error',
+                    message: 'All location fields are required',
+                },
+            });
+            return;
+        }
+
+        try {
+            setLoading(true);
+            if (!userDocId) {
+                throw new Error('User document not found');
+            }
+            const userRef = doc(db, 'users', userDocId);
+            await updateDoc(userRef, { address, city, state });
+
+            // Update local state
+            const updatedUser = { ...currentUser, address, city, state };
+            setCurrentUser(updatedUser);
+            setUserData({ ...userData, address, city, state });
+            sessionStorage.setItem('userData', JSON.stringify(updatedUser));
+            localStorage.setItem('userData', JSON.stringify(updatedUser));
+
+            dispatch({
+                type: 'UPDATE_ALERT',
+                payload: {
+                    open: true,
+                    severity: 'success',
+                    message: 'Location updated successfully',
+                },
+            });
+            setOpenDialog(DIALOG_TYPES.NONE);
+        } catch (error) {
+            console.error(error);
+            dispatch({
+                type: 'UPDATE_ALERT',
+                payload: {
+                    open: true,
+                    severity: 'error',
+                    message: error.message,
+                },
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleUpdateDescription = async () => {
+        const description = descriptionRef.current.value;
+
+        if (!description || description.trim().length < 10) {
+            dispatch({
+                type: 'UPDATE_ALERT',
+                payload: {
+                    open: true,
+                    severity: 'error',
+                    message: 'Description must be at least 10 characters',
+                },
+            });
+            return;
+        }
+
+        try {
+            setLoading(true);
+            if (!userDocId) {
+                throw new Error('User document not found');
+            }
+            const userRef = doc(db, 'users', userDocId);
+            await updateDoc(userRef, { description });
+
+            // Update local state
+            const updatedUser = { ...currentUser, description };
+            setCurrentUser(updatedUser);
+            setUserData({ ...userData, description });
+            sessionStorage.setItem('userData', JSON.stringify(updatedUser));
+            localStorage.setItem('userData', JSON.stringify(updatedUser));
+
+            dispatch({
+                type: 'UPDATE_ALERT',
+                payload: {
+                    open: true,
+                    severity: 'success',
+                    message: 'Description updated successfully',
+                },
+            });
+            setOpenDialog(DIALOG_TYPES.NONE);
+        } catch (error) {
+            console.error(error);
+            dispatch({
+                type: 'UPDATE_ALERT',
+                payload: {
+                    open: true,
+                    severity: 'error',
+                    message: error.message,
+                },
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const openDialogHandler = (dialogType) => () => {
+        setOpenDialog(dialogType);
+    };
+
+    const closeDialogHandler = () => {
+        setOpenDialog(DIALOG_TYPES.NONE);
+    };
+
     if (!currentUser) return null;
 
     return (
@@ -236,6 +469,24 @@ const UserProfile = () => {
             }}
         >
             <Container maxWidth="md">
+                <Collapse in={profileLoaded && !isProfileComplete() && !dismissedWarning}>
+                    <Alert
+                        severity="warning"
+                        action={
+                            <IconButton
+                                aria-label="close"
+                                color="inherit"
+                                size="small"
+                                onClick={() => setDismissedWarning(true)}
+                            >
+                                <Close fontSize="inherit" />
+                            </IconButton>
+                        }
+                        sx={{ mb: 2 }}
+                    >
+                        Complete your profile to get the best experience on Parkvue.
+                    </Alert>
+                </Collapse>
                 <Paper
                     elevation={0}
                     sx={{
@@ -249,20 +500,43 @@ const UserProfile = () => {
                 >
                     {/* Header Section */}
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 6 }}>
-                        <Avatar
-                            sx={{
-                                width: 120,
-                                height: 120,
-                                mb: 2,
-                                fontSize: '3rem',
-                                bgcolor: theme.palette.primary.main,
-                                boxShadow: `0 8px 24px ${alpha(theme.palette.primary.main, 0.4)}`,
-                                border: `4px solid ${theme.palette.background.paper}`,
-                            }}
-                            src={currentUser.photoURL}
-                        >
-                            {currentUser.fullName?.charAt(0).toUpperCase() || <Person />}
-                        </Avatar>
+                        <Box sx={{ position: 'relative' }}>
+                            <Avatar
+                                sx={{
+                                    width: 120,
+                                    height: 120,
+                                    mb: 2,
+                                    fontSize: '3rem',
+                                    bgcolor: theme.palette.primary.main,
+                                    boxShadow: `0 8px 24px ${alpha(theme.palette.primary.main, 0.4)}`,
+                                    border: `4px solid ${theme.palette.background.paper}`,
+                                }}
+                                src={currentUser.photoURL}
+                            >
+                                {currentUser.fullName?.charAt(0).toUpperCase() || <Person />}
+                            </Avatar>
+                            <IconButton
+                                sx={{
+                                    position: 'absolute',
+                                    bottom: 16,
+                                    right: 0,
+                                    bgcolor: theme.palette.primary.main,
+                                    color: 'white',
+                                    '&:hover': { bgcolor: theme.palette.primary.dark },
+                                }}
+                                onClick={() => fileInputRef.current.click()}
+                                disabled={uploadingPhoto}
+                            >
+                                {uploadingPhoto ? <PulseLoader size={6} /> : <PhotoCamera fontSize="small" />}
+                            </IconButton>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                style={{ display: 'none' }}
+                                accept="image/*"
+                                onChange={handlePhotoUpload}
+                            />
+                        </Box>
                         <Typography variant="h4" fontWeight="700" gutterBottom>
                             {currentUser.fullName || 'User Profile'}
                         </Typography>
@@ -310,7 +584,7 @@ const UserProfile = () => {
                                     </Box>
                                     <Button
                                         startIcon={<Edit />}
-                                        onClick={() => setOpenNameDialog(true)}
+                                        onClick={openDialogHandler(DIALOG_TYPES.NAME)}
                                         sx={{
                                             borderRadius: 2,
                                             textTransform: 'none',
@@ -439,7 +713,7 @@ const UserProfile = () => {
                                     </Box>
                                     <Button
                                         startIcon={<Edit />}
-                                        onClick={() => setOpenPasswordDialog(true)}
+                                        onClick={openDialogHandler(DIALOG_TYPES.PASSWORD)}
                                         color="error"
                                         sx={{
                                             borderRadius: 2,
@@ -451,14 +725,114 @@ const UserProfile = () => {
                                 </Box>
                             </Box>
                         </Grid>
+
+                        {/* Location Section */}
+                        <Grid item xs={12}>
+                            <Box
+                                sx={{
+                                    p: 3,
+                                    borderRadius: 3,
+                                    bgcolor: isDarkMode ? alpha(theme.palette.common.white, 0.03) : alpha(theme.palette.common.black, 0.02),
+                                    border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                                    transition: 'transform 0.2s',
+                                    '&:hover': {
+                                        transform: 'translateY(-2px)',
+                                        bgcolor: isDarkMode ? alpha(theme.palette.common.white, 0.05) : alpha(theme.palette.common.black, 0.03),
+                                    },
+                                }}
+                            >
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <Box
+                                            sx={{
+                                                p: 1.5,
+                                                borderRadius: 2,
+                                                bgcolor: alpha(theme.palette.secondary.main, 0.1),
+                                                color: theme.palette.secondary.main,
+                                            }}
+                                        >
+                                            <LocationOn />
+                                        </Box>
+                                        <Box>
+                                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                                                Location
+                                            </Typography>
+                                            <Typography variant="h6">
+                                                {userData?.address ? `${userData.address}, ${userData.city}, ${userData.state}` : 'Not set'}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                    <Button
+                                        startIcon={<Edit />}
+                                        onClick={openDialogHandler(DIALOG_TYPES.LOCATION)}
+                                        sx={{
+                                            borderRadius: 2,
+                                            textTransform: 'none',
+                                        }}
+                                    >
+                                        Edit
+                                    </Button>
+                                </Box>
+                            </Box>
+                        </Grid>
+
+                        {/* Profile Description Section */}
+                        <Grid item xs={12}>
+                            <Box
+                                sx={{
+                                    p: 3,
+                                    borderRadius: 3,
+                                    bgcolor: isDarkMode ? alpha(theme.palette.common.white, 0.03) : alpha(theme.palette.common.black, 0.02),
+                                    border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                                    transition: 'transform 0.2s',
+                                    '&:hover': {
+                                        transform: 'translateY(-2px)',
+                                        bgcolor: isDarkMode ? alpha(theme.palette.common.white, 0.05) : alpha(theme.palette.common.black, 0.03),
+                                    },
+                                }}
+                            >
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <Box
+                                            sx={{
+                                                p: 1.5,
+                                                borderRadius: 2,
+                                                bgcolor: alpha(theme.palette.warning.main, 0.1),
+                                                color: theme.palette.warning.main,
+                                            }}
+                                        >
+                                            <Description />
+                                        </Box>
+                                        <Box>
+                                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                                                Profile Description
+                                            </Typography>
+                                            <Typography variant="h6">
+                                                {userData?.description || 'Not set'}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                    <Button
+                                        startIcon={<Edit />}
+                                        onClick={openDialogHandler(DIALOG_TYPES.DESCRIPTION)}
+                                        sx={{
+                                            borderRadius: 2,
+                                            textTransform: 'none',
+                                        }}
+                                    >
+                                        Edit
+                                    </Button>
+                                </Box>
+                            </Box>
+                        </Grid>
                     </Grid>
                 </Paper>
             </Container>
 
-            {/* Edit Name Dialog */}
+            {/* Consolidated Dialog Component */}
             <Dialog
-                open={openNameDialog}
-                onClose={() => setOpenNameDialog(false)}
+                open={openDialog !== DIALOG_TYPES.NONE}
+                onClose={closeDialogHandler}
                 sx={{ zIndex: 900 }}
                 PaperProps={{
                     sx: {
@@ -468,84 +842,135 @@ const UserProfile = () => {
                     }
                 }}
             >
-                <DialogTitle sx={{ fontWeight: 600 }}>Update Name</DialogTitle>
+                {/* Dialog Title based on type */}
+                <DialogTitle sx={{ fontWeight: 600 }}>
+                    {openDialog === DIALOG_TYPES.NAME && 'Update Name'}
+                    {openDialog === DIALOG_TYPES.PASSWORD && 'Change Password'}
+                    {openDialog === DIALOG_TYPES.LOCATION && 'Update Location'}
+                    {openDialog === DIALOG_TYPES.DESCRIPTION && 'Update Profile Description'}
+                </DialogTitle>
+                
                 <DialogContent>
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        label="Full Name"
-                        type="text"
-                        fullWidth
-                        defaultValue={currentUser.fullName}
-                        inputRef={nameRef}
-                        variant="outlined"
-                        sx={{ mt: 1 }}
-                    />
+                    {/* Name Dialog Content */}
+                    {openDialog === DIALOG_TYPES.NAME && (
+                        <TextField
+                            autoFocus
+                            margin="dense"
+                            label="Full Name"
+                            type="text"
+                            fullWidth
+                            defaultValue={currentUser.fullName}
+                            inputRef={nameRef}
+                            variant="outlined"
+                            sx={{ mt: 1 }}
+                        />
+                    )}
+
+                    {/* Password Dialog Content */}
+                    {openDialog === DIALOG_TYPES.PASSWORD && (
+                        <>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                Enter your new password below.
+                            </Typography>
+                            <TextField
+                                autoFocus
+                                margin="dense"
+                                label="New Password"
+                                type="password"
+                                fullWidth
+                                inputRef={passwordRef}
+                                variant="outlined"
+                                sx={{ mb: 2 }}
+                            />
+                            <TextField
+                                margin="dense"
+                                label="Confirm New Password"
+                                type="password"
+                                fullWidth
+                                inputRef={confirmPasswordRef}
+                                variant="outlined"
+                            />
+                        </>
+                    )}
+
+                    {/* Location Dialog Content */}
+                    {openDialog === DIALOG_TYPES.LOCATION && (
+                        <>
+                            <TextField
+                                autoFocus
+                                margin="dense"
+                                label="Address"
+                                type="text"
+                                fullWidth
+                                defaultValue={userData?.address}
+                                inputRef={addressRef}
+                                variant="outlined"
+                                sx={{ mb: 2 }}
+                            />
+                            <TextField
+                                margin="dense"
+                                label="City"
+                                type="text"
+                                fullWidth
+                                defaultValue={userData?.city}
+                                inputRef={cityRef}
+                                variant="outlined"
+                                sx={{ mb: 2 }}
+                            />
+                            <TextField
+                                margin="dense"
+                                label="State"
+                                type="text"
+                                fullWidth
+                                defaultValue={userData?.state}
+                                inputRef={stateRef}
+                                variant="outlined"
+                            />
+                        </>
+                    )}
+
+                    {/* Description Dialog Content */}
+                    {openDialog === DIALOG_TYPES.DESCRIPTION && (
+                        <TextField
+                            autoFocus
+                            margin="dense"
+                            label="Description"
+                            type="text"
+                            fullWidth
+                            multiline
+                            rows={4}
+                            defaultValue={userData?.description}
+                            inputRef={descriptionRef}
+                            variant="outlined"
+                            sx={{ mt: 1 }}
+                        />
+                    )}
                 </DialogContent>
+                
                 <DialogActions sx={{ px: 3, pb: 2 }}>
-                    <Button onClick={() => setOpenNameDialog(false)} color="inherit" sx={{ borderRadius: 2 }}>
+                    <Button onClick={closeDialogHandler} color="inherit" sx={{ borderRadius: 2 }}>
                         Cancel
                     </Button>
                     <Button
-                        onClick={handleUpdateName}
+                        onClick={() => {
+                            switch (openDialog) {
+                                case DIALOG_TYPES.NAME:
+                                    return handleUpdateName();
+                                case DIALOG_TYPES.PASSWORD:
+                                    return handleUpdatePassword();
+                                case DIALOG_TYPES.LOCATION:
+                                    return handleUpdateLocation();
+                                case DIALOG_TYPES.DESCRIPTION:
+                                    return handleUpdateDescription();
+                                default:
+                                    return;
+                            }
+                        }}
                         variant="contained"
                         disabled={loading}
                         sx={{ borderRadius: 2, px: 3 }}
                     >
                         {loading ? <PulseLoader size={8} color="#fff" /> : 'Save Changes'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* Change Password Dialog */}
-            <Dialog
-                open={openPasswordDialog}
-                onClose={() => setOpenPasswordDialog(false)}
-                sx={{ zIndex: 900 }}
-                PaperProps={{
-                    sx: {
-                        borderRadius: 3,
-                        p: 1,
-                        minWidth: { xs: 300, sm: 400 }
-                    }
-                }}
-            >
-                <DialogTitle sx={{ fontWeight: 600 }}>Change Password</DialogTitle>
-                <DialogContent>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        Enter your new password below.
-                    </Typography>
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        label="New Password"
-                        type="password"
-                        fullWidth
-                        inputRef={passwordRef}
-                        variant="outlined"
-                        sx={{ mb: 2 }}
-                    />
-                    <TextField
-                        margin="dense"
-                        label="Confirm New Password"
-                        type="password"
-                        fullWidth
-                        inputRef={confirmPasswordRef}
-                        variant="outlined"
-                    />
-                </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 2 }}>
-                    <Button onClick={() => setOpenPasswordDialog(false)} color="inherit" sx={{ borderRadius: 2 }}>
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={handleUpdatePassword}
-                        variant="contained"
-                        color="primary"
-                        disabled={loading}
-                        sx={{ borderRadius: 2, px: 3 }}
-                    >
-                        {loading ? <PulseLoader size={8} color="#fff" /> : 'Update Password'}
                     </Button>
                 </DialogActions>
             </Dialog>

@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import { PulseLoader } from "react-spinners";
 import { Close, Send } from "@mui/icons-material";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import GoogleOneTapLogin from "./GoogleOneTapLogin";
 import PasswordField from "./PasswordField";
 import "../NavBar/NavBar.css"; // Assuming some CSS here
@@ -32,17 +32,12 @@ const Register = () => {
   const passwordRef = useRef();
   const confirmPasswordRef = useRef();
   const navigate = useNavigate();
-  const location = useLocation();
   const [loading, setLoading] = useState(false);
   const { currentUser, setCurrentUser } = useContext(Context);
 
   // Get theme from context and Material-UI
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
-
-  const handleClose = () => {
-    navigate("/"); // Close the dialog and navigate to the home page
-  };
 
   useEffect(() => {
     if (currentUser) {
@@ -127,7 +122,7 @@ const Register = () => {
       sessionStorage.setItem("userData", JSON.stringify(userData));
       localStorage.setItem("userData", JSON.stringify(userData));
       setCurrentUser(userData);
-      navigate("/dashboard"); // Redirect to dashboard after registration
+      navigate("/profile"); // Redirect to profile after registration
     } catch (error) {
       let errorMessage = "An error occurred:" + error.message;
       let errorType = "error";
