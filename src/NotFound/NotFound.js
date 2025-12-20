@@ -16,14 +16,11 @@ const NotFound = ({ information }) => {
   return (
     <Box
       sx={{
-        minHeight: '100vh',
+        height: 'auto',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: isDarkMode
-          ? `linear-gradient(135deg, ${theme.palette.background.default} 0%, ${alpha(theme.palette.primary.dark, 0.1)} 100%)`
-          : `linear-gradient(135deg, ${theme.palette.background.default} 0%, ${alpha(theme.palette.primary.light, 0.05)} 100%)`,
-        position: 'relative',
+        background: theme.palette.background.default,
         overflow: 'hidden',
         py: 4,
       }}
@@ -38,8 +35,8 @@ const NotFound = ({ information }) => {
           height: 400,
           borderRadius: '50%',
           background: isDarkMode
-            ? `radial-gradient(circle, ${alpha(theme.palette.primary.main, 0.1)} 0%, transparent 70%)`
-            : `radial-gradient(circle, ${alpha(theme.palette.primary.main, 0.05)} 0%, transparent 70%)`,
+            ? `radial-gradient(circle, ${alpha(theme.palette.primary.main, 0.4)} 0%, transparent 70%)`
+            : `radial-gradient(circle, ${alpha(theme.palette.primary.main, 0.7)} 0%, transparent 70%)`,
         }}
       />
       <Box
@@ -51,8 +48,8 @@ const NotFound = ({ information }) => {
           height: 500,
           borderRadius: '50%',
           background: isDarkMode
-            ? `radial-gradient(circle, ${alpha(theme.palette.secondary.main, 0.08)} 0%, transparent 70%)`
-            : `radial-gradient(circle, ${alpha(theme.palette.secondary.main, 0.03)} 0%, transparent 70%)`,
+            ? `radial-gradient(circle, ${alpha(theme.palette.secondary.main, 0.4)} 0%, transparent 70%)`
+            : `radial-gradient(circle, ${alpha(theme.palette.secondary.main, 0.6)} 0%, transparent 70%)`,
         }}
       />
 
@@ -71,8 +68,8 @@ const NotFound = ({ information }) => {
             backdropFilter: 'blur(10px)',
             borderRadius: 4,
             boxShadow: isDarkMode
-              ? '0 20px 60px rgba(0,0,0,0.3)'
-              : '0 20px 60px rgba(0,0,0,0.1)',
+              ? '0 10px 30px rgba(0,0,0,0.3)'
+              : '0 10px 30px rgba(0,0,0,0.1)',
             border: isDarkMode
               ? `1px solid ${alpha(theme.palette.divider, 0.2)}`
               : `1px solid ${alpha(theme.palette.divider, 0.1)}`,
