@@ -588,7 +588,7 @@ const Rooms = () => {
                           height: "100%",
                           display: "flex",
                           flexDirection: "column",
-                          borderRadius: 4,
+                          borderRadius: 2,
                           bgcolor: "background.paper",
                           border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
                           transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",

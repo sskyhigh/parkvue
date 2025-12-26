@@ -212,18 +212,21 @@ const SellerProfile = () => {
     >
       <Container maxWidth="lg">
         {/* Back Button */}
-        <IconButton
+        <Button
           onClick={handleBackClick}
+          startIcon={<ArrowBack />}
           sx={{
             mb: 2,
             color: theme.palette.text.primary,
+            textTransform: 'none',
+            fontWeight: 600,
             "&:hover": {
               background: alpha(theme.palette.primary.main, 0.1),
             },
           }}
         >
-          <ArrowBack />
-        </IconButton>
+          Back
+        </Button>
 
         {/* Seller Profile Header */}
         <Paper
@@ -469,16 +472,29 @@ const SellerProfile = () => {
                             </Typography>
                           </Stack>
 
-                          {room.averageRating > 0 && (
+                          {room.ratingCount > 0 ? (
                             <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mb: 1 }}>
                               <StarIcon sx={{ fontSize: 16, color: theme.palette.warning.main }} />
                               <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                {room.averageRating.toFixed(1)}
+                                {(room.averageRating || 0).toFixed(1)}
                               </Typography>
                               <Typography variant="body2" color="text.secondary">
-                                ({room.ratingCount || 0})
+                                ({room.ratingCount})
                               </Typography>
                             </Stack>
+                          ) : (
+                            <Chip
+                              size="small"
+                              label="no ratings yet"
+                              sx={{
+                                height: 24,
+                                mb: 1,
+                                bgcolor: alpha(theme.palette.grey[300], 0.1),
+                                color: theme.palette.text.secondary,
+                                fontWeight: 500,
+                                border: 'none',
+                              }}
+                            />
                           )}
 
                           <Divider sx={{ my: 1.5 }} />
