@@ -770,6 +770,12 @@ if (!loading && !room) {
                         label={`Owner: ${room.ownerName || "Anonymous"}`}
                         color="default"
                         variant="primary"
+                        onClick={() => {
+                          if (room.createdBy) {
+                            navigate(`/seller/${room.createdBy}`);
+                          }
+                        }}
+                        sx={{ cursor: room.createdBy ? 'pointer' : 'default' }}
                       />
                       <Chip
                         icon={<AttachMoney fontSize="small" />}

@@ -23,6 +23,7 @@ import Rooms from "./Components/rooms/Rooms";
 import NotFound from "./NotFound/NotFound";
 import UserDashboard from "./Components/user/Dashboard";
 import UserProfile from "./Components/user/UserProfile";
+import SellerProfile from "./Components/user/SellerProfile";
 import { FloatingButtonsHolder } from "./Components/chatbot/FloatingChatHolder";
 
 const App = () => {
@@ -71,6 +72,7 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<UserDashboard />} />
           <Route path="/profile" element={<UserProfile />} />
+          <Route path="/seller/:sellerId" element={<SellerProfile />} />
           <Route path="/logout" element={<Logout />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/map" element={<ClusterMap />} />

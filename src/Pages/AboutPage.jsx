@@ -447,7 +447,7 @@ function About() {
                         height: 200,
                         border: `4px solid ${theme.palette.primary.main}`,
                       }}
-                      src="/dev.png"
+                      src="/default-avatar.png"
                       alt="Developer"
                     />
                   </Box>
