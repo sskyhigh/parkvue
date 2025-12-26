@@ -395,6 +395,7 @@ const SellerProfile = () => {
                         background: theme.customStyles.cardGlass.background,
                         border: theme.customStyles.cardGlass.border,
                         backdropFilter: theme.customStyles.cardGlass.backdropFilter,
+                        overflow: "hidden",
                         transition: "all 0.3s ease",
                         position: "relative",
                         "&:hover": {
@@ -406,7 +407,10 @@ const SellerProfile = () => {
                         },
                       }}
                     >
-                      <CardActionArea onClick={() => handleRoomClick(room.id)}>
+                      <CardActionArea
+                        onClick={() => handleRoomClick(room.id)}
+                        sx={{ display: "flex", flexDirection: "column", alignItems: "stretch", flex: 1 }}
+                      >
                         <Box sx={{ position: "relative" }}>
                           <CardMedia
                             component="img"
@@ -415,6 +419,7 @@ const SellerProfile = () => {
                             alt={room.title || "Parking spot"}
                             sx={{
                               objectFit: "cover",
+                              flexShrink: 0,
                               filter: isAvailable ? "none" : "grayscale(50%)",
                             }}
                           />
@@ -441,7 +446,7 @@ const SellerProfile = () => {
                             }}
                           />
                         </Box>
-                        <CardContent>
+                        <CardContent sx={{ flexGrow: 1 }}>
                           <Typography
                             variant="h6"
                             gutterBottom
