@@ -1193,44 +1193,67 @@ const Rooms = () => {
                         bgcolor: alpha(theme.palette.background.default, 0.5),
                       }}
                     >
-                      <Stack direction="row" alignItems="center" spacing={2}>
-                        <Avatar src={selectedRoom.photoURL} sx={{ bgcolor: alpha(theme.palette.secondary.main, 0.1) }}>
-                          <PersonIcon />
-                        </Avatar>
-                        <Box>
-                          <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                            Hosted by {selectedRoom.ownerName || "Anonymous"}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            Listed on {prettyDate(selectedRoom.createdAt)}
-                          </Typography>
-                        </Box>
-                        {currentUser?.uid !== selectedRoom?.createdBy && (
+                      <Stack spacing={2}>
+                        <Stack direction="row" alignItems="center" spacing={2}>
+                          <Avatar src={selectedRoom.photoURL} sx={{ bgcolor: alpha(theme.palette.secondary.main, 0.1) }}>
+                            <PersonIcon />
+                          </Avatar>
+                          <Box sx={{ flex: 1 }}>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                              Hosted by {selectedRoom.ownerName || "Anonymous"}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              Listed on {prettyDate(selectedRoom.createdAt)}
+                            </Typography>
+                          </Box>
+                        </Stack>
+                        <Stack 
+                          direction={{ xs: 'column', sm: 'row' }} 
+                          spacing={1}
+                          sx={{ width: '100%' }}
+                        >
                           <Button
                             variant="outlined"
                             size="small"
-                            startIcon={<ChatIcon />}
+                            fullWidth
                             onClick={(e) => {
                               e.stopPropagation();
-                              if (!currentUser) return navigate('/login');
-                              setOpenDialog(false);
-                              dispatch({
-                                type: 'UPDATE_CHAT',
-                                payload: {
-                                  open: true,
-                                  user: {
-                                    uid: selectedRoom.createdBy,
-                                    name: selectedRoom.ownerName,
-                                    photoURL: selectedRoom.photoURL || "/dev.png"
-                                  }
-                                }
-                              });
+                              if (selectedRoom?.createdBy) {
+                                navigate(`/seller/${selectedRoom.createdBy}`);
+                              }
                             }}
-                            sx={{ ml: 'auto', borderRadius: 2 }}
+                            sx={{ borderRadius: 2 }}
                           >
-                            Chat
+                            View Profile
                           </Button>
-                        )}
+                          {currentUser?.uid !== selectedRoom?.createdBy && (
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              fullWidth
+                              startIcon={<ChatIcon />}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (!currentUser) return navigate('/login');
+                                setOpenDialog(false);
+                                dispatch({
+                                  type: 'UPDATE_CHAT',
+                                  payload: {
+                                    open: true,
+                                    user: {
+                                      uid: selectedRoom.createdBy,
+                                      name: selectedRoom.ownerName,
+                                      photoURL: selectedRoom.photoURL || "/dev.png"
+                                    }
+                                  }
+                                });
+                              }}
+                              sx={{ borderRadius: 2 }}
+                            >
+                              Chat
+                            </Button>
+                          )}
+                        </Stack>
                       </Stack>
                     </Paper>
                   </Stack>
