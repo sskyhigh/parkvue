@@ -11,6 +11,9 @@ import { Toaster } from "react-hot-toast";
 
 import FAQ from "./Components/FAQ/FAQ";
 import AboutPage from "./Pages/AboutPage";
+import TermsPage from "./Pages/TermsPage";
+import PrivacyPage from "./Pages/PrivacyPage";
+import SecurityPage from "./Pages/SecurityPage";
 import Register from "./Components/user/Register";
 import Login from "./Components/user/Login";
 import Logout from "./Components/user/Logout";
@@ -25,6 +28,8 @@ import UserDashboard from "./Components/user/Dashboard";
 import UserProfile from "./Components/user/UserProfile";
 import SellerProfile from "./Components/user/SellerProfile";
 import { FloatingButtonsHolder } from "./Components/chatbot/FloatingChatHolder";
+import Footer from "./Components/Footer/Footer";
+import ScrollToTop from "./Components/ScrollToTop";
 
 const App = () => {
   const muiTheme = useTheme();
@@ -42,45 +47,52 @@ const App = () => {
         <Notification />
         <NavBar />
       </Box>
+      <ScrollToTop />
       <FloatingButtonsHolder />
 
       {/*defines the position and duration*/}
       <Toaster position="bottom-center" toastOptions={{ duration: 2000 }} />
 
       <Box sx={{ flexGrow: 1, overflowY: "auto", overflowX: "hidden", position: "relative", display: "flex", flexDirection: "column" }} id="scrollable-content">
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <>
-                <div className="app-container">
-                  <div className="home-banner-container">
-                    <HomeBanner />
+        <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <>
+                  <div className="app-container">
+                    <div className="home-banner-container">
+                      <HomeBanner />
+                    </div>
                   </div>
-                </div>
-                <Reserve />
-                <UploadListing />
-                <FAQ />
-              </>
-            }
-          />
-          {/*Defining the routes*/}
-          {/*website.com/register => registers accounts*/}
-          {/*website.com/login => sends to login*/}
-          {/*website.com/home => sends to homepage*/}
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<UserDashboard />} />
-          <Route path="/profile" element={<UserProfile />} />
-          <Route path="/seller/:sellerId" element={<SellerProfile />} />
-          <Route path="/logout" element={<Logout />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/map" element={<ClusterMap />} />
-          <Route path="/upload" element={<AddRoom />} />
-          <Route path="/rooms" element={<Rooms />} />
-          <Route path="/booking/:roomId" element={<Booking />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+                  <Reserve />
+                  <UploadListing />
+                  <FAQ />
+                </>
+              }
+            />
+            {/*Defining the routes*/}
+            {/*website.com/register => registers accounts*/}
+            {/*website.com/login => sends to login*/}
+            {/*website.com/home => sends to homepage*/}
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/dashboard" element={<UserDashboard />} />
+            <Route path="/profile" element={<UserProfile />} />
+            <Route path="/seller/:sellerId" element={<SellerProfile />} />
+            <Route path="/logout" element={<Logout />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/security" element={<SecurityPage />} />
+            <Route path="/map" element={<ClusterMap />} />
+            <Route path="/upload" element={<AddRoom />} />
+            <Route path="/rooms" element={<Rooms />} />
+            <Route path="/booking/:roomId" element={<Booking />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Box>
+        <Footer />
       </Box>
       <link
         rel="stylesheet"

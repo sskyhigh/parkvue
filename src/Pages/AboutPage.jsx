@@ -67,19 +67,19 @@ function About() {
   // Stats data
   const stats = [
     {
-      value: "10,000+",
+      value: "1,000+",
       label: "Happy Users",
       icon: <People />,
       description: "Active community members"
     },
     {
-      value: "5,000+",
+      value: "500+",
       label: "Parking Spots",
       icon: <LocalParking />,
       description: "Verified parking locations"
     },
     {
-      value: "5",
+      value: "50+",
       label: "Cities",
       icon: <EmojiEvents />,
       description: "Across major metropolitan areas"
@@ -527,7 +527,7 @@ function About() {
                       </Avatar>
                     </a>
 
-                    <a href="mailto:shaoyan888@gmail.com">
+                    <a href="mailto:slow160boys@gmail.com">
                       <Avatar
                         sx={{
                           bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',

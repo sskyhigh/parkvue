@@ -465,6 +465,7 @@ const UserProfile = () => {
             sx={{
                 minHeight: 'auto',
                 pt: 2,
+                pb: 4,
                 background: theme.palette.background.default,
             }}
         >

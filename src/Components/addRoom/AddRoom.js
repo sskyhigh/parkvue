@@ -450,8 +450,6 @@ const AddRoom = () => {
         accessHours: formData.accessHours,
         availableFrom: formData.availableFrom,
         availableTo: formData.availableTo,
-        availableFrom: formData.availableFrom,
-        availableTo: formData.availableTo,
         images: imageUrls,
         video: videoUrl || null,
         createdBy: currentUser?.uid,
@@ -701,7 +699,7 @@ const AddRoom = () => {
                       placeholder="10.00"
                       required
                       InputProps={{
-                        startAdornment: "$",
+                        startAdornment: "$ ",
                       }}
                     />
                   </Grid>

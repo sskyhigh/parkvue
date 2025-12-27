@@ -338,7 +338,7 @@ const Rooms = () => {
       sx={{
         minHeight: "auto",
         pt: 2,
-        pb: 3,
+        pb: 4,
         background: theme.palette.customStyles?.heroBackground || theme.palette.background.default,
         ...fadeIn,
         animation: "fadeIn 0.5s ease-out",
