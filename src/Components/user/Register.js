@@ -24,6 +24,7 @@ import {
   collection,
   addDoc,
 } from "../../firebase/config";
+import { sanitizeName, validateEmail, sanitizePassword } from "../../utils/sanitize";
 
 const Register = () => {
   const { dispatch } = useValue();
@@ -47,10 +48,16 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const fullName = nameRef.current.value;
-    const email = emailRef.current.value;
-    const password = passwordRef.current.value;
-    const confirmPassword = confirmPasswordRef.current.value;
+    const rawFullName = nameRef.current.value;
+    const rawEmail = emailRef.current.value;
+    const rawPassword = passwordRef.current.value;
+    const rawConfirmPassword = confirmPasswordRef.current.value;
+
+    // Sanitize inputs
+    const fullName = sanitizeName(rawFullName);
+    const { isValid, sanitized: email } = validateEmail(rawEmail);
+    const password = sanitizePassword(rawPassword);
+    const confirmPassword = sanitizePassword(rawConfirmPassword);
 
     if (password !== confirmPassword) {
       dispatch({
@@ -85,13 +92,13 @@ const Register = () => {
       });
       return;
     }
-    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+    if (!isValid) {
       dispatch({
         type: "UPDATE_ALERT",
         payload: {
           open: true,
           severity: "error",
-          message: "Please provide an email",
+          message: "Please provide a valid email",
         },
       });
       return;

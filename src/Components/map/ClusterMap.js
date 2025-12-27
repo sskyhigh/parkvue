@@ -495,10 +495,13 @@ const ClusterMap = () => {
             </Popup>
           )}
 
-          {/* Map controls */}
+          {/* Map controls - adjusted for mobile */}
           <NavigationControl
             position="bottom-right"
-            style={{ margin: 10 }}
+            style={{ 
+              margin: window.innerWidth < 600 ? 5 : 10,
+              marginBottom: window.innerWidth < 600 ? 60 : 10
+            }}
           />
           <GeolocateControl
             position="top-left"
@@ -512,67 +515,91 @@ const ClusterMap = () => {
                 },
               })
             }
-            style={{ margin: 10 }}
+            style={{ 
+              margin: window.innerWidth < 600 ? 5 : 10,
+              marginTop: window.innerWidth < 600 ? 60 : 10
+            }}
           />
           <Geocoder />
         </ReactMapGL>
       </Box>
 
-      {/* Stats overlay */}
+      {/* Stats overlay - responsive for mobile */}
       {!loading && (
         <Box
           sx={{
             position: "absolute",
-            top: 5,
-            left: 45,
-            bgcolor: alpha(theme.palette.background.paper, 0.9),
+            top: { xs: 5, sm: 5 },
+            left: { xs: 5, sm: 45 },
+            right: { xs: 5, sm: 'auto' },
+            bgcolor: alpha(theme.palette.background.paper, 0.95),
             borderRadius: 2,
-            p: 2,
+            p: { xs: 1.5, sm: 2 },
             boxShadow: theme.shadows[4],
             zIndex: 1,
+            maxWidth: { xs: '100%', sm: 250 },
           }}
         >
           <Stack spacing={1}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: theme.palette.text.primary }}>
+            <Typography 
+              variant="subtitle2" 
+              sx={{ 
+                fontWeight: 700, 
+                color: theme.palette.text.primary,
+                fontSize: { xs: '0.8rem', sm: '0.875rem' }
+              }}
+            >
               Parking Spaces
             </Typography>
             <Stack spacing={0.5}>
               <Stack direction="row" alignItems="center" spacing={1}>
                 <Box
                   sx={{
-                    width: 12,
-                    height: 12,
+                    width: { xs: 10, sm: 12 },
+                    height: { xs: 10, sm: 12 },
                     borderRadius: "50%",
                     bgcolor: theme.palette.primary.main,
                   }}
                 />
-                <Typography variant="body2" color="text.secondary">
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary"
+                  sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                >
                   {rooms.filter(r => r.available !== false).length} Available
                 </Typography>
               </Stack>
               <Stack direction="row" alignItems="center" spacing={1}>
                 <Box
                   sx={{
-                    width: 12,
-                    height: 12,
+                    width: { xs: 10, sm: 12 },
+                    height: { xs: 10, sm: 12 },
                     borderRadius: "50%",
                     bgcolor: theme.palette.error.main,
                   }}
                 />
-                <Typography variant="body2" color="text.secondary">
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary"
+                  sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                >
                   {rooms.filter(r => r.available === false).length} Reserved
                 </Typography>
               </Stack>
               <Stack direction="row" alignItems="center" spacing={1}>
                 <Box
                   sx={{
-                    width: 12,
-                    height: 12,
+                    width: { xs: 10, sm: 12 },
+                    height: { xs: 10, sm: 12 },
                     borderRadius: "50%",
                     bgcolor: theme.palette.text.secondary,
                   }}
                 />
-                <Typography variant="body2" color="text.secondary">
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary"
+                  sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                >
                   {rooms.length} Total
                 </Typography>
               </Stack>

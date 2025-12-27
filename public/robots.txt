@@ -1,3 +1,37 @@
 # https://www.robotstxt.org/robotstxt.html
+# ParkVue - Parking Space Marketplace
+
+# Allow all search engines
 User-agent: *
-Disallow:
+Allow: /
+
+# Block access to user-specific pages
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /logout
+Disallow: /seller/
+
+# Block API endpoints if any
+Disallow: /api/
+
+# Allow Google bots specifically
+User-agent: Googlebot
+Allow: /
+
+# Allow Bing bots
+User-agent: Bingbot
+Allow: /
+
+# Block bad bots (optional)
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: SemrushBot
+Crawl-delay: 10
+
+# Sitemap location
+Sitemap: https://parkvue.runcat.pro/sitemap.xml
+

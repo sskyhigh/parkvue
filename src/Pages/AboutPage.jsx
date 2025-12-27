@@ -67,19 +67,19 @@ function About() {
   // Stats data
   const stats = [
     {
-      value: "10,000+",
+      value: "1,000+",
       label: "Happy Users",
       icon: <People />,
       description: "Active community members"
     },
     {
-      value: "5,000+",
+      value: "500+",
       label: "Parking Spots",
       icon: <LocalParking />,
       description: "Verified parking locations"
     },
     {
-      value: "5",
+      value: "50+",
       label: "Cities",
       icon: <EmojiEvents />,
       description: "Across major metropolitan areas"
@@ -334,7 +334,7 @@ function About() {
                   fontSize: '1.1rem',
                 }}
               >
-                At ParkVue, we believe that finding parking shouldn't be a stressful experience.
+                Finding parking shouldn't be a stressful experience.
                 Our mission is to create smarter cities by optimizing parking space utilization
                 through innovative technology.
               </Typography>
@@ -349,12 +349,11 @@ function About() {
                 }}
               >
                 We envision a future where urban mobility is seamless, efficient, and accessible
-                to everyone. By connecting parking space owners with drivers, we're building
-                sustainable communities while reducing traffic congestion and carbon emissions.
+                to everyone.
               </Typography>
 
-              <Box sx={{ mt: 4 }}>
-                <Grid container spacing={2}>
+              <Box sx={{ mt: 2 }}>
+                <Grid container spacing={1}>
                   {missionPoints.map((point, index) => (
                     <Grid item xs={6} key={index}>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -378,31 +377,21 @@ function About() {
               }}
             >
               <Box
+                component="video"
+                autoPlay
+                loop
+                muted
+                playsInline
+                poster="/map/static-poster.jpeg"
                 sx={{
                   width: '100%',
-                  maxWidth: 400,
-                  height: 400,
-                  borderRadius: 4,
-                  background: theme.customStyles?.neonGradient || 'linear-gradient(45deg, #00acca, #00bcca)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  position: 'relative',
-                  overflow: 'hidden',
+                  height: 'auto',
+                  borderRadius: 2,
+                  border: `1px solid ${theme.palette.divider}`,
+                  boxShadow: theme.shadows[4],
                 }}
               >
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: `radial-gradient(circle at 30% 30%, ${isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.25)'
-                      } 0%, transparent 70%)`,
-                  }}
-                />
-                <LocalParking sx={{ fontSize: 120, color: 'white', opacity: 0.9 }} />
+                <source src="/map/map-video.mp4" type="video/mp4" />
               </Box>
             </Box>
           </Grid>
@@ -527,7 +516,7 @@ function About() {
                       </Avatar>
                     </a>
 
-                    <a href="mailto:shaoyan888@gmail.com">
+                    <a href="mailto:slow160boys@gmail.com">
                       <Avatar
                         sx={{
                           bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',

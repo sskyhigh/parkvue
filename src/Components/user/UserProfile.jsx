@@ -53,7 +53,7 @@ const UserProfile = () => {
 
     const [openDialog, setOpenDialog] = useState(DIALOG_TYPES.NONE);
     const [loading, setLoading] = useState(false);
-    const [emailVerified, setEmailVerified] = useState(auth.currentUser?.emailVerified || false);
+    const [emailVerified, setEmailVerified] = useState(auth?.currentUser?.emailVerified || false);
     const [sendingVerification, setSendingVerification] = useState(false);
     const [dismissedWarning, setDismissedWarning] = useState(false);
     const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -73,39 +73,47 @@ const UserProfile = () => {
     useEffect(() => {
         if (!currentUser) {
             navigate('/login');
-        } else {
-            // Fetch full user data from Firestore
-            const fetchUserData = async () => {
-                try {
-                    const q = query(collection(db, 'users'), where('uid', '==', currentUser.uid));
-                    const querySnapshot = await getDocs(q);
-                    if (!querySnapshot.empty) {
-                        const userDoc = querySnapshot.docs[0];
-                        const data = userDoc.data();
-                        setUserData(data);
-                        setUserDocId(userDoc.id);
-                        // Update currentUser if needed
+            return;
+        }
+        
+        // Only fetch user data once on mount, not on every currentUser change
+        // This prevents re-fetching and restoring user data after logout
+        const fetchUserData = async () => {
+            try {
+                const q = query(collection(db, 'users'), where('uid', '==', currentUser.uid));
+                const querySnapshot = await getDocs(q);
+                if (!querySnapshot.empty) {
+                    const userDoc = querySnapshot.docs[0];
+                    const data = userDoc.data();
+                    setUserData(data);
+                    setUserDocId(userDoc.id);
+                    
+                    // Only update if storage data exists (prevents restoration after logout)
+                    const storageData = sessionStorage.getItem('userData') || localStorage.getItem('userData');
+                    if (storageData) {
                         const updatedUser = { ...currentUser, ...data };
                         setCurrentUser(updatedUser);
                         sessionStorage.setItem('userData', JSON.stringify(updatedUser));
                         localStorage.setItem('userData', JSON.stringify(updatedUser));
                     }
-                } catch (error) {
-                    console.error('Error fetching user data:', error);
-                } finally {
-                    setProfileLoaded(true);
                 }
-            };
-            fetchUserData();
-        }
-    }, [currentUser, navigate, setCurrentUser]);
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            } finally {
+                setProfileLoaded(true);
+            }
+        };
+        
+        fetchUserData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [navigate]); // Only run on mount and when navigate changes
 
     // Check email verification status
     useEffect(() => {
         const checkVerification = async () => {
-            if (auth.currentUser) {
+            if (auth?.currentUser) {
                 await auth.currentUser.reload();
-                setEmailVerified(auth.currentUser.emailVerified);
+                setEmailVerified(auth?.currentUser?.emailVerified);
             }
         };
 
@@ -114,7 +122,7 @@ const UserProfile = () => {
 
         // Check every 5 seconds if not verified
         const interval = setInterval(() => {
-            if (!emailVerified && auth.currentUser) {
+            if (!emailVerified && auth?.currentUser) {
                 checkVerification();
             }
         }, 5000);
@@ -140,7 +148,7 @@ const UserProfile = () => {
     const handleSendVerification = async () => {
         try {
             setSendingVerification(true);
-            if (auth.currentUser && !auth.currentUser.emailVerified) {
+            if (auth?.currentUser && !auth?.currentUser?.emailVerified) {
                 await sendEmailVerification(auth.currentUser);
                 dispatch({
                     type: 'UPDATE_ALERT',
@@ -182,7 +190,7 @@ const UserProfile = () => {
 
         try {
             setLoading(true);
-            if (auth.currentUser) {
+            if (auth?.currentUser) {
                 await updateProfile(auth.currentUser, { displayName: newName });
 
                 // Also update in Firestore if you have a users collection syncing
@@ -260,7 +268,7 @@ const UserProfile = () => {
 
         try {
             setLoading(true);
-            if (auth.currentUser) {
+            if (auth?.currentUser) {
                 await updatePassword(auth.currentUser, newPassword);
                 dispatch({
                     type: 'UPDATE_ALERT',
@@ -301,7 +309,7 @@ const UserProfile = () => {
             const subFolder = 'profilePictures';
             const photoURL = await uploadFileProgress(file, subFolder, imageName, () => {});
 
-            if (auth.currentUser) {
+            if (auth?.currentUser) {
                 await updateProfile(auth.currentUser, { photoURL });
 
                 // Update in Firestore
@@ -465,6 +473,7 @@ const UserProfile = () => {
             sx={{
                 minHeight: 'auto',
                 pt: 2,
+                pb: 4,
                 background: theme.palette.background.default,
             }}
         >
@@ -511,9 +520,9 @@ const UserProfile = () => {
                                     boxShadow: `0 8px 24px ${alpha(theme.palette.primary.main, 0.4)}`,
                                     border: `4px solid ${theme.palette.background.paper}`,
                                 }}
-                                src={currentUser.photoURL}
+                                src={currentUser?.photoURL}
                             >
-                                {currentUser.fullName?.charAt(0).toUpperCase() || <Person />}
+                                {currentUser?.fullName?.charAt(0)?.toUpperCase() || <Person />}
                             </Avatar>
                             <IconButton
                                 sx={{
@@ -538,7 +547,7 @@ const UserProfile = () => {
                             />
                         </Box>
                         <Typography variant="h4" fontWeight="700" gutterBottom>
-                            {currentUser.fullName || 'User Profile'}
+                            {currentUser?.fullName || 'User Profile'}
                         </Typography>
                         <Typography variant="body1" color="text.secondary">
                             Manage your account settings and preferences
@@ -578,7 +587,7 @@ const UserProfile = () => {
                                                 Full Name
                                             </Typography>
                                             <Typography variant="h6">
-                                                {currentUser.fullName}
+                                                {currentUser?.fullName}
                                             </Typography>
                                         </Box>
                                     </Box>
@@ -636,7 +645,7 @@ const UserProfile = () => {
                                                     fontSize: { xs: '0.95rem', sm: '1.25rem' }
                                                 }}
                                             >
-                                                {currentUser.email}
+                                                {currentUser?.email}
                                             </Typography>
                                         </Box>
                                     </Box>
@@ -758,7 +767,7 @@ const UserProfile = () => {
                                                 Location
                                             </Typography>
                                             <Typography variant="h6">
-                                                {userData?.address ? `${userData.address}, ${userData.city}, ${userData.state}` : 'Not set'}
+                                                {userData?.address ? `${userData?.address}, ${userData?.city}, ${userData?.state}` : 'Not set'}
                                             </Typography>
                                         </Box>
                                     </Box>
@@ -859,7 +868,7 @@ const UserProfile = () => {
                             label="Full Name"
                             type="text"
                             fullWidth
-                            defaultValue={currentUser.fullName}
+                            defaultValue={currentUser?.fullName}
                             inputRef={nameRef}
                             variant="outlined"
                             sx={{ mt: 1 }}

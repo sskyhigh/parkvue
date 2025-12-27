@@ -59,7 +59,9 @@ function FAQ() {
   return (
     <Box
       sx={{
-        py: { xs: 8, md: 12 },
+        pt: { xs: 8, md: 12 },
+        pb: { xs: 4, md: 6 },
+        mb: 14,
         background: isDarkMode
           ? "linear-gradient(135deg, #1a1a23 0%, #0f0f15 100%)"
           : "linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%)",

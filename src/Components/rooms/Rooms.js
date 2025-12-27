@@ -338,7 +338,7 @@ const Rooms = () => {
       sx={{
         minHeight: "auto",
         pt: 2,
-        pb: 3,
+        pb: 4,
         background: theme.palette.customStyles?.heroBackground || theme.palette.background.default,
         ...fadeIn,
         animation: "fadeIn 0.5s ease-out",
@@ -440,7 +440,12 @@ const Rooms = () => {
 
           <Collapse in={showFilters}>
             <Box sx={{ mt: 3, pt: 3, borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+              <Stack 
+                direction={{ xs: 'column', sm: 'row' }} 
+                justifyContent="space-between" 
+                alignItems={{ xs: 'flex-start', sm: 'center' }} 
+                sx={{ mb: 2, gap: { xs: 1, sm: 0 } }}
+              >
                 <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Filter Options</Typography>
                 <Button
                   size="small"
@@ -451,6 +456,7 @@ const Rooms = () => {
                     setFilterSecurity("");
                     setFilterCity("");
                   }}
+                  sx={{ width: { xs: '100%', sm: 'auto' } }}
                 >
                   Reset Filters
                 </Button>
@@ -575,7 +581,7 @@ const Rooms = () => {
           </Box>
         ) : (
           <Box>
-            <Grid container spacing={3}>
+            <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }}>
               {displayed.map((room, index) => {
                 const isAvailable = room.available !== false;
                 const img = room.images && room.images.length ? room.images[0] : "";
@@ -871,7 +877,7 @@ const Rooms = () => {
           </Box>
         )}
 
-        {/* Pagination */}
+        {/* Pagination - responsive size */}
         {pageCount > 1 && (
           <Box sx={{ mt: 6, display: "flex", justifyContent: "center", animation: "fadeIn 0.6s ease-out" }}>
             <Pagination
@@ -880,7 +886,9 @@ const Rooms = () => {
               onChange={(e, v) => setPage(v)}
               color="primary"
               shape="rounded"
-              size="large"
+              size={{ xs: "medium", sm: "large" }}
+              siblingCount={{ xs: 0, sm: 1 }}
+              boundaryCount={{ xs: 1, sm: 1 }}
               sx={{
                 '& .MuiPaginationItem-root': {
                   borderRadius: 2,
