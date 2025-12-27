@@ -1,295 +1,675 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Container,
   Typography,
   Paper,
   useTheme,
+  alpha,
+  Button,
+  Chip,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Stack,
   Divider,
+  Avatar,
 } from '@mui/material';
-import { alpha } from '@mui/material/styles';
 import {
-  Gavel,
-  Description,
-  AccountBalance,
-  VerifiedUser,
+  ExpandMore as ExpandMoreIcon,
+  Gavel as GavelIcon,
+  Shield as ShieldIcon,
+  Payment as PaymentIcon,
+  Warning as WarningIcon,
+  Copyright as CopyrightIcon,
+  Cancel as CancelIcon,
+  Handshake as HandshakeIcon,
+  Edit as EditIcon,
+  ContactSupport as ContactSupportIcon,
+  CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
+import { motion } from 'framer-motion';
+import Grid from '@mui/material/Grid';
 
 const TermsPage = () => {
   const theme = useTheme();
+  const [expanded, setExpanded] = useState(false);
 
-  const sectionStyle = {
-    mb: 4,
-    p: 3,
-    backgroundColor: alpha(theme.palette.background.paper, 0.6),
-    backdropFilter: 'blur(10px)',
-    borderRadius: 2,
-    border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+  const handleAccordionChange = (panel) => (event, isExpanded) => {
+    setExpanded(isExpanded ? panel : false);
   };
 
-  const iconStyle = {
-    color: theme.palette.primary.main,
-    mr: 1,
-    verticalAlign: 'middle',
+  const termsSections = [
+    {
+      id: 'agreement',
+      title: 'Agreement to Terms',
+      icon: <HandshakeIcon />,
+      content: [
+        'By using ParkVue, you agree to these Terms of Service. If you do not agree, please do not use our platform.',
+        'ParkVue connects parking space owners with renters in a secure, peer-to-peer marketplace. We facilitate these connections but are not a party to rental agreements.',
+        'These terms govern your access to and use of ParkVue services, including our website, mobile applications, and APIs.'
+      ],
+      tags: ['Registration', 'Acceptance']
+    },
+    {
+      id: 'eligibility',
+      title: 'Eligibility',
+      icon: <ShieldIcon />,
+      content: [
+        'You must be at least 18 years old to use ParkVue.',
+        'Provide accurate and complete registration information.',
+        'Maintain the security of your account credentials.',
+        'Not have been previously suspended or removed from the platform.',
+        'Comply with all applicable laws in your jurisdiction.'
+      ],
+      tags: ['Age Requirement', 'Account Security']
+    },
+    {
+      id: 'owner-responsibilities',
+      title: 'Owner Responsibilities',
+      icon: <CheckCircleIcon />,
+      content: [
+        'Have legal authority to list and rent the parking space.',
+        'Provide accurate, current, and complete listing information.',
+        'Maintain the space in safe, clean, and accessible condition.',
+        'Comply with all local laws, zoning regulations, and property rules.',
+        'Honor confirmed bookings and communicate promptly with renters.',
+        'Set clear access instructions and be available for questions.',
+        'Maintain appropriate insurance coverage for your property.'
+      ],
+      tags: ['Legal Authority', 'Property Management']
+    },
+    {
+      id: 'renter-responsibilities',
+      title: 'Renter Responsibilities',
+      icon: <CheckCircleIcon />,
+      content: [
+        'Use the space only as described in the listing.',
+        'Leave the space in the same condition as you found it.',
+        'Comply with all posted rules and owner instructions.',
+        'You are liable for any damage caused during your booking.',
+        'Park only the vehicle(s) specified in your booking.',
+        'Respect the property and neighboring spaces.',
+        'Report any issues or damages immediately.'
+      ],
+      tags: ['Proper Use', 'Damage Liability']
+    },
+    {
+      id: 'bookings-payments',
+      title: 'Bookings & Payments',
+      icon: <PaymentIcon />,
+      content: [
+        'Bookings are confirmed upon successful payment processing through Stripe.',
+        'Full payment is required at the time of booking.',
+        'ParkVue charges a service fee (displayed before confirmation).',
+        'Cancellation policies are set by individual owners and vary by listing.',
+        'Refunds are processed according to the applicable cancellation policy.',
+        'We reserve the right to cancel bookings in cases of suspected fraud.'
+      ],
+      tags: ['Stripe', 'Cancellation Policy']
+    },
+    {
+      id: 'prohibited',
+      title: 'Prohibited Activities',
+      icon: <WarningIcon />,
+      content: [
+        'Violating any laws, regulations, or third-party rights.',
+        'Submitting false or misleading information.',
+        'Harassing, harming, or intimidating other users.',
+        'Circumventing payment systems or service fees.',
+        'Creating multiple accounts to manipulate ratings.',
+        'Using automated systems, bots, or scrapers.',
+        'Storing hazardous materials or engaging in illegal activities.',
+        'Commercial use without explicit permission.'
+      ],
+      tags: ['Zero Tolerance', 'Compliance']
+    },
+    {
+      id: 'liability',
+      title: 'Limitation of Liability',
+      icon: <GavelIcon />,
+      content: [
+        'ParkVue is a platform connecting owners and renters - we do not own or control listed spaces.',
+        'We are not responsible for the condition, safety, or legality of parking spaces.',
+        'Not liable for property damage, theft, or personal injury at parking locations.',
+        'Users should obtain appropriate insurance coverage for their needs.',
+        'The platform is provided "as is" without warranties of any kind.',
+        'Maximum liability is limited to the amount paid for the booking in question.'
+      ],
+      tags: ['Disclaimer', 'Insurance']
+    },
+    {
+      id: 'intellectual-property',
+      title: 'Intellectual Property',
+      icon: <CopyrightIcon />,
+      content: [
+        'All ParkVue platform content is protected by copyright and trademark laws.',
+        'By uploading content, you grant us a worldwide, non-exclusive license to use it.',
+        'You retain ownership of your content but allow ParkVue to display it on the platform.',
+        'Do not infringe on others\' intellectual property rights.',
+        'Report copyright infringement through our designated process.'
+      ],
+      tags: ['Copyright', 'Licensing']
+    },
+    {
+      id: 'account-termination',
+      title: 'Account Termination',
+      icon: <CancelIcon />,
+      content: [
+        'We may suspend or terminate accounts for:',
+        '• Violation of these Terms of Service',
+        '• Fraudulent or harmful activity',
+        '• Multiple complaints from other users',
+        '• Creating a risk or legal exposure for ParkVue',
+        '• Prolonged inactivity (over 24 months)',
+        'You may delete your account anytime through account settings.',
+        'Termination does not relieve you of outstanding payment obligations.'
+      ],
+      tags: ['Suspension', 'Account Management']
+    },
+    {
+      id: 'dispute-resolution',
+      title: 'Dispute Resolution',
+      icon: <HandshakeIcon />,
+      content: [
+        'Disputes between users should first be resolved directly between parties.',
+        'ParkVue may assist in mediation at our discretion.',
+        'For unresolved disputes, contact us at disputes@parkvue.com.',
+        'Agree to attempt informal resolution for at least 30 days before legal action.',
+        'Binding arbitration may be required for certain disputes.',
+        'Governing law is based on your location and platform usage.'
+      ],
+      tags: ['Mediation', 'Arbitration']
+    },
+    {
+      id: 'changes',
+      title: 'Changes to Terms',
+      icon: <EditIcon />,
+      content: [
+        'We may modify these terms as needed to reflect:',
+        '• Changes to our services',
+        '• Legal or regulatory requirements',
+        '• Security or technical considerations',
+        'We will notify users of material changes via email or platform notifications.',
+        'Continued use after changes constitutes acceptance of modified terms.',
+        'Check this page regularly for updates.',
+        'Previous versions are archived and available upon request.'
+      ],
+      tags: ['Updates', 'Notification']
+    },
+    {
+      id: 'contact',
+      title: 'Contact Information',
+      icon: <ContactSupportIcon />,
+      content: [
+        'For questions about these Terms of Service:',
+        'Email: legal@parkvue.com',
+        'For general support: support@parkvue.com',
+        'For press inquiries: press@parkvue.com',
+        'Mailing address: ParkVue Inc., 123 Innovation Drive, Tech City, TC 94107',
+        'Response time: 2-3 business days for non-urgent inquiries.',
+        'Emergency contact for urgent safety concerns: +1-800-PARKVUE'
+      ],
+      tags: ['Support', 'Legal Team']
+    }
+  ];
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 12
+      }
+    }
   };
 
   return (
     <Box
       sx={{
         minHeight: '100vh',
-        pt: 8,
-        pb: 6,
-        background: theme.palette.mode === 'dark'
-          ? `linear-gradient(180deg, ${alpha(theme.palette.background.default, 1)} 0%, ${alpha(theme.palette.background.paper, 0.8)} 100%)`
-          : `linear-gradient(180deg, ${alpha(theme.palette.primary.light, 0.05)} 0%, ${alpha(theme.palette.background.default, 1)} 100%)`,
+        pt: { xs: 8, md: 10 },
+        pb: 8,
+        background: `linear-gradient(135deg, ${alpha(theme.palette.primary.light, 0.05)} 0%, ${alpha(theme.palette.secondary.light, 0.05)} 100%)`,
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
-      <Container maxWidth="lg">
-        {/* Header */}
-        <Box sx={{ textAlign: 'center', mb: 6 }}>
-          <Gavel sx={{ fontSize: 60, color: theme.palette.primary.main, mb: 2 }} />
+      {/* Animated background elements */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '400px',
+          background: `radial-gradient(circle at 20% 50%, ${alpha(theme.palette.primary.main, 0.1)} 0%, transparent 50%)`,
+          zIndex: 0,
+        }}
+      />
+
+      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+        {/* Header Section */}
+        <Box
+          component={motion.div}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          sx={{ 
+            mb: 6, 
+            textAlign: 'center',
+            position: 'relative',
+          }}
+        >
+          <Avatar
+            sx={{
+              width: 80,
+              height: 80,
+              bgcolor: alpha(theme.palette.primary.main, 0.1),
+              color: theme.palette.primary.main,
+              margin: '0 auto 20px',
+              border: `3px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+              boxShadow: theme.shadows[4],
+            }}
+          >
+            <GavelIcon sx={{ fontSize: 40 }} />
+          </Avatar>
+          
           <Typography
             variant="h2"
             component="h1"
             sx={{
-              fontWeight: 700,
+              fontWeight: 900,
               mb: 2,
-              background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-              backgroundClip: 'text',
+              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
             }}
           >
             Terms of Service
           </Typography>
-          <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 700, mx: 'auto' }}>
-            Please read these terms carefully before using ParkVue
+          
+          <Typography
+            variant="h6"
+            color="text.secondary"
+            sx={{ 
+              mb: 5,
+              maxWidth: '600px',
+              mx: 'auto',
+              fontWeight: 400,
+            }}
+          >
+            Your guide to using ParkVue responsibly and securely
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-            Last Updated: December 27, 2025
+
+          <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap" sx={{ mb: 4 }}>
+            <Chip 
+              icon={<CheckCircleIcon />} 
+              label="Last Updated: Dec 27, 2025" 
+              color="primary" 
+              variant="outlined"
+            />
+            <Chip 
+              icon={<ShieldIcon />} 
+              label="Secure Platform" 
+              color="success"
+              variant="outlined"
+            />
+            <Chip 
+              icon={<PaymentIcon />} 
+              label="Stripe Protected" 
+              color="info"
+              variant="outlined"
+            />
+          </Stack>
+
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{
+              maxWidth: '700px',
+              mx: 'auto',
+              px: { xs: 2, md: 0 },
+              fontSize: '1.1rem',
+              lineHeight: 1.6,
+              mb: 4,
+            }}
+          >
+            Welcome to ParkVue! These terms outline the rules and guidelines for using our platform. 
+            We're committed to creating a safe, transparent, and efficient marketplace for parking space rentals.
           </Typography>
         </Box>
 
-        {/* Introduction */}
-        <Paper sx={sectionStyle}>
-          <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, display: 'flex', alignItems: 'center' }}>
-            <Description sx={iconStyle} />
-            1. Agreement to Terms
-          </Typography>
-          <Typography variant="body1" color="text.secondary" paragraph>
-            Welcome to ParkVue. By accessing or using our platform, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing this site.
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            ParkVue is a peer-to-peer marketplace that connects parking space owners ("Hosts") with individuals seeking parking ("Guests"). We facilitate these connections but are not a party to the agreements between Hosts and Guests.
-          </Typography>
-        </Paper>
+        {/* Quick Summary Cards */}
+        <Box
+          component={motion.div}
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          sx={{ mb: 6 }}
+        >
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            <Grid item xs={12} md={4}>
+              <motion.div variants={itemVariants}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 3,
+                    height: '100%',
+                    borderRadius: 3,
+                    background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.primary.main, 0.05)} 100%)`,
+                    border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: theme.shadows[8],
+                    }
+                  }}
+                >
+                  <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+                    <Avatar sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1) }}>
+                      <ShieldIcon color="primary" />
+                    </Avatar>
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                      Your Safety First
+                    </Typography>
+                  </Stack>
+                  <Typography variant="body2" color="text.secondary">
+                    Secure payments, verified users, and comprehensive insurance options to protect every transaction.
+                  </Typography>
+                </Paper>
+              </motion.div>
+            </Grid>
+            
+            <Grid item xs={12} md={4}>
+              <motion.div variants={itemVariants}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 3,
+                    height: '100%',
+                    borderRadius: 3,
+                    background: `linear-gradient(135deg, ${alpha(theme.palette.success.main, 0.1)} 0%, ${alpha(theme.palette.success.main, 0.05)} 100%)`,
+                    border: `1px solid ${alpha(theme.palette.success.main, 0.2)}`,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: theme.shadows[8],
+                    }
+                  }}
+                >
+                  <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+                    <Avatar sx={{ bgcolor: alpha(theme.palette.success.main, 0.1) }}>
+                      <HandshakeIcon color="success" />
+                    </Avatar>
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                      Fair Terms
+                    </Typography>
+                  </Stack>
+                  <Typography variant="body2" color="text.secondary">
+                    Transparent cancellation policies, clear expectations, and fair dispute resolution for all users.
+                  </Typography>
+                </Paper>
+              </motion.div>
+            </Grid>
+            
+            <Grid item xs={12} md={4}>
+              <motion.div variants={itemVariants}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 4.3,
+                    height: '100%',
+                    borderRadius: 3,
+                    background: `linear-gradient(135deg, ${alpha(theme.palette.info.main, 0.1)} 0%, ${alpha(theme.palette.info.main, 0.05)} 100%)`,
+                    border: `1px solid ${alpha(theme.palette.info.main, 0.2)}`,
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: theme.shadows[8],
+                    }
+                  }}
+                >
+                  <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+                    <Avatar sx={{ bgcolor: alpha(theme.palette.info.main, 0.1) }}>
+                      <PaymentIcon color="info" />
+                    </Avatar>
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                      Secure Payments
+                    </Typography>
+                  </Stack>
+                  <Typography variant="body2" color="text.secondary">
+                    All transactions protected by Stripe with encrypted processing and fraud detection.
+                  </Typography>
+                </Paper>
+              </motion.div>
+            </Grid>
+          </Grid>
+        </Box>
 
-        {/* Eligibility */}
-        <Paper sx={sectionStyle}>
-          <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, display: 'flex', alignItems: 'center' }}>
-            <VerifiedUser sx={iconStyle} />
-            2. Eligibility
+        {/* Main Terms Content */}
+        <Box
+          component={motion.div}
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          sx={{ mb: 6 }}
+        >
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 800,
+              mb: 4,
+              color: theme.palette.text.primary,
+              textAlign: 'center',
+            }}
+          >
+            Detailed Terms & Conditions
           </Typography>
-          <Typography variant="body1" color="text.secondary" paragraph>
-            To use ParkVue, you must:
-          </Typography>
-          <Box component="ul" sx={{ color: theme.palette.text.secondary, pl: 3 }}>
-            <li>Be at least 18 years of age</li>
-            <li>Have the legal capacity to enter into binding contracts</li>
-            <li>Provide accurate and complete registration information</li>
-            <li>Maintain the security of your account credentials</li>
-            <li>Not have been previously banned from the platform</li>
-          </Box>
-        </Paper>
 
-        {/* User Responsibilities */}
-        <Paper sx={sectionStyle}>
-          <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
-            3. User Responsibilities
+          {termsSections.map((section, index) => (
+            <motion.div key={section.id} variants={itemVariants} style={{ marginBottom: '24px' }}>
+              <Accordion
+                expanded={expanded === section.id}
+                onChange={handleAccordionChange(section.id)}
+                elevation={0}
+                sx={{
+                  borderRadius: 3,
+                  mb: 2,
+                  border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                  overflow: 'hidden',
+                  transition: 'all 0.3s ease',
+                  '&:before': { display: 'none' },
+                  '&:hover': {
+                    borderColor: alpha(theme.palette.primary.main, 0.3),
+                    boxShadow: theme.shadows[4],
+                  },
+                }}
+              >
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon />}
+                  sx={{
+                    backgroundColor: expanded === section.id 
+                      ? alpha(theme.palette.primary.main, 0.05)
+                      : 'transparent',
+                    borderLeft: `4px solid ${theme.palette.primary.main}`,
+                    minHeight: '72px',
+                    '& .MuiAccordionSummary-content': {
+                      alignItems: 'center',
+                      gap: 2,
+                    },
+                  }}
+                >
+                  <Avatar
+                    sx={{
+                      bgcolor: expanded === section.id 
+                        ? theme.palette.primary.main 
+                        : alpha(theme.palette.primary.main, 0.1),
+                      color: expanded === section.id ? 'white' : theme.palette.primary.main,
+                    }}
+                  >
+                    {section.icon}
+                  </Avatar>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                      {section.title}
+                    </Typography>
+                    <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
+                      {section.tags.map((tag) => (
+                        <Chip
+                          key={tag}
+                          label={tag}
+                          size="small"
+                          variant="outlined"
+                          sx={{ fontSize: '0.7rem' }}
+                        />
+                      ))}
+                    </Stack>
+                  </Box>
+                </AccordionSummary>
+                <AccordionDetails
+                  sx={{
+                    backgroundColor: alpha(theme.palette.background.default, 0.5),
+                    p: 3,
+                  }}
+                >
+                  <Stack spacing={2}>
+                    {section.content.map((paragraph, idx) => (
+                      <Typography
+                        key={idx}
+                        variant="body1"
+                        color="text.secondary"
+                        sx={{
+                          lineHeight: 1.7,
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: 1,
+                        }}
+                      >
+                        {paragraph.startsWith('•') ? (
+                          <>
+                            <Box component="span" sx={{ color: theme.palette.primary.main, mt: '2px' }}>•</Box>
+                            {paragraph.substring(1)}
+                          </>
+                        ) : (
+                          paragraph
+                        )}
+                      </Typography>
+                    ))}
+                  </Stack>
+                </AccordionDetails>
+              </Accordion>
+            </motion.div>
+          ))}
+        </Box>
+
+        {/* Final Acceptance Section */}
+        <Paper
+          component={motion.div}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          elevation={0}
+          sx={{
+            p: { xs: 3, md: 5 },
+            borderRadius: 4,
+            textAlign: 'center',
+            background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)} 0%, ${alpha(theme.palette.secondary.main, 0.05)} 100%)`,
+            border: `2px dashed ${alpha(theme.palette.primary.main, 0.3)}`,
+            mb: 4,
+          }}
+        >
+          <Avatar
+            sx={{
+              width: 80,
+              height: 80,
+              bgcolor: theme.palette.primary.main,
+              color: 'white',
+              margin: '0 auto 24px',
+              boxShadow: `0 8px 32px ${alpha(theme.palette.primary.main, 0.3)}`,
+            }}
+          >
+            <CheckCircleIcon sx={{ fontSize: 40 }} />
+          </Avatar>
+          
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 800,
+              mb: 2,
+              color: theme.palette.text.primary,
+            }}
+          >
+            Your Agreement
           </Typography>
           
-          <Typography variant="h6" sx={{ mt: 3, mb: 2, fontWeight: 600, color: theme.palette.primary.main }}>
-            For Hosts (Parking Space Owners):
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{
+              maxWidth: '600px',
+              mx: 'auto',
+              mb: 4,
+              fontSize: '1.1rem',
+              lineHeight: 1.7,
+            }}
+          >
+            By continuing to use ParkVue, you acknowledge that you have read, understood, 
+            and agree to be bound by these Terms of Service.
           </Typography>
-          <Box component="ul" sx={{ color: theme.palette.text.secondary, pl: 3 }}>
-            <li>You must have legal authority to list and rent the parking space</li>
-            <li>All listing information must be accurate, current, and complete</li>
-            <li>You must maintain the parking space in safe and accessible condition</li>
-            <li>You are responsible for complying with all local laws, regulations, and HOA rules</li>
-            <li>You must honor confirmed bookings unless extraordinary circumstances arise</li>
-            <li>You may not discriminate against Guests based on protected characteristics</li>
-          </Box>
 
-          <Typography variant="h6" sx={{ mt: 3, mb: 2, fontWeight: 600, color: theme.palette.primary.main }}>
-            For Guests (Parking Space Renters):
-          </Typography>
-          <Box component="ul" sx={{ color: theme.palette.text.secondary, pl: 3 }}>
-            <li>You must use the parking space only as described in the listing</li>
-            <li>You are responsible for the conduct of all occupants of your vehicle</li>
-            <li>You must leave the parking space in the same condition as you found it</li>
-            <li>You must comply with all posted rules and Host instructions</li>
-            <li>You are liable for any damage caused to the parking space or surrounding property</li>
-            <li>You must park only the vehicle(s) specified in your booking</li>
-          </Box>
+          <Divider sx={{ my: 3, borderColor: alpha(theme.palette.divider, 0.3) }} />
+
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center" alignItems="center">
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={<CheckCircleIcon />}
+              sx={{ borderRadius: 2, px: 4 }}
+              onClick={() => window.history.back()}
+            >
+              I Understand & Accept
+            </Button>
+            <Button
+              variant="outlined"
+              size="large"
+              startIcon={<ContactSupportIcon />}
+              href="mailto:legal@parkvue.com"
+              sx={{ borderRadius: 2, px: 4 }}
+            >
+              Ask Questions
+            </Button>
+          </Stack>
         </Paper>
-
-        {/* Booking and Payments */}
-        <Paper sx={sectionStyle}>
-          <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, display: 'flex', alignItems: 'center' }}>
-            <AccountBalance sx={iconStyle} />
-            4. Booking and Payment Terms
-          </Typography>
-          
-          <Typography variant="h6" sx={{ mt: 3, mb: 2, fontWeight: 600 }}>
-            Booking Process:
-          </Typography>
-          <Box component="ul" sx={{ color: theme.palette.text.secondary, pl: 3 }}>
-            <li>Bookings are confirmed when payment is successfully processed</li>
-            <li>You will receive a confirmation email with booking details</li>
-            <li>Changes or cancellations are subject to the Host's cancellation policy</li>
-          </Box>
-
-          <Typography variant="h6" sx={{ mt: 3, mb: 2, fontWeight: 600 }}>
-            Payment Processing:
-          </Typography>
-          <Box component="ul" sx={{ color: theme.palette.text.secondary, pl: 3 }}>
-            <li>All payments are processed securely through our payment partners</li>
-            <li>Guests are charged at the time of booking</li>
-            <li>Hosts receive payment after the booking period ends, minus service fees</li>
-            <li>ParkVue charges a service fee for facilitating transactions</li>
-            <li>All fees are clearly displayed before booking confirmation</li>
-          </Box>
-
-          <Typography variant="h6" sx={{ mt: 3, mb: 2, fontWeight: 600 }}>
-            Cancellations and Refunds:
-          </Typography>
-          <Box component="ul" sx={{ color: theme.palette.text.secondary, pl: 3 }}>
-            <li>Cancellation policies vary by listing and are set by Hosts</li>
-            <li>Refunds are processed according to the applicable cancellation policy</li>
-            <li>Service fees may be non-refundable</li>
-            <li>ParkVue reserves the right to cancel bookings in cases of suspected fraud or policy violations</li>
-          </Box>
-        </Paper>
-
-        {/* Prohibited Activities */}
-        <Paper sx={sectionStyle}>
-          <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
-            5. Prohibited Activities
-          </Typography>
-          <Typography variant="body1" color="text.secondary" paragraph>
-            Users may not:
-          </Typography>
-          <Box component="ul" sx={{ color: theme.palette.text.secondary, pl: 3 }}>
-            <li>Violate any local, state, national, or international law</li>
-            <li>Infringe on intellectual property rights</li>
-            <li>Submit false, misleading, or fraudulent information</li>
-            <li>Harass, abuse, or harm other users</li>
-            <li>Use the platform for commercial activities not related to parking</li>
-            <li>Attempt to circumvent payment systems or service fees</li>
-            <li>Create multiple accounts to manipulate ratings or reviews</li>
-            <li>Use automated systems or bots to access the platform</li>
-            <li>Store hazardous materials or engage in illegal activities on listed properties</li>
-          </Box>
-        </Paper>
-
-        {/* Liability and Disclaimers */}
-        <Paper sx={sectionStyle}>
-          <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
-            6. Limitation of Liability
-          </Typography>
-          <Typography variant="body1" color="text.secondary" paragraph>
-            ParkVue acts solely as an intermediary platform. We do not own, operate, or control parking spaces listed on our platform.
-          </Typography>
-          <Box component="ul" sx={{ color: theme.palette.text.secondary, pl: 3 }}>
-            <li>ParkVue is not responsible for the condition, safety, or legality of any parking space</li>
-            <li>We are not liable for any property damage, theft, or personal injury occurring at parking locations</li>
-            <li>Hosts and Guests enter into agreements directly with each other</li>
-            <li>Users are responsible for obtaining appropriate insurance coverage</li>
-            <li>ParkVue's total liability shall not exceed the fees paid for the specific booking in question</li>
-          </Box>
-          <Typography variant="body1" color="text.secondary" sx={{ mt: 2, fontStyle: 'italic' }}>
-            THE PLATFORM IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED.
-          </Typography>
-        </Paper>
-
-        {/* Intellectual Property */}
-        <Paper sx={sectionStyle}>
-          <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
-            7. Intellectual Property
-          </Typography>
-          <Typography variant="body1" color="text.secondary" paragraph>
-            All content on ParkVue, including text, graphics, logos, images, and software, is the property of ParkVue or its content suppliers and is protected by copyright, trademark, and other intellectual property laws.
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            By uploading content to ParkVue, you grant us a worldwide, non-exclusive, royalty-free license to use, display, and distribute your content in connection with the platform.
-          </Typography>
-        </Paper>
-
-        {/* Account Termination */}
-        <Paper sx={sectionStyle}>
-          <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
-            8. Account Termination
-          </Typography>
-          <Typography variant="body1" color="text.secondary" paragraph>
-            ParkVue reserves the right to suspend or terminate your account at any time for:
-          </Typography>
-          <Box component="ul" sx={{ color: theme.palette.text.secondary, pl: 3 }}>
-            <li>Violation of these Terms of Service</li>
-            <li>Fraudulent, illegal, or harmful activity</li>
-            <li>Multiple complaints from other users</li>
-            <li>Extended period of inactivity</li>
-            <li>At our sole discretion for any other reason</li>
-          </Box>
-          <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
-            You may terminate your account at any time through your account settings. Upon termination, you remain liable for all outstanding obligations.
-          </Typography>
-        </Paper>
-
-        {/* Dispute Resolution */}
-        <Paper sx={sectionStyle}>
-          <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
-            9. Dispute Resolution
-          </Typography>
-          <Typography variant="body1" color="text.secondary" paragraph>
-            Disputes between Hosts and Guests should first be resolved directly between the parties. If resolution cannot be reached, ParkVue may, at its discretion, assist in mediating the dispute.
-          </Typography>
-          <Typography variant="body1" color="text.secondary" paragraph>
-            Any claims against ParkVue must first go through good faith negotiation. If unresolved after 30 days, disputes will be resolved through binding arbitration in accordance with applicable laws.
-          </Typography>
-        </Paper>
-
-        {/* Changes to Terms */}
-        <Paper sx={sectionStyle}>
-          <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
-            10. Modifications to Terms
-          </Typography>
-          <Typography variant="body1" color="text.secondary" paragraph>
-            ParkVue reserves the right to modify these Terms of Service at any time. We will notify users of material changes via email or platform notification. Continued use of the platform after changes constitutes acceptance of the modified terms.
-          </Typography>
-        </Paper>
-
-        {/* Contact Information */}
-        <Paper sx={sectionStyle}>
-          <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
-            11. Contact Us
-          </Typography>
-          <Typography variant="body1" color="text.secondary" paragraph>
-            If you have questions about these Terms of Service, please contact us:
-          </Typography>
-          <Box sx={{ color: theme.palette.text.secondary }}>
-            <Typography variant="body1">Email: legal@parkvue.com</Typography>
-            <Typography variant="body1">Support: support@parkvue.com</Typography>
-          </Box>
-        </Paper>
-
-        <Divider sx={{ my: 4 }} />
 
         {/* Footer Note */}
-        <Box sx={{ textAlign: 'center', mt: 4 }}>
-          <Typography variant="body2" color="text.secondary">
-            By using ParkVue, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.
-          </Typography>
-        </Box>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{
+            textAlign: 'center',
+            mt: 4,
+            px: 2,
+            fontStyle: 'italic',
+          }}
+        >
+          These terms are effective as of December 27, 2025. We recommend reviewing this page periodically for updates.
+        </Typography>
       </Container>
     </Box>
   );

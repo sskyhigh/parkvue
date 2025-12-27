@@ -378,31 +378,22 @@ function About() {
               }}
             >
               <Box
+                component="video"
+                autoPlay
+                loop
+                muted
+                playsInline
+                poster="/map/static-poster.jpeg"
                 sx={{
                   width: '100%',
-                  maxWidth: 400,
-                  height: 400,
-                  borderRadius: 4,
-                  background: theme.customStyles?.neonGradient || 'linear-gradient(45deg, #00acca, #00bcca)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  position: 'relative',
-                  overflow: 'hidden',
+                  maxWidth: 500,
+                  height: 'auto',
+                  borderRadius: 2,
+                  border: `1px solid ${theme.palette.divider}`,
+                  boxShadow: theme.shadows[4],
                 }}
               >
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: `radial-gradient(circle at 30% 30%, ${isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.25)'
-                      } 0%, transparent 70%)`,
-                  }}
-                />
-                <LocalParking sx={{ fontSize: 120, color: 'white', opacity: 0.9 }} />
+                <source src="/map/map-video.mp4" type="video/mp4" />
               </Box>
             </Box>
           </Grid>
