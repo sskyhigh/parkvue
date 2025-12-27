@@ -454,9 +454,9 @@ export default function UserDashboard() {
     </Card>
   );
 
-  // skeleton grid while loading
+  // skeleton grid while loading - responsive spacing
   const SkeletonGrid = () => (
-    <Grid container spacing={2}>
+    <Grid container spacing={{ xs: 1.5, sm: 2 }}>
       {Array.from({ length: 6 }).map((_, i) => (
         <Grid item xs={12} sm={6} md={4} key={i}>
           <Card>
@@ -580,7 +580,7 @@ export default function UserDashboard() {
         </Paper>
 
         {/* Main Content */}
-        <Grid container spacing={4}>
+        <Grid container spacing={{ xs: 2, md: 3, lg: 4 }}>
           {/* Left: My Rooms Section */}
           <Grid item xs={12} lg={8}>
             <Paper
@@ -637,7 +637,7 @@ export default function UserDashboard() {
                   </Button>
                 </Box>
               ) : (
-                <Grid container spacing={2}>
+                <Grid container spacing={{ xs: 1.5, sm: 2 }}>
                   {myRooms.map((r) => (
                     <Grid item xs={12} sm={6} key={r.id}>
                       <RoomCard room={r} />

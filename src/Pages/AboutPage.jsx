@@ -334,7 +334,7 @@ function About() {
                   fontSize: '1.1rem',
                 }}
               >
-                At ParkVue, we believe that finding parking shouldn't be a stressful experience.
+                Finding parking shouldn't be a stressful experience.
                 Our mission is to create smarter cities by optimizing parking space utilization
                 through innovative technology.
               </Typography>
@@ -349,12 +349,11 @@ function About() {
                 }}
               >
                 We envision a future where urban mobility is seamless, efficient, and accessible
-                to everyone. By connecting parking space owners with drivers, we're building
-                sustainable communities while reducing traffic congestion and carbon emissions.
+                to everyone.
               </Typography>
 
-              <Box sx={{ mt: 4 }}>
-                <Grid container spacing={2}>
+              <Box sx={{ mt: 2 }}>
+                <Grid container spacing={1}>
                   {missionPoints.map((point, index) => (
                     <Grid item xs={6} key={index}>
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -386,7 +385,6 @@ function About() {
                 poster="/map/static-poster.jpeg"
                 sx={{
                   width: '100%',
-                  maxWidth: 500,
                   height: 'auto',
                   borderRadius: 2,
                   border: `1px solid ${theme.palette.divider}`,

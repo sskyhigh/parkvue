@@ -48,6 +48,13 @@ import { db, doc, setDoc } from "../../firebase/config";
 import { v4 as uuidv4 } from "uuid";
 import { useNavigate } from "react-router-dom";
 import uploadFileProgress from "../../firebase/uploadFileProgress";
+import { 
+  sanitizeText,
+  sanitizeAddress,
+  sanitizeZipCode,
+  sanitizePrice,
+  sanitizeTextarea
+} from "../../utils/sanitize";
 
 const AddRoom = () => {
   const theme = useTheme();
@@ -83,7 +90,7 @@ const AddRoom = () => {
     price: "",
     vehicleTypes: [],
     amenities: [],
-    size: "standard",
+    size: "Standard",
     securityFeatures: [],
     accessHours: "24/7",
     availableFrom: "",
@@ -392,6 +399,14 @@ const AddRoom = () => {
     if (images.length === 0) {
       return "Please upload at least one image";
     }
+    // Check if images are still uploading
+    if (imageUrls.length < images.length) {
+      return `Please wait for all images to finish uploading (${imageUrls.length}/${images.length} complete)`;
+    }
+    // Check if video is still uploading
+    if (video && !videoUrl) {
+      return "Please wait for video to finish uploading";
+    }
     if (!location.lng || !location.lat) {
       return "Please select a location on the map";
     }
@@ -428,21 +443,31 @@ const AddRoom = () => {
       setUploading(true);
 
       const uniqueRoomId = uuidv4();
-      const fullAddress = `${formData.address}, ${formData.city}, ${formData.state} ${formData.zipCode}`;
+      
+      // Sanitize all form inputs
+      const sanitizedAddress = sanitizeAddress(formData.address);
+      const sanitizedCity = sanitizeText(formData.city);
+      const sanitizedState = sanitizeText(formData.state);
+      const sanitizedZipCode = sanitizeZipCode(formData.zipCode);
+      const sanitizedTitle = sanitizeText(formData.title);
+      const sanitizedDescription = sanitizeTextarea(formData.description);
+      const sanitizedPrice = sanitizePrice(formData.price);
+      
+      const fullAddress = `${sanitizedAddress}, ${sanitizedCity}, ${sanitizedState} ${sanitizedZipCode}`;
 
       const room = {
         id: uniqueRoomId,
         available: true,
         lng: location.lng,
         lat: location.lat,
-        address: formData.address,
-        city: formData.city,
-        state: formData.state,
-        zipCode: formData.zipCode,
+        address: sanitizedAddress,
+        city: sanitizedCity,
+        state: sanitizedState,
+        zipCode: sanitizedZipCode,
         fullAddress,
-        price: parseFloat(formData.price),
-        title: formData.title,
-        description: formData.description,
+        price: sanitizedPrice,
+        title: sanitizedTitle,
+        description: sanitizedDescription,
         vehicleTypes: formData.vehicleTypes,
         amenities: formData.amenities,
         size: formData.size,
@@ -466,10 +491,10 @@ const AddRoom = () => {
       // Save form data to localStorage if checkbox is checked
       if (saveForFuture) {
         const savedData = {
-          address: formData.address,
-          city: formData.city,
-          state: formData.state,
-          zipCode: formData.zipCode,
+          address: sanitizedAddress,
+          city: sanitizedCity,
+          state: sanitizedState,
+          zipCode: sanitizedZipCode,
           vehicleTypes: formData.vehicleTypes,
           amenities: formData.amenities,
           size: formData.size,
@@ -488,6 +513,11 @@ const AddRoom = () => {
         },
       });
 
+      // Clear global images array
+      images.forEach(img => {
+        dispatch({ type: "DELETE_IMAGE", payload: img });
+      });
+
       // Reset form
       setFormData({
         address: "",
@@ -499,15 +529,18 @@ const AddRoom = () => {
         price: "",
         vehicleTypes: [],
         amenities: [],
-        size: "standard",
+        size: "Standard",
         securityFeatures: [],
         accessHours: "24/7",
         availableFrom: "",
         availableTo: "",
       });
-      // also reset video state
+      
+      // Reset local image and video states
+      setImageUrls([]);
       setVideo(null);
       setVideoUrl("");
+      setProgress({});
 
       navigate("/");
     } catch (error) {
@@ -711,10 +744,10 @@ const AddRoom = () => {
                         onChange={(e) => handleChange("size", e.target.value)}
                         label="Spot Size"
                       >
-                        <MenuItem value="compact">Compact</MenuItem>
-                        <MenuItem value="standard">Standard</MenuItem>
-                        <MenuItem value="large">Large</MenuItem>
-                        <MenuItem value="oversized">Oversized</MenuItem>
+                        <MenuItem value="Compact">Compact</MenuItem>
+                        <MenuItem value="Standard">Standard</MenuItem>
+                        <MenuItem value="Large">Large</MenuItem>
+                        <MenuItem value="Oversized">Oversized</MenuItem>
                       </Select>
                     </FormControl>
                   </Grid>
@@ -1083,6 +1116,25 @@ const AddRoom = () => {
             borderTop: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
             textAlign: "center"
           }}>
+            {/* Upload progress indicator */}
+            {(images.length > imageUrls.length || (video && !videoUrl)) && (
+              <Alert
+                severity="warning"
+                sx={{
+                  mb: 3,
+                  bgcolor: alpha(theme.palette.warning.main, 0.1),
+                  border: `1px solid ${alpha(theme.palette.warning.main, 0.2)}`,
+                }}
+              >
+                <Typography variant="body2" fontWeight={600}>
+                  Uploads in progress... ({imageUrls.length}/{images.length} images{video ? ', video uploading' : ''})
+                </Typography>
+                <Typography variant="caption">
+                  Please wait for all uploads to complete before publishing
+                </Typography>
+              </Alert>
+            )}
+            
             <Alert
               severity="info"
               sx={{
@@ -1099,7 +1151,7 @@ const AddRoom = () => {
               size="large"
               endIcon={uploading ? <CircularProgress size={20} color="inherit" /> : <Send />}
               onClick={handleSubmit}
-              disabled={uploading}
+              disabled={uploading || imageUrls.length < images.length || (video && !videoUrl)}
               sx={{
                 px: 8,
                 py: 2,

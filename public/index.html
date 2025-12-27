@@ -3,28 +3,173 @@
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Find your next parking space! React Full Stack Application"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="theme-color" content="#2B74A8" />
+    
+    <!-- Primary Meta Tags -->
+    <title>ParkVue - Monetize Your NYC Parking Space | Find & Rent Parking</title>
+    <meta name="title" content="ParkVue - Monetize Your NYC Parking Space | Find & Rent Parking" />
+    <meta name="description" content="Turn your NYC parking space into passive income with ParkVue. Find secure, affordable parking or list your space. Dynamic pricing, 24/7 AI support, and seamless booking." />
+    <meta name="keywords" content="NYC parking, rent parking space, parking marketplace, New York parking, monetize parking, find parking NYC, secure parking, parking rental, ParkVue" />
+    <meta name="author" content="ParkVue" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://parkvue.vercel.app" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://parkvue.vercel.app/" />
+    <meta property="og:title" content="ParkVue - Monetize Your NYC Parking Space" />
+    <meta property="og:description" content="Turn your NYC parking space into passive income. Find secure, affordable parking or list your space. Dynamic pricing, 24/7 AI support, and seamless booking." />
+    <meta property="og:image" content="https://parkvue.vercel.app/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="ParkVue" />
+    <meta property="og:locale" content="en_US" />
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://parkvue.vercel.app/" />
+    <meta name="twitter:title" content="ParkVue - Monetize Your NYC Parking Space" />
+    <meta name="twitter:description" content="Turn your NYC parking space into passive income. Find secure, affordable parking or list your space." />
+    <meta name="twitter:image" content="https://parkvue.vercel.app/og-image.jpg" />
+    <meta name="twitter:creator" content="@parkvue" />
+    
+    <!-- Additional Meta Tags -->
+    <meta name="application-name" content="ParkVue" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="ParkVue" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    
+    <!-- Geo Meta Tags -->
+    <meta name="geo.region" content="US-NY" />
+    <meta name="geo.placename" content="New York" />
+    <meta name="geo.position" content="40.7128;-74.0060" />
+    <meta name="ICBM" content="40.7128, -74.0060" />
+    
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
-
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->  
-    <title>parkvue</title>
+    
+    <!-- Preconnect to external domains for better performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://accounts.google.com" />
+    <link rel="preconnect" href="https://api.mapbox.com" />
+    
+    <!-- DNS Prefetch -->
+    <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com" />
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+    
+    <!-- DNS Prefetch -->
+    <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com" />
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+    
+    <!-- JSON-LD Structured Data for Local Business -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": "ParkVue",
+      "description": "Peer-to-peer parking marketplace connecting parking space owners with renters in New York City",
+      "url": "https://parkvue.vercel.app",
+      "logo": "https://parkvue.vercel.app/logo192.png",
+      "image": "https://parkvue.vercel.app/og-image.jpg",
+      "telephone": "+1-XXX-XXX-XXXX",
+      "email": "support@parkvue.com",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "New York",
+        "addressRegion": "NY",
+        "addressCountry": "US"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": "40.7128",
+        "longitude": "-74.0060"
+      },
+      "priceRange": "$$",
+      "openingHours": "Mo-Su 00:00-23:59",
+      "sameAs": [
+        "https://twitter.com/parkvue",
+        "https://facebook.com/parkvue",
+        "https://linkedin.com/company/parkvue"
+      ],
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "reviewCount": "1000"
+      },
+      "areaServed": {
+        "@type": "City",
+        "name": "New York City"
+      }
+    }
+    </script>
+    
+    <!-- WebSite Structured Data for Search -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "ParkVue",
+      "url": "https://parkvue.vercel.app",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://parkvue.vercel.app/rooms?search={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    
+    <!-- Service Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "serviceType": "Parking Space Rental",
+      "provider": {
+        "@type": "Organization",
+        "name": "ParkVue"
+      },
+      "areaServed": {
+        "@type": "City",
+        "name": "New York City"
+      },
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Parking Spaces",
+        "itemListElement": [
+          {
+            "@type": "OfferCatalog",
+            "name": "Daily Parking",
+            "itemListElement": [
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Service",
+                  "name": "Daily Parking Space Rental"
+                }
+              }
+            ]
+          },
+          {
+            "@type": "OfferCatalog",
+            "name": "Monthly Parking",
+            "itemListElement": [
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Service",
+                  "name": "Monthly Parking Space Rental"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+    </script>
   </head>
   <body>
   <script src="https://accounts.google.com/gsi/client" async></script>

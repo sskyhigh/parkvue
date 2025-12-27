@@ -56,6 +56,7 @@ import {
   Info,
 } from "@mui/icons-material";
 import NotFound from "../../NotFound/NotFound";
+import { sanitizeText, sanitizeCardNumber, sanitizeCVV } from "../../utils/sanitize";
 
 // ---------- helper utilities ----------
 const luhnCheck = (num) => {
@@ -269,10 +270,15 @@ const Booking = () => {
       // simulate payment processing delay
       await new Promise((res) => setTimeout(res, 900));
 
+      // Sanitize card inputs
+      const sanitizedCardName = sanitizeText(cardName);
+      const sanitizedCardNumber = sanitizeCardNumber(cardNumber);
+      const sanitizedCardCvc = sanitizeCVV(cardCvc);
+
       // build reservation payload
-      const cardDigits = cardNumber.replace(/\D/g, "");
+      const cardDigits = sanitizedCardNumber.replace(/\D/g, "");
       const last4 = cardDigits.slice(-4);
-      const cardBrand = detectCardBrand(cardNumber);
+      const cardBrand = detectCardBrand(sanitizedCardNumber);
 
       const reservationPayload = {
         reserverId: currentUser.uid,
@@ -408,7 +414,7 @@ const Booking = () => {
         <Skeleton variant="rectangular" height={1} />
       </Box>
 
-      <Grid container spacing={4}>
+      <Grid container spacing={{ xs: 2, md: 3, lg: 4 }}>
         {/* Left: Room Details Skeleton */}
         <Grid item xs={12} md={self ? 12 : 7}>
           <Paper
@@ -530,7 +536,7 @@ const Booking = () => {
                 {/* Booking Duration Section */}
                 <Box sx={{ p: 2, bgcolor: alpha(theme.palette.info.main, 0.05), borderRadius: 2 }}>
                   <Skeleton width="50%" height={28} sx={{ mb: 2 }} />
-                  <Grid container spacing={2}>
+                  <Grid container spacing={{ xs: 1.5, sm: 2 }}>
                     <Grid item xs={12} sm={6}>
                       <Skeleton width="60%" height={20} sx={{ mb: 1 }} />
                       <Skeleton variant="rectangular" height={40} />
@@ -562,7 +568,7 @@ const Booking = () => {
                   <Skeleton width="30%" height={16} sx={{ mt: 0.5 }} />
                 </Box>
 
-                <Grid container spacing={2}>
+                <Grid container spacing={{ xs: 1.5, sm: 2 }}>
                   <Grid item xs={6}>
                     <Skeleton width="40%" height={20} sx={{ mb: 1 }} />
                     <Skeleton variant="rectangular" height={40} />

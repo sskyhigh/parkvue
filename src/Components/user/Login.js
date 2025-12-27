@@ -27,6 +27,7 @@ import {
   sendPasswordResetEmail,
 } from "../../firebase/config";
 import { useValue, Context } from "../../context/ContextProvider";
+import { sanitizePassword, validateEmail } from "../../utils/sanitize";
 
 const Login = () => {
   const { dispatch } = useValue();
@@ -48,16 +49,32 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const email = emailRef.current.value;
-    const password = passwordRef.current.value;
+    const rawEmail = emailRef.current.value;
+    const rawPassword = passwordRef.current.value;
 
-    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+    // Sanitize inputs
+    const { isValid, sanitized: email } = validateEmail(rawEmail);
+    const password = sanitizePassword(rawPassword);
+
+    if (!isValid) {
       dispatch({
         type: "UPDATE_ALERT",
         payload: {
           open: true,
           severity: "error",
-          message: "Please provide an email",
+          message: "Please provide a valid email",
+        },
+      });
+      return;
+    }
+
+    if (!password || password.length < 6) {
+      dispatch({
+        type: "UPDATE_ALERT",
+        payload: {
+          open: true,
+          severity: "error",
+          message: "Password must be at least 6 characters",
         },
       });
       return;
@@ -110,14 +127,16 @@ const Login = () => {
   };
 
   const handlePasswordReset = async () => {
-    const email = emailRef.current.value;
-    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+    const rawEmail = emailRef.current.value;
+    const { isValid, sanitized: email } = validateEmail(rawEmail);
+    
+    if (!isValid) {
       dispatch({
         type: "UPDATE_ALERT",
         payload: {
           open: true,
           severity: "error",
-          message: "Please provide an email",
+          message: "Please provide a valid email",
         },
       });
       return;
