@@ -112,35 +112,43 @@ const ClusterMap = () => {
     fetchRooms();
   }, []);
 
-  // Auto-locate user
+  // Auto-locate user (only on development/localhost)
   useEffect(() => {
     if (!lng && !lat) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          if (mapRef.current) {
-            mapRef.current.flyTo({
-              center: [longitude, latitude],
-              zoom: 12,
-              essential: true,
+      // Only attempt geolocation on localhost/development to avoid permission prompts on production
+      const isProduction = window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1";
+      
+      if (!isProduction && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            if (mapRef.current) {
+              mapRef.current.flyTo({
+                center: [longitude, latitude],
+                zoom: 12,
+                essential: true,
+              });
+            }
+            dispatch({
+              type: "UPDATE_LOCATION",
+              payload: { lng: longitude, lat: latitude },
             });
-          }
-          dispatch({
-            type: "UPDATE_LOCATION",
-            payload: { lng: longitude, lat: latitude },
-          });
-          setViewState(prev => ({
-            ...prev,
-            longitude,
-            latitude,
-          }));
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-          dispatch({ type: "UPDATE_LOCATION", payload: defaultLocation });
-        },
-        { enableHighAccuracy: true }
-      );
+            setViewState(prev => ({
+              ...prev,
+              longitude,
+              latitude,
+            }));
+          },
+          (error) => {
+            console.warn("Geolocation access denied or unavailable, using default location");
+            dispatch({ type: "UPDATE_LOCATION", payload: defaultLocation });
+          },
+          { enableHighAccuracy: true, timeout: 5000 }
+        );
+      } else if (isProduction) {
+        // On production, use default location without prompting
+        dispatch({ type: "UPDATE_LOCATION", payload: defaultLocation });
+      }
     }
   }, [dispatch, lng, lat]);
 
