@@ -444,6 +444,9 @@ const TermsPage = () => {
                 These terms are effective as of December 27, 2025. We recommend reviewing this page periodically for updates.
               </Typography>
             </Box>
+
+            {/* Extra space so the last section can become active */}
+            <Box sx={{ height: { xs: 200, md: 260 } }} />
           </Box>
         </Box>
       </Container>

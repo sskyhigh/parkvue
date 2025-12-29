@@ -51,31 +51,72 @@ const SecurityPage = () => {
   );
 
   useEffect(() => {
+    const offset = 120;
     const scrollContainer = document.getElementById('scrollable-content');
+    const sectionIds = securitySections.map((s) => s.id);
+    let rafId = null;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+    const isAtBottom = () => {
+      const lastId = sectionIds[sectionIds.length - 1];
+      if (!lastId) return null;
 
-        if (visible[0]?.target?.id) {
-          setActiveSection(visible[0].target.id);
-        }
-      },
-      {
-        root: scrollContainer || null,
-        rootMargin: '-15% 0px -70% 0px',
-        threshold: 0,
+      if (scrollContainer) {
+        const atBottom = scrollContainer.scrollTop + scrollContainer.clientHeight >= scrollContainer.scrollHeight - 4;
+        return atBottom ? lastId : null;
       }
-    );
 
-    securitySections.forEach(({ id }) => {
-      const element = document.getElementById(id);
-      if (element) observer.observe(element);
-    });
+      const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
+      return atBottom ? lastId : null;
+    };
 
-    return () => observer.disconnect();
+    const computeActive = () => {
+      const bottomId = isAtBottom();
+      if (bottomId) {
+        setActiveSection(bottomId);
+        return;
+      }
+
+      const currentScrollTop = scrollContainer ? scrollContainer.scrollTop : window.scrollY;
+      const containerRect = scrollContainer ? scrollContainer.getBoundingClientRect() : { top: 0 };
+      const targetY = currentScrollTop + offset;
+
+      let bestId = sectionIds[0] || 'commitment';
+      let bestTop = -Infinity;
+
+      sectionIds.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        const rect = el.getBoundingClientRect();
+        const topInScroll = scrollContainer
+          ? (rect.top - containerRect.top) + currentScrollTop
+          : rect.top + window.scrollY;
+
+        if (topInScroll <= targetY && topInScroll > bestTop) {
+          bestTop = topInScroll;
+          bestId = id;
+        }
+      });
+
+      setActiveSection(bestId);
+    };
+
+    const onScroll = () => {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = null;
+        computeActive();
+      });
+    };
+
+    const scrollTarget = scrollContainer || window;
+    scrollTarget.addEventListener('scroll', onScroll, { passive: true });
+    computeActive();
+
+    return () => {
+      scrollTarget.removeEventListener('scroll', onScroll);
+      if (rafId) window.cancelAnimationFrame(rafId);
+    };
   }, [securitySections]);
 
   const scrollToSection = (sectionId) => {
@@ -101,7 +142,8 @@ const SecurityPage = () => {
 
   const sectionStyle = {
     mb: 3,
-    p: { xs: 2, md: 3 },
+    p: { xs: 2.5, md: 3 },
+    scrollMarginTop: 120,
     backgroundColor: theme.palette.background.paper,
     borderRadius: 2,
     border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
@@ -482,6 +524,9 @@ const SecurityPage = () => {
                 Security is an ongoing commitment. We continuously update our measures to protect against emerging threats.
               </Typography>
             </Box>
+
+            {/* Extra space so the last section can become active */}
+            <Box sx={{ height: { xs: 200, md: 260 } }} />
           </Box>
         </Box>
       </Container>
