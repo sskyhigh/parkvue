@@ -542,7 +542,7 @@ const AddRoom = () => {
       setVideoUrl("");
       setProgress({});
 
-      navigate("/");
+      navigate("/dashboard");
     } catch (error) {
       console.error("Submission error:", error);
       dispatch({
