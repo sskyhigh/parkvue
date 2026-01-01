@@ -46,28 +46,33 @@ import {
   query,
   where,
   getDocs,
-  updateDoc,
   deleteDoc,
   doc,
   serverTimestamp,
   getDoc,
   runTransaction,
+  increment,
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { getRoomCapacity, getRoomMaxCapacity, isRoomAvailable, MAX_LISTING_CAPACITY } from "../../utils/capacity";
 
 // UserDashboard component
 export default function UserDashboard() {
   const theme = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
   const { dispatch } = useValue();
   const { currentUser } = useContext(Context) || {};
   
   useEffect(() => {
     if (!currentUser) {
-      navigate("/login");
+      navigate("/login", {
+        state: { redirectTo: location.pathname + location.search },
+        replace: true,
+      });
     }
-  }, [currentUser, navigate]);
+  }, [currentUser, navigate, location.pathname, location.search]);
 
   // local state
   const [myRooms, setMyRooms] = useState([]);
@@ -106,7 +111,12 @@ export default function UserDashboard() {
         if (!mounted) return;
         const data = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
         // sort: available first
-        data.sort((a, b) => (a.available === b.available ? 0 : a.available ? -1 : 1));
+        data.sort((a, b) => {
+          const aAvail = isRoomAvailable(a);
+          const bAvail = isRoomAvailable(b);
+          if (aAvail === bAvail) return 0;
+          return aAvail ? -1 : 1;
+        });
         setMyRooms(data);
       } catch (err) {
         console.error(err);
@@ -210,10 +220,18 @@ export default function UserDashboard() {
     return () => { mounted = false; };
   }, [currentUser, dispatch]);
 
-  // Handlers: Edit, Save, Delete, Toggle availability, Unreserve
+  // Handlers: Edit, Save, Delete, Pause/Restore (capacity), Release reservation
   const openEdit = (room) => {
     setEditingRoom(room);
-    setEditValues({ title: room.title || "", price: room.price || "", description: room.description || "" });
+    const currentCap = getRoomCapacity(room);
+    const maxCap = Math.min(MAX_LISTING_CAPACITY, getRoomMaxCapacity(room) || currentCap || 1);
+    setEditValues({
+      title: room.title || "",
+      price: room.price || "",
+      description: room.description || "",
+      maxCapacity: String(maxCap),
+      capacity: String(currentCap),
+    });
     setEditOpen(true);
   };
   const closeEdit = () => { setEditOpen(false); setEditingRoom(null); setEditValues({}); };
@@ -222,9 +240,46 @@ export default function UserDashboard() {
     if (!editingRoom) return;
     try {
       const roomRef = doc(db, "rooms", editingRoom.id);
-      await updateDoc(roomRef, { ...editValues, updatedAt: serverTimestamp() });
+
+      const parsedMax = Number.parseInt(String(editValues.maxCapacity ?? "").trim(), 10);
+      const parsedCap = Number.parseInt(String(editValues.capacity ?? "").trim(), 10);
+
+      await runTransaction(db, async (transaction) => {
+        const snap = await transaction.get(roomRef);
+        if (!snap.exists()) throw new Error('Room not found');
+        const data = { id: snap.id, ...snap.data() };
+        const currentCap = getRoomCapacity(data);
+        const currentMax = getRoomMaxCapacity(data) || currentCap || 1;
+
+        const nextMax = Number.isFinite(parsedMax)
+          ? Math.min(MAX_LISTING_CAPACITY, Math.max(1, parsedMax))
+          : Math.min(MAX_LISTING_CAPACITY, currentMax);
+        const nextCapRaw = Number.isFinite(parsedCap) ? Math.max(0, parsedCap) : currentCap;
+        const nextCap = Math.min(nextMax, nextCapRaw);
+
+        transaction.update(roomRef, {
+          title: editValues.title,
+          price: editValues.price,
+          description: editValues.description,
+          maxCapacity: nextMax,
+          capacity: nextCap,
+          // legacy compatibility: once capacity is present, deprecate boolean
+          available: true,
+          updatedAt: serverTimestamp(),
+        });
+      });
       // refresh
-      setMyRooms((prev) => prev.map((r) => (r.id === editingRoom.id ? { ...r, ...editValues } : r)));
+      setMyRooms((prev) =>
+        prev.map((r) => {
+          if (r.id !== editingRoom.id) return r;
+          const maxCapacity = Math.min(
+            MAX_LISTING_CAPACITY,
+            Math.max(1, Number.parseInt(String(editValues.maxCapacity ?? "1"), 10) || getRoomMaxCapacity(r) || 1)
+          );
+          const capacity = Math.min(maxCapacity, Math.max(0, Number.parseInt(String(editValues.capacity ?? "0"), 10) || getRoomCapacity(r)));
+          return { ...r, ...editValues, maxCapacity, capacity };
+        })
+      );
       dispatch({ type: "UPDATE_ALERT", payload: { open: true, severity: "success", message: "Room updated" } });
       closeEdit();
     } catch (err) {
@@ -243,19 +298,202 @@ export default function UserDashboard() {
         await deleteDoc(doc(db, "rooms", id));
         setMyRooms((prev) => prev.filter((r) => r.id !== id));
         dispatch({ type: "UPDATE_ALERT", payload: { open: true, severity: "success", message: "Room deleted" } });
-      } else if (type === "toggleAvail") {
-        await updateDoc(doc(db, "rooms", id), { available: extra.newVal, updatedAt: serverTimestamp() });
-        setMyRooms((prev) => prev.map((r) => (r.id === id ? { ...r, available: extra.newVal } : r)));
-        dispatch({ type: "UPDATE_ALERT", payload: { open: true, severity: "success", message: `Room marked ${extra.newVal ? "available" : "reserved"}` } });
-      } else if (type === "unreserve") {
-        // confirmPayload.extra should contain reservationId and roomId
-        const { reservationId, roomId } = extra;
-        if (reservationId) await deleteDoc(doc(db, "reservations", reservationId));
-        if (roomId) await updateDoc(doc(db, "rooms", roomId), { available: true, updatedAt: serverTimestamp() });
-        // refresh lists locally
-        setMyReservations((prev) => prev.filter((x) => x.reservationId !== reservationId));
-        setMyRooms((prev) => prev.map((r) => (r.id === roomId ? { ...r, available: true } : r)));
-        dispatch({ type: "UPDATE_ALERT", payload: { open: true, severity: "success", message: "Reservation cancelled" } });
+      } else if (type === "toggleCapacity") {
+        // Pause listing (set capacity=0) or restore to maxCapacity
+        const roomId = id;
+        if (!roomId) throw new Error('Missing room id');
+        const roomRef = doc(db, "rooms", roomId);
+
+        let newCapacity = 0;
+        let newMaxCapacity = undefined;
+
+        await runTransaction(db, async (transaction) => {
+          const snap = await transaction.get(roomRef);
+          if (!snap.exists()) throw new Error('Room not found');
+          const roomData = { id: snap.id, ...snap.data() };
+          const currentCap = getRoomCapacity(roomData);
+          const maxCap = getRoomMaxCapacity(roomData) || (currentCap > 0 ? currentCap : 1);
+
+          if (currentCap > 0) {
+            newCapacity = 0;
+          } else {
+            newCapacity = maxCap > 0 ? maxCap : 1;
+          }
+
+          // For legacy docs, ensure maxCapacity exists once we touch it
+          if (!Number.isFinite(roomData.maxCapacity)) {
+            newMaxCapacity = maxCap;
+          }
+
+          transaction.update(roomRef, {
+            ...(newMaxCapacity !== undefined ? { maxCapacity: newMaxCapacity } : {}),
+            capacity: newCapacity,
+            available: true,
+            updatedAt: serverTimestamp(),
+          });
+        });
+
+        setMyRooms((prev) =>
+          prev.map((r) => {
+            if (r.id !== roomId) return r;
+            return {
+              ...r,
+              ...(newMaxCapacity !== undefined ? { maxCapacity: newMaxCapacity } : {}),
+              capacity: newCapacity,
+            };
+          })
+        );
+
+        dispatch({
+          type: "UPDATE_ALERT",
+          payload: {
+            open: true,
+            severity: "success",
+            message: newCapacity > 0 ? "Listing restored" : "Listing paused",
+          },
+        });
+      } else if (type === "unreserveAll" || type === "unreserveOne") {
+        const { reservationId, roomId } = extra || {};
+        if (!reservationId) throw new Error('Missing reservation id');
+
+        const resRef = doc(db, "reservations", reservationId);
+        const roomRef = roomId ? doc(db, "rooms", roomId) : null;
+
+        // Resolve host's user doc (Firestore id) outside the transaction.
+        // Prefer the ownerId stored on the reservation; fallback to room.createdBy.
+        let hostUserRef = null;
+        try {
+          let hostUid = null;
+          const resSnap = await getDoc(resRef);
+          if (resSnap.exists()) {
+            const resData = resSnap.data() || {};
+            hostUid = resData.ownerId || resData.createdBy || null;
+          }
+          if (!hostUid && roomRef) {
+            const roomSnap = await getDoc(roomRef);
+            if (roomSnap.exists()) {
+              const roomData = roomSnap.data() || {};
+              hostUid = roomData.createdBy || null;
+            }
+          }
+          if (hostUid) {
+            const usersRef = collection(db, "users");
+            const uq = query(usersRef, where("uid", "==", hostUid));
+            const us = await getDocs(uq);
+            if (!us.empty) {
+              hostUserRef = doc(db, "users", us.docs[0].id);
+            }
+          }
+        } catch (e) {
+          hostUserRef = null;
+        }
+
+        let delta = 0;
+        let updatedReservationSpaces = null;
+        let earningsDelta = 0;
+
+        await runTransaction(db, async (transaction) => {
+          const resSnap = await transaction.get(resRef);
+          if (!resSnap.exists()) throw new Error('Reservation not found');
+          const resData = resSnap.data() || {};
+          const currentSpaces = Math.max(1, Number.parseInt(String(resData.spaces ?? 1), 10) || 1);
+
+          // Compute host payout per space.
+          // Prefer stored hostPayout/totalPrice; fallback to unitPrice/duration.
+          const storedTotal =
+            typeof resData.hostPayout === 'number'
+              ? resData.hostPayout
+              : (typeof resData.totalPrice === 'number' ? resData.totalPrice : null);
+          const unitPrice = typeof resData.unitPrice === 'number' ? resData.unitPrice : 0;
+          const duration = typeof resData.duration === 'number' ? resData.duration : 0;
+          const computedPerSpace = duration * (unitPrice / 24);
+          const perSpacePayout = storedTotal !== null ? (storedTotal / currentSpaces) : computedPerSpace;
+
+          if (type === 'unreserveOne') {
+            if (currentSpaces <= 1) {
+              // fallback to full cancel
+              delta = currentSpaces;
+              earningsDelta = Math.max(0, perSpacePayout * delta);
+              transaction.delete(resRef);
+              updatedReservationSpaces = 0;
+            } else {
+              delta = 1;
+              const nextSpaces = currentSpaces - 1;
+              updatedReservationSpaces = nextSpaces;
+
+              earningsDelta = Math.max(0, perSpacePayout * delta);
+
+              const scale = nextSpaces / currentSpaces;
+              const nextTotalPrice = typeof resData.totalPrice === 'number' ? (resData.totalPrice * scale) : undefined;
+              const nextTotalPaid = typeof resData.totalPaid === 'number' ? (resData.totalPaid * scale) : undefined;
+              const nextServiceFee = typeof resData.serviceFee === 'number' ? (resData.serviceFee * scale) : undefined;
+              const nextHostPayout = typeof resData.hostPayout === 'number' ? (resData.hostPayout * scale) : undefined;
+
+              transaction.update(resRef, {
+                spaces: nextSpaces,
+                ...(nextTotalPrice !== undefined ? { totalPrice: nextTotalPrice } : {}),
+                ...(nextTotalPaid !== undefined ? { totalPaid: nextTotalPaid } : {}),
+                ...(nextServiceFee !== undefined ? { serviceFee: nextServiceFee } : {}),
+                ...(nextHostPayout !== undefined ? { hostPayout: nextHostPayout } : {}),
+                updatedAt: serverTimestamp(),
+              });
+            }
+          } else {
+            delta = currentSpaces;
+            updatedReservationSpaces = 0;
+            earningsDelta = Math.max(0, perSpacePayout * delta);
+            transaction.delete(resRef);
+          }
+
+          if (roomRef) {
+            const roomSnap = await transaction.get(roomRef);
+            if (roomSnap.exists()) {
+              const roomData = { id: roomSnap.id, ...roomSnap.data() };
+              const currentCap = getRoomCapacity(roomData);
+              const maxCap = getRoomMaxCapacity(roomData) || (currentCap + delta);
+              const nextCap = Math.min(maxCap, currentCap + delta);
+              transaction.update(roomRef, { capacity: nextCap, available: true, updatedAt: serverTimestamp() });
+            }
+          }
+
+          // Adjust host earnings when a reservation is reduced/cancelled.
+          // This prevents earnings from inflating when users release/cancel bookings.
+          if (hostUserRef && Number.isFinite(earningsDelta) && earningsDelta > 0) {
+            transaction.update(hostUserRef, {
+              totalEarnings: increment(-earningsDelta),
+              lastEarningUpdate: serverTimestamp(),
+            });
+          }
+        });
+
+        if (type === 'unreserveAll' || updatedReservationSpaces === 0) {
+          setMyReservations((prev) => prev.filter((x) => x.reservationId !== reservationId));
+        } else {
+          setMyReservations((prev) =>
+            prev.map((r) => (r.reservationId === reservationId ? { ...r, spaces: updatedReservationSpaces } : r))
+          );
+        }
+
+        if (roomId) {
+          // only updates if this user owns the room (it will exist in myRooms)
+          setMyRooms((prev) =>
+            prev.map((r) => {
+              if (r.id !== roomId) return r;
+              const currentCap = getRoomCapacity(r);
+              const maxCap = getRoomMaxCapacity(r) || (currentCap + delta);
+              return { ...r, capacity: Math.min(maxCap, currentCap + delta) };
+            })
+          );
+        }
+
+        dispatch({
+          type: "UPDATE_ALERT",
+          payload: {
+            open: true,
+            severity: "success",
+            message: type === 'unreserveOne' ? 'Released 1 space' : 'Reservation cancelled',
+          },
+        });
       }
     } catch (err) {
       console.error(err);
@@ -366,12 +604,17 @@ export default function UserDashboard() {
         <Stack spacing={1.5}>
           <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
             <Box>
+              {(() => {
+                const cap = getRoomCapacity(room);
+                const isAvail = cap > 0;
+                return (
+                  <>
               <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.text.primary, mb: 0.5 }}>
                 {room.title}
               </Typography>
               <Chip
-                label={room.available ? "Available" : "Reserved"}
-                color={room.available ? "success" : "error"}
+                label={isAvail ? `Available (${cap})` : "Reserved"}
+                color={isAvail ? "success" : "error"}
                 size="small"
                 sx={{
                   fontWeight: 600,
@@ -379,6 +622,9 @@ export default function UserDashboard() {
                   height: 22
                 }}
               />
+                  </>
+                );
+              })()}
             </Box>
             <Typography variant="h6" sx={{
               fontWeight: 800,
@@ -421,18 +667,18 @@ export default function UserDashboard() {
                   <Edit fontSize="small" />
                 </IconButton>
               </Tooltip>
-              <Tooltip title={room.available ? "Mark Reserved" : "Mark Available"}>
+              <Tooltip title={getRoomCapacity(room) > 0 ? "Pause Listing" : "Restore Listing"}>
                 <IconButton
-                  onClick={() => confirmAction({ type: "toggleAvail", id: room.id, extra: { newVal: !room.available } })}
+                  onClick={() => confirmAction({ type: "toggleCapacity", id: room.id })}
                   size="small"
                   sx={{
-                    bgcolor: room.available ? alpha(theme.palette.warning.main, 0.1) : alpha(theme.palette.success.main, 0.1),
+                    bgcolor: getRoomCapacity(room) > 0 ? alpha(theme.palette.warning.main, 0.1) : alpha(theme.palette.success.main, 0.1),
                     '&:hover': {
-                      bgcolor: room.available ? alpha(theme.palette.warning.main, 0.2) : alpha(theme.palette.success.main, 0.2)
+                      bgcolor: getRoomCapacity(room) > 0 ? alpha(theme.palette.warning.main, 0.2) : alpha(theme.palette.success.main, 0.2)
                     }
                   }}
                 >
-                  {room.available ? <ToggleOff fontSize="small" /> : <ToggleOn fontSize="small" />}
+                  {getRoomCapacity(room) > 0 ? <ToggleOff fontSize="small" /> : <ToggleOn fontSize="small" />}
                 </IconButton>
               </Tooltip>
               <Tooltip title="Delete">
@@ -604,7 +850,7 @@ export default function UserDashboard() {
                     Your Listings
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {myRooms.length} room{myRooms.length !== 1 ? 's' : ''} listed • {myRooms.filter(r => r.available).length} available
+                    {myRooms.length} room{myRooms.length !== 1 ? 's' : ''} listed • {myRooms.filter((r) => getRoomCapacity(r) > 0).length} available
                   </Typography>
                 </Box>
               </Stack>
@@ -757,16 +1003,28 @@ export default function UserDashboard() {
                                 }}>
                                   {res.room?.title || 'Room Unavailable'}
                                 </Typography>
-                                <Chip
-                                  label={`$${res.room?.price ?? '—'}`}
-                                  size="small"
-                                  color="primary"
-                                  sx={{
-                                    height: 20,
-                                    fontSize: '0.7rem',
-                                    fontWeight: 700
-                                  }}
-                                />
+                                <Stack direction="row" spacing={0.5} alignItems="center">
+                                  <Chip
+                                    label={`$${res.room?.price ?? '—'}`}
+                                    size="small"
+                                    color="primary"
+                                    sx={{
+                                      height: 20,
+                                      fontSize: '0.7rem',
+                                      fontWeight: 700
+                                    }}
+                                  />
+                                  <Chip
+                                    label={`${Math.max(1, Number.parseInt(String(res.spaces ?? 1), 10) || 1)} space${Math.max(1, Number.parseInt(String(res.spaces ?? 1), 10) || 1) !== 1 ? 's' : ''}`}
+                                    size="small"
+                                    variant="outlined"
+                                    sx={{
+                                      height: 20,
+                                      fontSize: '0.7rem',
+                                      fontWeight: 700
+                                    }}
+                                  />
+                                </Stack>
                               </Stack>
 
                               <Typography variant="caption" color="text.secondary" sx={{
@@ -791,18 +1049,34 @@ export default function UserDashboard() {
                                 >
                                   View Details
                                 </Button>
+                                {Math.max(1, Number.parseInt(String(res.spaces ?? 1), 10) || 1) > 1 && (
+                                  <Tooltip title={"Release 1 space (keep the rest)"}>
+                                    <Button
+                                      size="small"
+                                      color="error"
+                                      variant="outlined"
+                                      onClick={() => confirmAction({ type: 'unreserveOne', extra: { reservationId: res.reservationId, roomId: res.room?.id } })}
+                                      sx={{
+                                        fontSize: '0.75rem',
+                                        py: 0.25
+                                      }}
+                                    >
+                                      Release 1
+                                    </Button>
+                                  </Tooltip>
+                                )}
                                 <Tooltip title={"Cancel This Reservation"}>
                                   <Button
                                     size="small"
                                     color="error"
                                     variant="outlined"
-                                    onClick={() => confirmAction({ type: 'unreserve', extra: { reservationId: res.reservationId, roomId: res.room?.id } })}
+                                    onClick={() => confirmAction({ type: 'unreserveAll', extra: { reservationId: res.reservationId, roomId: res.room?.id } })}
                                     sx={{
                                       fontSize: '0.75rem',
                                       py: 0.25
                                     }}
                                   >
-                                    Release
+                                    Release all
                                   </Button>
                                 </Tooltip>
                                 <Tooltip title={res.hasRated ? "Change Rating" : ""}>
@@ -864,6 +1138,43 @@ export default function UserDashboard() {
                 startAdornment: <Typography color="text.secondary">$</Typography>
               }}
             />
+
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Total Spaces (Max)"
+                  fullWidth
+                  type="number"
+                  value={editValues.maxCapacity || ''}
+                  onChange={(e) => setEditValues((s) => ({ ...s, maxCapacity: e.target.value }))}
+                  variant="outlined"
+                  size="small"
+                  inputProps={{ min: 1, max: MAX_LISTING_CAPACITY, step: 1 }}
+                  helperText={`Total capacity for this listing (1-${MAX_LISTING_CAPACITY})`}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Spaces Available Now"
+                  fullWidth
+                  type="number"
+                  value={editValues.capacity || ''}
+                  onChange={(e) => setEditValues((s) => ({ ...s, capacity: e.target.value }))}
+                  variant="outlined"
+                  size="small"
+                  inputProps={{
+                    min: 0,
+                    max: Math.min(
+                      MAX_LISTING_CAPACITY,
+                      Math.max(1, Number.parseInt(String(editValues.maxCapacity ?? MAX_LISTING_CAPACITY), 10) || MAX_LISTING_CAPACITY)
+                    ),
+                    step: 1,
+                  }}
+                  helperText="Current remaining spaces (0 = reserved)"
+                />
+              </Grid>
+            </Grid>
+
             <TextField
               label="Description"
               fullWidth
@@ -893,9 +1204,11 @@ export default function UserDashboard() {
           <Typography color="text.secondary">
             {confirmPayload?.type === 'deleteRoom'
               ? 'Are you sure you want to delete this room? This action cannot be undone.'
-              : confirmPayload?.type === 'toggleAvail'
-                ? 'Do you want to change the availability status of this room?'
-                : 'Are you sure you want to cancel this reservation?'}
+              : confirmPayload?.type === 'toggleCapacity'
+                ? 'Do you want to pause/restore this listing? (Pausing sets capacity to 0.)'
+                : confirmPayload?.type === 'unreserveOne'
+                  ? 'Release 1 space from this reservation?'
+                  : 'Are you sure you want to cancel this reservation?'}
           </Typography>
         </DialogContent>
         <DialogActions sx={{ p: 2, pt: 0 }}>

@@ -23,6 +23,7 @@ import {
   Alert,
   Card,
   CardMedia,
+  FormHelperText
 } from "@mui/material";
 import {
   Send,
@@ -46,7 +47,7 @@ import Geocoder from "../map/Geocoder";
 import { useValue, Context } from "../../context/ContextProvider";
 import { db, doc, setDoc } from "../../firebase/config";
 import { v4 as uuidv4 } from "uuid";
-import { useNavigate } from "react-router-dom";
+import { useLocation as useRouterLocation, useNavigate } from "react-router-dom";
 import uploadFileProgress from "../../firebase/uploadFileProgress";
 import { 
   sanitizeText,
@@ -55,6 +56,7 @@ import {
   sanitizePrice,
   sanitizeTextarea
 } from "../../utils/sanitize";
+import { MAX_LISTING_CAPACITY } from "../../utils/capacity";
 
 const AddRoom = () => {
   const theme = useTheme();
@@ -73,6 +75,7 @@ const AddRoom = () => {
   const [videoUrl, setVideoUrl] = useState(""); // Local state for video Firebase URL
   const [progress, setProgress] = useState({});
   const navigate = useNavigate();
+  const routerLocation = useRouterLocation();
   const [viewport, setViewport] = useState({
     longitude: location.lng || -74.006,
     latitude: location.lat || 40.7128,
@@ -88,6 +91,7 @@ const AddRoom = () => {
     title: "",
     description: "",
     price: "",
+    capacity: "1",
     vehicleTypes: [],
     amenities: [],
     size: "Standard",
@@ -100,9 +104,12 @@ const AddRoom = () => {
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!currentUser) {
-      navigate("/login");
+      navigate("/login", {
+        state: { redirectTo: routerLocation.pathname + routerLocation.search },
+        replace: true,
+      });
     }
-  }, [currentUser, navigate]);
+  }, [currentUser, navigate, routerLocation.pathname, routerLocation.search]);
 
   const lastSourceRef = useRef(null); // 'form', 'map', 'api', 'geocoder'
 
@@ -393,6 +400,13 @@ const AddRoom = () => {
     if (!formData.price || parseFloat(formData.price) <= 0) {
       return "Please enter a valid price";
     }
+    const cap = Number.parseInt(String(formData.capacity ?? "").trim(), 10);
+    if (!Number.isFinite(cap) || cap < 1) {
+      return "Please enter a valid number of spaces (capacity)";
+    }
+    if (cap > MAX_LISTING_CAPACITY) {
+      return `Maximum capacity is ${MAX_LISTING_CAPACITY} spaces`;
+    }
     if (formData.vehicleTypes.length === 0) {
       return "Please select at least one vehicle type";
     }
@@ -452,12 +466,17 @@ const AddRoom = () => {
       const sanitizedTitle = sanitizeText(formData.title);
       const sanitizedDescription = sanitizeTextarea(formData.description);
       const sanitizedPrice = sanitizePrice(formData.price);
+
+      const parsedCapacity = Number.parseInt(String(formData.capacity ?? "").trim(), 10);
+      const sanitizedCapacityRaw = Number.isFinite(parsedCapacity) && parsedCapacity > 0 ? parsedCapacity : 1;
+      const sanitizedCapacity = Math.min(MAX_LISTING_CAPACITY, sanitizedCapacityRaw);
       
       const fullAddress = `${sanitizedAddress}, ${sanitizedCity}, ${sanitizedState} ${sanitizedZipCode}`;
 
       const room = {
         id: uniqueRoomId,
-        available: true,
+        capacity: sanitizedCapacity,
+        maxCapacity: sanitizedCapacity,
         lng: location.lng,
         lat: location.lat,
         address: sanitizedAddress,
@@ -495,6 +514,7 @@ const AddRoom = () => {
           city: sanitizedCity,
           state: sanitizedState,
           zipCode: sanitizedZipCode,
+          capacity: String(sanitizedCapacity),
           vehicleTypes: formData.vehicleTypes,
           amenities: formData.amenities,
           size: formData.size,
@@ -527,6 +547,7 @@ const AddRoom = () => {
         title: "",
         description: "",
         price: "",
+        capacity: "1",
         vehicleTypes: [],
         amenities: [],
         size: "Standard",
@@ -722,7 +743,7 @@ const AddRoom = () => {
                       helperText="Describe features, size, access instructions, etc."
                     />
                   </Grid>
-                  <Grid item xs={12} sm={6}>
+                  <Grid item xs={12} sm={3}>
                     <TextField
                       fullWidth
                       label="Daily Rate ($)"
@@ -734,9 +755,23 @@ const AddRoom = () => {
                       InputProps={{
                         startAdornment: "$ ",
                       }}
+                      helperText="Daily rate in USD"
                     />
                   </Grid>
-                  <Grid item xs={12} sm={6}>
+                  <Grid item xs={12} sm={5}>
+                    <TextField
+                      fullWidth
+                      label="Spaces (Capacity)"
+                      type="number"
+                      value={formData.capacity}
+                      onChange={(e) => handleChange("capacity", e.target.value)}
+                      placeholder="1"
+                      required
+                      inputProps={{ min: 1, max: MAX_LISTING_CAPACITY, step: 1 }}
+                      helperText={`Vehicles this location can hold (1-${MAX_LISTING_CAPACITY})`}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
                     <FormControl fullWidth>
                       <InputLabel>Spot Size</InputLabel>
                       <Select
@@ -749,6 +784,7 @@ const AddRoom = () => {
                         <MenuItem value="Large">Large</MenuItem>
                         <MenuItem value="Oversized">Oversized</MenuItem>
                       </Select>
+                      <FormHelperText>Size category of each parking spot</FormHelperText>
                     </FormControl>
                   </Grid>
                   <Grid item xs={12} sm={6}>

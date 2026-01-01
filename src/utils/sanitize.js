@@ -318,7 +318,7 @@ export const sanitizeObject = (obj, schema) => {
   return sanitized;
 };
 
-export default {
+const sanitize = {
   sanitizeText,
   sanitizeEmail,
   validateEmail,
@@ -339,3 +339,5 @@ export default {
   validateDate,
   sanitizeObject
 };
+
+export default sanitize;

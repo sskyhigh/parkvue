@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext } from "react";
+import React, { useState, useEffect, useRef, useContext, useCallback } from "react";
 import {
     Box,
     IconButton,
@@ -189,6 +189,12 @@ const UserChat = ({ isOpen, onClose }) => {
         }, 100);
     };
 
+    const handleClose = useCallback(() => {
+        // Clear global state chat request
+        dispatch({ type: 'UPDATE_CHAT', payload: { open: false, user: null } });
+        onClose?.();
+    }, [dispatch, onClose]);
+
     // Scroll to bottom when messages change or view changes to chat OR when chat is opened
     useEffect(() => {
         if (view === "chat" && isOpen) scrollToBottom();
@@ -238,7 +244,7 @@ const UserChat = ({ isOpen, onClose }) => {
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [isOpen]);
+    }, [isOpen, handleClose]);
 
     const handleSendMessage = async () => {
         if (!input.trim() || !activeChat || !currentUser) return;
@@ -309,12 +315,6 @@ const UserChat = ({ isOpen, onClose }) => {
             setMessages([]);
             setClearHistoryDialog(false);
         }
-    };
-
-    const handleClose = () => {
-        // Clear global state chat request
-        dispatch({ type: 'UPDATE_CHAT', payload: { open: false, user: null } });
-        onClose();
     };
 
     if (!isOpen) return null;

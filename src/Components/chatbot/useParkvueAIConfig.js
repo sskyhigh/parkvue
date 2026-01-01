@@ -2,6 +2,7 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { Context } from "../../context/ContextProvider";
 import { collection, query, where, limit, getDocs } from "firebase/firestore";
 import { db } from "../../firebase/config";
+import { isRoomAvailable } from "../../utils/capacity";
 
 const useParkvueAIConfig = () => {
   const { currentUser } = useContext(Context) || {};
@@ -16,23 +17,27 @@ const useParkvueAIConfig = () => {
       const q = query(
         collection(db, "rooms"),
         where("city", "==", currentUser.city),
-        where("available", "==", true),
-        limit(5)
+        // Fetch more than needed, then filter client-side for capacity/legacy availability
+        limit(20)
       );
 
       const snap = await getDocs(q);
 
-      setRooms(
-        snap.docs.map(doc => ({
-          title: doc.data().title,
-          description: doc.data().description,
-          price: doc.data().price,
-          fullAddress: doc.data().fullAddress,
-          ownerName: doc.data().ownerName,
-          size: doc.data().size,
-          id: doc.data().id,
-        }))
-      );
+      const filtered = snap.docs
+        .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
+        .filter((r) => isRoomAvailable(r))
+        .slice(0, 5)
+        .map((r) => ({
+          title: r.title,
+          description: r.description,
+          price: r.price,
+          fullAddress: r.fullAddress,
+          ownerName: r.ownerName,
+          size: r.size,
+          id: r.id,
+        }));
+
+      setRooms(filtered);
     };
 
     fetchRooms();

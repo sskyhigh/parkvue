@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import { PulseLoader } from "react-spinners";
 import { Close, Send } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import PasswordField from "./PasswordField";
 import GoogleOneTapLogin from "./GoogleOneTapLogin";
 import "../NavBar/NavBar.css";
@@ -33,9 +33,20 @@ const Login = () => {
   const { dispatch } = useValue();
   const emailRef = useRef();
   const passwordRef = useRef();
+  const location = useLocation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const { currentUser, setCurrentUser } = useContext(Context);
+
+  const resolveRedirectTo = (value) => {
+    if (typeof value !== "string") return "/dashboard";
+    if (!value.startsWith("/")) return "/dashboard";
+    if (value === "/login" || value === "/register") return "/dashboard";
+    return value;
+  };
+
+  const redirectTo = resolveRedirectTo(location?.state?.redirectTo);
 
   // Get theme from context and Material-UI
   const theme = useTheme();
@@ -43,9 +54,9 @@ const Login = () => {
 
   useEffect(() => {
     if (currentUser) {
-      navigate("/");
+      navigate(redirectTo, { replace: true });
     };
-  }, [currentUser, navigate]);
+  }, [currentUser, navigate, redirectTo]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -97,7 +108,7 @@ const Login = () => {
         sessionStorage.setItem("userData", JSON.stringify(userData));
         localStorage.setItem("userData", JSON.stringify(userData));
         setCurrentUser(userData);
-        navigate("/dashboard"); // Redirect to dashboard after login
+        navigate(redirectTo, { replace: true });
       }
     } catch (error) {
       let errorMessage = "An error Occurred: " + error.message;
@@ -111,7 +122,7 @@ const Login = () => {
         errorMessage = "Enter a password";
         errorType = "info";
       } else if (error.code === "auth/user-disabled") {
-        errorMessage = "Account has been blocked by an Admin";
+        errorMessage = "Your account has been disabled. Please contact support.";
         errorType = "error";
       } else if (error.code === "auth/too-many-requests") {
         errorMessage = "Too many failed attempts. Try later";
@@ -127,6 +138,7 @@ const Login = () => {
   };
 
   const handlePasswordReset = async () => {
+    if (googleLoading) return;
     const rawEmail = emailRef.current.value;
     const { isValid, sanitized: email } = validateEmail(rawEmail);
     
@@ -237,7 +249,11 @@ const Login = () => {
                 transition: "transform 0.2s"
               }
             }}
-            onClick={() => navigate("/")}
+            disabled={loading || googleLoading}
+            onClick={() => {
+              if (loading || googleLoading) return;
+              navigate("/");
+            }}
           >
             <Close />
           </IconButton>
@@ -308,6 +324,7 @@ const Login = () => {
                 variant="contained"
                 endIcon={<Send />}
                 fullWidth
+                disabled={loading || googleLoading}
                 sx={{
                   py: 1.5,
                   borderRadius: 2,
@@ -333,7 +350,7 @@ const Login = () => {
           </Box>
 
           <Box sx={{ px: 3, py: 2, textAlign: "center" }}>
-            <GoogleOneTapLogin />
+            <GoogleOneTapLogin onLoadingChange={setGoogleLoading} />
           </Box>
 
           <Box sx={{
@@ -358,6 +375,7 @@ const Login = () => {
               </Typography>
               <Button
                 onClick={handlePasswordReset}
+                disabled={loading || googleLoading}
                 sx={{
                   textTransform: "none",
                   fontWeight: "600",
@@ -383,7 +401,11 @@ const Login = () => {
                 Don't have an account?
               </Typography>
               <Button
-                onClick={() => navigate("/register")}
+                onClick={() => {
+                  if (loading || googleLoading) return;
+                  navigate("/register", { state: { redirectTo } });
+                }}
+                disabled={loading || googleLoading}
                 sx={{
                   textTransform: "none",
                   fontWeight: "600",

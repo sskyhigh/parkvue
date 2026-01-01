@@ -121,7 +121,7 @@ const AIChatBot = ({ isOpenProp, setIsOpenProp, customToggle }) => {
         return () => {
             document.body.style.overflow = 'unset';
         };
-    }, [isOpen]);
+    }, [isOpen, setIsOpen]);
 
     // Close chatbot when clicking outside
     useEffect(() => {
@@ -145,7 +145,7 @@ const AIChatBot = ({ isOpenProp, setIsOpenProp, customToggle }) => {
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [isOpen]);
+    }, [isOpen, setIsOpen]);
 
     const handleSend = async () => {
         if (!input.trim()) return;

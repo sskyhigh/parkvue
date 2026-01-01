@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState, useContext } from "react";
 import { collection, getDocs, db, doc, getDoc, updateDoc, setDoc, increment, serverTimestamp, query as firebaseQuery, where } from "../../firebase/config";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { documentId, getCountFromServer, limit, orderBy } from "firebase/firestore";
 import {
   Box,
@@ -52,7 +52,6 @@ import {
   Warning,
   Info,
   FilterList as FilterIcon,
-  ExpandMore,
   ExpandLess,
   RestartAlt,
   Chat as ChatIcon,
@@ -61,6 +60,7 @@ import {
   PlayCircle,
 } from "@mui/icons-material";
 import { Context } from "../../context/ContextProvider";
+import { getRoomCapacity, isRoomAvailable } from "../../utils/capacity";
 
 const Rooms = () => {
   const theme = useTheme();
@@ -68,6 +68,7 @@ const Rooms = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { currentUser, dispatch } = useContext(Context);
+  const location = useLocation();
 
   // Media loading cache (avoids repeated skeleton flashes when paginating/back)
   const loadedMediaSrcRef = useRef(new Set());
@@ -210,12 +211,17 @@ const Rooms = () => {
 
         if (useServerPagination) {
           // Counts (for pageCount + chips)
-          const [totalAgg, reservedAgg] = await Promise.all([
+          const [totalAgg, reservedLegacyAgg, reservedCapacityAgg] = await Promise.all([
             getCountFromServer(roomCollection),
+            // Legacy docs
             getCountFromServer(firebaseQuery(roomCollection, where('available', '==', false))),
+            // New docs
+            getCountFromServer(firebaseQuery(roomCollection, where('capacity', '==', 0))),
           ]);
           const total = totalAgg.data().count || 0;
-          const reserved = reservedAgg.data().count || 0;
+          const reservedLegacy = reservedLegacyAgg.data().count || 0;
+          const reservedNew = reservedCapacityAgg.data().count || 0;
+          const reserved = Math.min(total, reservedLegacy + reservedNew);
           const available = Math.max(0, total - reserved);
           if (mounted) setServerCounts({ total, available, reserved });
 
@@ -331,9 +337,9 @@ const Rooms = () => {
 
     // Apply filters
     if (filterStatus === 'available') {
-      filtered = filtered.filter(r => r.available !== false);
+      filtered = filtered.filter((r) => isRoomAvailable(r));
     } else if (filterStatus === 'reserved') {
-      filtered = filtered.filter(r => r.available === false);
+      filtered = filtered.filter((r) => !isRoomAvailable(r));
     }
 
     if (filterVehicle) {
@@ -353,8 +359,8 @@ const Rooms = () => {
     }
 
     // stable partition: available first, reserved last
-    const available = filtered.filter((r) => r.available !== false);
-    const reserved = filtered.filter((r) => r.available === false);
+    const available = filtered.filter((r) => isRoomAvailable(r));
+    const reserved = filtered.filter((r) => !isRoomAvailable(r));
     return [...available, ...reserved];
   }, [rooms, query, filterStatus, filterVehicle, filterAmenity, filterSecurity, filterCity]);
 
@@ -371,10 +377,10 @@ const Rooms = () => {
 
     return {
       total: filtered.length,
-      available: filtered.filter(r => r.available !== false).length,
-      reserved: filtered.filter(r => r.available === false).length
+      available: filtered.filter((r) => isRoomAvailable(r)).length,
+      reserved: filtered.filter((r) => !isRoomAvailable(r)).length
     };
-  }, [rooms, query, filterVehicle, filterAmenity, filterSecurity, filterCity]);
+  }, [rooms, query, filterVehicle, filterAmenity, filterSecurity, filterCity, serverCounts, useServerPagination]);
 
   // pagination
   const pageCount = useServerPagination
@@ -687,7 +693,8 @@ const Rooms = () => {
           <Box>
             <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }}>
               {displayed.map((room, index) => {
-                const isAvailable = room.available !== false;
+                const capacity = getRoomCapacity(room);
+                const isAvailable = capacity > 0;
                 const imgSrc = (room.images && room.images.length ? room.images[0] : "") || "/placeholder-park.jpg";
                 const isImgLoaded = loadedMediaSrcRef.current.has(imgSrc);
                 return (
@@ -739,6 +746,27 @@ const Rooms = () => {
                         >
                           {isAvailable ? <CheckCircle sx={{ fontSize: 14 }} /> : <Warning sx={{ fontSize: 14 }} />}
                           {isAvailable ? "AVAILABLE" : "RESERVED"}
+                        </Box>
+
+                        {/* Capacity Badge */}
+                        <Box
+                          sx={{
+                            position: "absolute",
+                            top: 54,
+                            left: 16,
+                            zIndex: 2,
+                            px: 1.25,
+                            py: 0.5,
+                            borderRadius: 100,
+                            bgcolor: alpha(theme.palette.background.paper, 0.9),
+                            color: theme.palette.text.primary,
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.08)',
+                            backdropFilter: 'blur(4px)',
+                          }}
+                        >
+                          Spaces: {capacity}
                         </Box>
 
                         {/* Price Tag */}
@@ -1272,9 +1300,9 @@ const Rooms = () => {
                           ${Number(selectedRoom.price || 0).toFixed(2)}
                         </Typography>
                         <Chip
-                          label={selectedRoom.available ? "Available" : "Reserved"}
-                          color={selectedRoom.available ? "success" : "error"}
-                          icon={selectedRoom.available ? <CheckCircle /> : <Warning />}
+                          label={isRoomAvailable(selectedRoom) ? `Available (${getRoomCapacity(selectedRoom)})` : "Reserved"}
+                          color={isRoomAvailable(selectedRoom) ? "success" : "error"}
+                          icon={isRoomAvailable(selectedRoom) ? <CheckCircle /> : <Warning />}
                           sx={{ fontWeight: 600 }}
                         />
                       </Stack>
@@ -1439,7 +1467,10 @@ const Rooms = () => {
                               startIcon={<ChatIcon />}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                if (!currentUser) return navigate('/login');
+                                if (!currentUser)
+                                  return navigate('/login', {
+                                    state: { redirectTo: location.pathname + location.search },
+                                  });
                                 setOpenDialog(false);
                                 dispatch({
                                   type: 'UPDATE_CHAT',
@@ -1482,7 +1513,7 @@ const Rooms = () => {
           <Button
             variant="contained"
             onClick={handleBookClick}
-            disabled={!selectedRoom?.available}
+            disabled={!isRoomAvailable(selectedRoom)}
             sx={{ borderRadius: 2, px: 4 }}
             startIcon={<CheckCircle />}
           >
