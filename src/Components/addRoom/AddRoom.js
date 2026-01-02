@@ -856,7 +856,7 @@ CONSTRAINTS:
                         borderRadius: 2,
                       }}
                     >
-                      {aiAssistLoading ? "Generating…" : "AI"}
+                      {aiAssistLoading ? "Generating…" : "Suggest"}
                     </Button>
                   </Box>
 
