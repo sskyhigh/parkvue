@@ -42,6 +42,7 @@ const Login = () => {
   const resolveRedirectTo = (value) => {
     if (typeof value !== "string") return "/dashboard";
     if (!value.startsWith("/")) return "/dashboard";
+    if (value === "/") return "/dashboard";
     if (value === "/login" || value === "/register") return "/dashboard";
     return value;
   };
@@ -103,11 +104,13 @@ const Login = () => {
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
-        const userData = querySnapshot.docs[0].data();
+        const preferredDoc = querySnapshot.docs.find((d) => d.id === user.uid) || querySnapshot.docs[0];
+        const userData = preferredDoc.data();
         // Store userData in localSession
-        sessionStorage.setItem("userData", JSON.stringify(userData));
-        localStorage.setItem("userData", JSON.stringify(userData));
-        setCurrentUser(userData);
+        const merged = { ...(userData || {}), userDocId: preferredDoc.id };
+        sessionStorage.setItem("userData", JSON.stringify(merged));
+        localStorage.setItem("userData", JSON.stringify(merged));
+        setCurrentUser(merged);
         navigate(redirectTo, { replace: true });
       }
     } catch (error) {

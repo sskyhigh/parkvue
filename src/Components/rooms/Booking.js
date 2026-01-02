@@ -39,6 +39,11 @@ import {
   ListItemText,
   Fade,
   Skeleton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 import {
   Home,
@@ -110,6 +115,8 @@ const Booking = () => {
   const navigate = useNavigate();
   const theme = useTheme();
 
+  const bookingDraftKey = `parkvue_booking_draft:${roomId || "unknown"}`;
+
   // room data state
   const [room, setRoom] = useState(
     location.state?.room ?? undefined
@@ -126,6 +133,9 @@ const Booking = () => {
   const [processing, setProcessing] = useState(false);
   const [errors, setErrors] = useState({});
 
+  // auth-required dialog
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+
   // booking duration state
   const [bookingStart, setBookingStart] = useState("");
   const [bookingEnd, setBookingEnd] = useState("");
@@ -134,6 +144,79 @@ const Booking = () => {
   const [totalPrice, setTotalPrice] = useState(0);
   const [serviceFee, setServiceFee] = useState(0);
   const [totalWithFee, setTotalWithFee] = useState(0);
+
+  const saveBookingDraft = () => {
+    try {
+      if (!roomId) return;
+      const draft = {
+        roomId,
+        bookingStart,
+        bookingEnd,
+        spacesRequested,
+        cardName,
+        cardNumber,
+        cardExpiry,
+        cardCvc,
+        savedAt: Date.now(),
+      };
+      sessionStorage.setItem(bookingDraftKey, JSON.stringify(draft));
+    } catch {
+      // best-effort: ignore storage failures
+    }
+  };
+
+  const clearBookingDraft = () => {
+    try {
+      if (!roomId) return;
+      sessionStorage.removeItem(bookingDraftKey);
+    } catch {
+      // ignore
+    }
+  };
+
+  // Restore draft after login/signup (or after accidental navigation)
+  useEffect(() => {
+    if (!roomId) return;
+
+    // Only restore into a fresh form (avoid overwriting active edits)
+    const looksEmpty =
+      !bookingStart &&
+      !bookingEnd &&
+      (!spacesRequested || spacesRequested === 1) &&
+      !cardName &&
+      !cardNumber &&
+      !cardExpiry &&
+      !cardCvc;
+
+    if (!looksEmpty) return;
+
+    try {
+      const raw = sessionStorage.getItem(bookingDraftKey);
+      if (!raw) return;
+      const draft = JSON.parse(raw);
+      if (!draft || draft.roomId !== roomId) return;
+
+      if (typeof draft.bookingStart === "string") setBookingStart(draft.bookingStart);
+      if (typeof draft.bookingEnd === "string") setBookingEnd(draft.bookingEnd);
+      if (draft.spacesRequested != null) {
+        const n = Number.parseInt(String(draft.spacesRequested), 10);
+        setSpacesRequested(Number.isFinite(n) && n > 0 ? n : 1);
+      }
+
+      if (typeof draft.cardName === "string") setCardName(draft.cardName);
+      if (typeof draft.cardNumber === "string") setCardNumber(draft.cardNumber);
+      if (typeof draft.cardExpiry === "string") setCardExpiry(draft.cardExpiry);
+      if (typeof draft.cardCvc === "string") setCardCvc(draft.cardCvc);
+
+      dispatch({
+        type: "UPDATE_ALERT",
+        payload: { open: true, severity: "info", message: "Restored your booking details." },
+      });
+    } catch {
+      // ignore
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomId]);
 
   const remainingCapacity = getRoomCapacity(room);
   const availableNow = isRoomAvailable(room);
@@ -283,10 +366,7 @@ const Booking = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!currentUser || !currentUser.uid) {
-      dispatch({
-        type: "UPDATE_ALERT",
-        payload: { open: true, severity: "error", message: "You must be logged in to book." },
-      });
+      setLoginDialogOpen(true);
       return;
     }
     if (!validate()) return;
@@ -384,6 +464,8 @@ const Booking = () => {
         type: "UPDATE_ALERT",
         payload: { open: true, severity: "success", message: "Payment accepted — room reserved!" },
       });
+
+      clearBookingDraft();
 
       // navigate to rooms list
       navigate("/dashboard");
@@ -709,6 +791,41 @@ if (!loading && !room) {
       }}
     >
       <Container maxWidth="lg">
+        <Dialog
+          open={loginDialogOpen}
+          onClose={() => setLoginDialogOpen(false)}
+          aria-labelledby="login-required-title"
+          aria-describedby="login-required-description"
+          fullWidth
+          maxWidth="xs"
+        >
+          <DialogTitle id="login-required-title">Log in required</DialogTitle>
+          <DialogContent>
+            <DialogContentText id="login-required-description">
+              You need to log in to complete this booking. Your entered booking details will be saved so you can
+              continue after signing in.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setLoginDialogOpen(false)} color="inherit">
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={() => {
+                setLoginDialogOpen(false);
+                saveBookingDraft();
+                navigate("/login", {
+                  state: { redirectTo: location.pathname + location.search },
+                  replace: false,
+                });
+              }}
+            >
+              Go to login
+            </Button>
+          </DialogActions>
+        </Dialog>
+
         {/* Header Section */}
         <Box sx={{ mb: 4, ...slideIn, animation: "slideIn 0.5s ease-out" }}>
           <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 1 }}>

@@ -28,10 +28,8 @@ import {
 import { Context } from "../../context/ContextProvider";
 import { marked } from "marked";
 import badWords from "./badwords";
-
-// Google Generative AI (ESM clean import)
-import { GoogleGenAI } from "@google/genai";
 import useParkvueAIConfig from "../chatbot/useParkvueAIConfig";
+import { generateParkvueAIText } from "../../ai/parkvueAI";
 
 const AIChatBot = ({ isOpenProp, setIsOpenProp, customToggle }) => {
     const theme = useTheme();
@@ -59,10 +57,6 @@ const AIChatBot = ({ isOpenProp, setIsOpenProp, customToggle }) => {
     const chatBoxRef = useRef(null);
     const inputRef = useRef(null);
 
-    // Initialize Gemini
-    const apiKey = process.env.REACT_APP_GOOGLE_AI_API_KEY;
-    const ai = new GoogleGenAI({ apiKey: apiKey });
-
     // Load history
     useEffect(() => {
         if (currentUser?.uid) {
@@ -88,12 +82,11 @@ const AIChatBot = ({ isOpenProp, setIsOpenProp, customToggle }) => {
     }, [messages, currentUser]);
 
     async function generateResponse(text) {
-        const response = await ai.models.generateContent({
+        return await generateParkvueAIText({
             model: "gemini-2.5-flash",
             config,
             contents: text,
         });
-        return response.text;
     }
 
     const scrollToBottom = () => {

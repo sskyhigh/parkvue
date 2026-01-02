@@ -21,8 +21,8 @@ import {
   auth,
   db,
   createUserWithEmailAndPassword,
-  collection,
-  addDoc,
+  doc,
+  setDoc,
 } from "../../firebase/config";
 import { sanitizeName, validateEmail, sanitizePassword } from "../../utils/sanitize";
 
@@ -41,6 +41,7 @@ const Register = () => {
   const resolveRedirectTo = (value) => {
     if (typeof value !== "string") return "/dashboard";
     if (!value.startsWith("/")) return "/dashboard";
+    if (value === "/") return "/dashboard";
     if (value === "/login" || value === "/register") return "/dashboard";
     return value;
   };
@@ -126,7 +127,9 @@ const Register = () => {
         email: email,
       };
 
-      await addDoc(collection(db, "users"), userData);
+      // Use uid as doc id to avoid duplicates and be idempotent.
+      // This also matches GoogleOneTapLogin's user doc strategy.
+      await setDoc(doc(db, "users", user.uid), userData, { merge: true });
 
       dispatch({
         type: "UPDATE_ALERT",
@@ -137,9 +140,10 @@ const Register = () => {
         },
       });
 
-      sessionStorage.setItem("userData", JSON.stringify(userData));
-      localStorage.setItem("userData", JSON.stringify(userData));
-      setCurrentUser(userData);
+      const merged = { ...userData, userDocId: user.uid };
+      sessionStorage.setItem("userData", JSON.stringify(merged));
+      localStorage.setItem("userData", JSON.stringify(merged));
+      setCurrentUser(merged);
       navigate(redirectTo, { replace: true });
     } catch (error) {
       let errorMessage = "An error occurred:" + error.message;

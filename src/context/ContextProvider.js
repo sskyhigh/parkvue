@@ -140,7 +140,7 @@ const ContextProvider = ({ children }) => {
         }
 
         const storedUser = getStoredUser();
-        const userDoc = querySnapshot.docs[0];
+        const userDoc = querySnapshot.docs.find((d) => d.id === firebaseUser.uid) || querySnapshot.docs[0];
         const freshData = userDoc.data() || {};
 
         const authBackfill = {

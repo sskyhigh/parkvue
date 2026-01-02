@@ -19,6 +19,7 @@ const GoogleOAuthLogin = ({ onLoadingChange } = {}) => {
   const resolveRedirectTo = (value) => {
     if (typeof value !== "string") return "/dashboard";
     if (!value.startsWith("/")) return "/dashboard";
+    if (value === "/") return "/dashboard";
     if (value === "/login" || value === "/register") return "/dashboard";
     return value;
   };

@@ -298,11 +298,14 @@ const Rooms = () => {
 
   const handleBookClick = () => {
     if (selectedRoom) {
-      navigate(`/booking/${selectedRoom.id}`, {
+      const roomToBook = selectedRoom;
+      setOpenDialog(false);
+      setSelectedRoom(null);
+      navigate(`/booking/${roomToBook.id}`, {
         state: {
-          room: selectedRoom,
-          self: selectedRoom.ownerEmail === currentUser.email ? true : false
-        }
+          room: roomToBook,
+          self: !!(currentUser?.email && roomToBook?.ownerEmail && roomToBook.ownerEmail === currentUser.email),
+        },
       });
     }
   };

@@ -35,6 +35,7 @@ import {
   CarRental,
   Security,
   MonetizationOn,
+  AutoAwesome,
 } from "@mui/icons-material";
 import { useDropzone } from "react-dropzone";
 import ReactMapGL, {
@@ -57,6 +58,8 @@ import {
   sanitizeTextarea
 } from "../../utils/sanitize";
 import { MAX_LISTING_CAPACITY } from "../../utils/capacity";
+import { generateParkvueAIText, parseAIJSONObject } from "../../ai/parkvueAI";
+import { getListingAIConfig } from "../../ai/listingAIConfig";
 
 const AddRoom = () => {
   const theme = useTheme();
@@ -81,6 +84,10 @@ const AddRoom = () => {
     latitude: location.lat || 40.7128,
     zoom: 12,
   });
+
+  const [showAIAssist, setShowAIAssist] = useState(false);
+  const [aiAssistLoading, setAiAssistLoading] = useState(false);
+  const hideAIAssistTimerRef = useRef(null);
 
   // Form fields state
   const [formData, setFormData] = useState({
@@ -202,6 +209,107 @@ const AddRoom = () => {
       ...prev,
       [field]: value
     }));
+  };
+
+  const showAIAssistNow = () => {
+    if (hideAIAssistTimerRef.current) {
+      clearTimeout(hideAIAssistTimerRef.current);
+    }
+    setShowAIAssist(true);
+  };
+
+  const scheduleHideAIAssist = () => {
+    if (hideAIAssistTimerRef.current) {
+      clearTimeout(hideAIAssistTimerRef.current);
+    }
+    hideAIAssistTimerRef.current = setTimeout(() => {
+      setShowAIAssist(false);
+    }, 150);
+  };
+
+  const handleGenerateTitleAndDescription = async () => {
+    if (aiAssistLoading) return;
+
+    const address = String(formData.address || "").trim();
+    const city = String(formData.city || "").trim();
+    const stateVal = String(formData.state || "").trim();
+    const zipCode = String(formData.zipCode || "").trim();
+
+    if (!address || !city || !stateVal || !zipCode) {
+      dispatch({
+        type: "UPDATE_ALERT",
+        payload: {
+          open: true,
+          severity: "error",
+          message: "Please complete the address, city, state, and ZIP code first.",
+        },
+      });
+      return;
+    }
+
+    setAiAssistLoading(true);
+    try {
+      const listingConfig = getListingAIConfig();
+
+      const prompt = `Generate a parking spot listing title and description for this location.
+
+LOCATION DETAILS:
+- Address: ${address}
+- City: ${city}
+- State: ${stateVal}
+- ZIP Code: ${zipCode}
+
+OUTPUT FORMAT (MUST FOLLOW EXACTLY):
+Return ONLY a single JSON object with exactly these keys:
+{"title":"...","description":"..."}
+
+CONSTRAINTS:
+- Do not include markdown or code fences.
+- Do not include any other keys.
+- Title should be appealing and specific to the area.
+- Description should be one paragraph, no line breaks.
+`;
+
+      const text = await generateParkvueAIText({
+        model: "gemini-2.5-flash",
+        config: listingConfig,
+        contents: prompt,
+      });
+
+      const parsed = parseAIJSONObject(text);
+      const nextTitle = typeof parsed.title === "string" ? parsed.title.trim() : "";
+      const nextDescription =
+        typeof parsed.description === "string" ? parsed.description.trim() : "";
+
+      if (!nextTitle || !nextDescription) {
+        throw new Error("AI response missing title or description.");
+      }
+
+      handleChange("title", nextTitle);
+      handleChange("description", nextDescription);
+
+      dispatch({
+        type: "UPDATE_ALERT",
+        payload: {
+          open: true,
+          severity: "success",
+          message: "AI generated a title and description.",
+        },
+      });
+    } catch (error) {
+      dispatch({
+        type: "UPDATE_ALERT",
+        payload: {
+          open: true,
+          severity: "error",
+          message:
+            "Failed to generate listing text. Please try again." +
+            (error?.message ? ` (${error.message})` : ""),
+        },
+      });
+    } finally {
+      setAiAssistLoading(false);
+    }
   };
 
   // Handle file upload
@@ -718,7 +826,41 @@ const AddRoom = () => {
                   Parking Details
                 </Typography>
 
-                <Grid container spacing={2}>
+                <Box sx={{ position: "relative" }}>
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: -8,
+                      right: 0,
+                      opacity: showAIAssist ? 1 : 0,
+                      pointerEvents: showAIAssist ? "auto" : "none",
+                      transition: "opacity 150ms ease",
+                      zIndex: 2,
+                    }}
+                  >
+                    <Button
+                      variant="contained"
+                      size="small"
+                      startIcon={
+                        aiAssistLoading ? (
+                          <CircularProgress size={16} color="inherit" />
+                        ) : (
+                          <AutoAwesome />
+                        )
+                      }
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={handleGenerateTitleAndDescription}
+                      disabled={aiAssistLoading}
+                      sx={{
+                        textTransform: "none",
+                        borderRadius: 2,
+                      }}
+                    >
+                      {aiAssistLoading ? "Generating…" : "AI"}
+                    </Button>
+                  </Box>
+
+                  <Grid container spacing={2}>
                   <Grid item xs={12}>
                     <TextField
                       fullWidth
@@ -728,6 +870,8 @@ const AddRoom = () => {
                       placeholder="e.g., Spacious Downtown Parking Spot"
                       required
                       helperText="Make it descriptive and attractive"
+                      onFocus={showAIAssistNow}
+                      onBlur={scheduleHideAIAssist}
                     />
                   </Grid>
                   <Grid item xs={12}>
@@ -741,6 +885,8 @@ const AddRoom = () => {
                       rows={4}
                       required
                       helperText="Describe features, size, access instructions, etc."
+                      onFocus={showAIAssistNow}
+                      onBlur={scheduleHideAIAssist}
                     />
                   </Grid>
                   <Grid item xs={12} sm={3}>
@@ -815,7 +961,8 @@ const AddRoom = () => {
                       helperText="When will the availability end?"
                     />
                   </Grid>
-                </Grid>
+                  </Grid>
+                </Box>
               </Box>
 
               <Box sx={{ mb: 4 }}>
@@ -915,7 +1062,7 @@ const AddRoom = () => {
 
                 <Box
                   sx={{
-                    height: 300,
+                    height: { xs: 300, md: 450 },
                     borderRadius: 2,
                     overflow: "hidden",
                     border: `1px solid ${alpha(theme.palette.divider, 0.3)}`,
