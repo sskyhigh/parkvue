@@ -30,11 +30,14 @@ server/node_modules
 # /coverage
 
 # production
-# /build
+/build
 
 # misc
 #.DS_Store
 .env
+
+# Keep the example env file committed
+!.env.example
 .env.local
 .env.development.local
 .env.test.local

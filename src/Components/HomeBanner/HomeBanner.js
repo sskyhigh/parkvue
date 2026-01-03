@@ -20,17 +20,29 @@ import {
   query as fsQuery,
   orderBy,
   limit as fsLimit,
-  where as fsWhere,
   getDocs,
 } from "firebase/firestore";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import { useState, useEffect } from "react";
+import { isRoomAvailable } from "../../utils/capacity";
 
 // Slide animation
 const slideIn = keyframes`
   from { opacity: 0; transform: translateX(20px); }
   to { opacity: 1; transform: translateX(0); }
 `;
+
+const MOCK_CAR_IMAGES = [
+  "/car_images/img1.jpg",
+  "/car_images/img2.jpg",
+  "/car_images/img3.jpg",
+  "/car_images/img4.jpg",
+  "/car_images/img5.jpg",
+  "/car_images/img6.jpg",
+  "/car_images/img7.jpg",
+  "/car_images/img8.jpg",
+  "/car_images/img9.jpg",
+];
 
 function HomeBanner() {
   const theme = useTheme();
@@ -42,19 +54,6 @@ function HomeBanner() {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Mock image paths - you can replace this with actual API call to your backend
-  const mockCarImages = [
-    "/car_images/img1.jpg",
-    "/car_images/img2.jpg",
-    "/car_images/img3.jpg",
-    "/car_images/img4.jpg",
-    "/car_images/img5.jpg",
-    "/car_images/img6.jpg",
-    "/car_images/img7.jpg",
-    "/car_images/img8.jpg",
-    "/car_images/img9.jpg",
-  ];
-
   useEffect(() => {
     // fetch recent rooms and build slides
     let mounted = true;
@@ -63,33 +62,36 @@ function HomeBanner() {
         const roomsRef = collection(db, "rooms");
         const q = fsQuery(
           roomsRef,
-          fsWhere("available", "==", true),
           orderBy("createdAt", "desc"),
-          fsLimit(9)
+          // Fetch more than we need, then filter client-side for capacity/legacy availability
+          fsLimit(30)
         );
         const snap = await getDocs(q);
         if (!mounted) return;
         const rooms = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
         const roomSlides = [];
         rooms.forEach((r) => {
+          if (!isRoomAvailable(r)) return;
           if (r.images && r.images.length > 0) {
             roomSlides.push({ src: r.images[0], room: r });
           }
         });
 
-        if (roomSlides.length > 0) {
-          setSlides(roomSlides);
-          setCarImages(roomSlides.map((s) => s.src));
+        const limitedSlides = roomSlides.slice(0, 9);
+
+        if (limitedSlides.length > 0) {
+          setSlides(limitedSlides);
+          setCarImages(limitedSlides.map((s) => s.src));
         } else {
           // fallback to static images
-          setSlides(mockCarImages.map((s) => ({ src: s, room: null })));
-          setCarImages(mockCarImages);
+          setSlides(MOCK_CAR_IMAGES.map((s) => ({ src: s, room: null })));
+          setCarImages(MOCK_CAR_IMAGES);
         }
       } catch (err) {
         console.error("Error fetching rooms:", err);
         // fallback to static images on error
-        setSlides(mockCarImages.map((s) => ({ src: s, room: null })));
-        setCarImages(mockCarImages);
+        setSlides(MOCK_CAR_IMAGES.map((s) => ({ src: s, room: null })));
+        setCarImages(MOCK_CAR_IMAGES);
       } finally {
         setIsLoading(false);
       }
@@ -118,7 +120,7 @@ function HomeBanner() {
   // reset currentSlide if slides change and index out of range
   useEffect(() => {
     if (currentSlide >= carImages.length) setCurrentSlide(0);
-  }, [carImages.length]);
+  }, [carImages.length, currentSlide]);
 
   return (
     <Box

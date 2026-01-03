@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import { PulseLoader } from "react-spinners";
 import { Close, Send } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import GoogleOneTapLogin from "./GoogleOneTapLogin";
 import PasswordField from "./PasswordField";
 import "../NavBar/NavBar.css"; // Assuming some CSS here
@@ -21,8 +21,8 @@ import {
   auth,
   db,
   createUserWithEmailAndPassword,
-  collection,
-  addDoc,
+  doc,
+  setDoc,
 } from "../../firebase/config";
 import { sanitizeName, validateEmail, sanitizePassword } from "../../utils/sanitize";
 
@@ -32,9 +32,21 @@ const Register = () => {
   const emailRef = useRef();
   const passwordRef = useRef();
   const confirmPasswordRef = useRef();
+  const location = useLocation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const { currentUser, setCurrentUser } = useContext(Context);
+
+  const resolveRedirectTo = (value) => {
+    if (typeof value !== "string") return "/dashboard";
+    if (!value.startsWith("/")) return "/dashboard";
+    if (value === "/") return "/dashboard";
+    if (value === "/login" || value === "/register") return "/dashboard";
+    return value;
+  };
+
+  const redirectTo = resolveRedirectTo(location?.state?.redirectTo);
 
   // Get theme from context and Material-UI
   const theme = useTheme();
@@ -42,9 +54,9 @@ const Register = () => {
 
   useEffect(() => {
     if (currentUser) {
-      navigate("/dashboard"); // Redirect to dashboard if already logged in
+      navigate(redirectTo, { replace: true });
     };
-  }, [currentUser, navigate]);
+  }, [currentUser, navigate, redirectTo]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -115,7 +127,9 @@ const Register = () => {
         email: email,
       };
 
-      await addDoc(collection(db, "users"), userData);
+      // Use uid as doc id to avoid duplicates and be idempotent.
+      // This also matches GoogleOneTapLogin's user doc strategy.
+      await setDoc(doc(db, "users", user.uid), userData, { merge: true });
 
       dispatch({
         type: "UPDATE_ALERT",
@@ -126,10 +140,11 @@ const Register = () => {
         },
       });
 
-      sessionStorage.setItem("userData", JSON.stringify(userData));
-      localStorage.setItem("userData", JSON.stringify(userData));
-      setCurrentUser(userData);
-      navigate("/profile"); // Redirect to profile after registration
+      const merged = { ...userData, userDocId: user.uid };
+      sessionStorage.setItem("userData", JSON.stringify(merged));
+      localStorage.setItem("userData", JSON.stringify(merged));
+      setCurrentUser(merged);
+      navigate(redirectTo, { replace: true });
     } catch (error) {
       let errorMessage = "An error occurred:" + error.message;
       let errorType = "error";
@@ -252,7 +267,11 @@ const Register = () => {
                 transition: "transform 0.2s"
               }
             }}
-            onClick={() => navigate("/")}
+            disabled={loading || googleLoading}
+            onClick={() => {
+              if (loading || googleLoading) return;
+              navigate("/");
+            }}
           >
             <Close />
           </IconButton>
@@ -260,7 +279,7 @@ const Register = () => {
 
         <form onSubmit={handleSubmit} noValidate>
           <Box sx={{ pb: 2, textAlign: "center", pt: 3 }}>
-            <GoogleOneTapLogin />
+            <GoogleOneTapLogin onLoadingChange={setGoogleLoading} />
           </Box>
 
           <Typography
@@ -397,6 +416,7 @@ const Register = () => {
                 variant="contained"
                 endIcon={<Send />}
                 fullWidth
+                disabled={loading || googleLoading}
                 sx={{
                   py: 1.5,
                   borderRadius: 2,
@@ -437,7 +457,11 @@ const Register = () => {
             Already have an account?
           </Typography>
           <Button
-            onClick={() => navigate("/login")}
+            onClick={() => {
+              if (loading || googleLoading) return;
+              navigate("/login", { state: { redirectTo } });
+            }}
+            disabled={loading || googleLoading}
             sx={{
               textTransform: "none",
               fontWeight: "600",

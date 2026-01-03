@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState, useContext } from "react";
+import React, { useEffect, useMemo, useRef, useState, useContext } from "react";
 import { collection, getDocs, db, doc, getDoc, updateDoc, setDoc, increment, serverTimestamp, query as firebaseQuery, where } from "../../firebase/config";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { documentId, getCountFromServer, limit, orderBy } from "firebase/firestore";
 import {
   Box,
   Button,
@@ -16,9 +17,11 @@ import {
   IconButton,
   Pagination,
   Stack,
+  Skeleton,
   TextField,
   Typography,
   useTheme,
+  useMediaQuery,
   Chip,
   CircularProgress,
   Paper,
@@ -49,7 +52,6 @@ import {
   Warning,
   Info,
   FilterList as FilterIcon,
-  ExpandMore,
   ExpandLess,
   RestartAlt,
   Chat as ChatIcon,
@@ -58,19 +60,31 @@ import {
   PlayCircle,
 } from "@mui/icons-material";
 import { Context } from "../../context/ContextProvider";
-
-const ROOMS_PER_PAGE = 12;
+import { getRoomCapacity, isRoomAvailable } from "../../utils/capacity";
 
 const Rooms = () => {
   const theme = useTheme();
+  const isSmUp = useMediaQuery(theme.breakpoints.up('sm'));
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { currentUser, dispatch } = useContext(Context);
+  const location = useLocation();
+
+  // Media loading cache (avoids repeated skeleton flashes when paginating/back)
+  const loadedMediaSrcRef = useRef(new Set());
+  const [mediaLoadTick, setMediaLoadTick] = useState(0);
+
+  // Pagination size (user-configurable)
+  const [roomsPerPage, setRoomsPerPage] = useState(8);
+  const resultsPerPageOptions = [8, 16, 24, 32];
 
   const [rooms, setRooms] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [loading, setLoading] = useState(true);
   const [photoIndex, setPhotoIndex] = useState(0);
+
+  const [activeMediaLoaded, setActiveMediaLoaded] = useState(false);
 
   // Derive media list
   const mediaList = useMemo(() => {
@@ -89,6 +103,16 @@ const Rooms = () => {
     setPhotoIndex(0);
   }, [selectedRoom]);
 
+  useEffect(() => {
+    const active = mediaList?.[photoIndex];
+    if (!active) return;
+    if (active.type === 'image' && loadedMediaSrcRef.current.has(active.src)) {
+      setActiveMediaLoaded(true);
+    } else {
+      setActiveMediaLoaded(false);
+    }
+  }, [photoIndex, mediaList, selectedRoom, mediaLoadTick]);
+
   const handleNextMedia = () => {
     setPhotoIndex((prev) => (prev + 1) % mediaList.length);
   };
@@ -98,7 +122,19 @@ const Rooms = () => {
   };
 
   const [query, setQuery] = useState("");
-  const [page, setPage] = useState(1);
+  const getPageFromSearchParams = () => {
+    const raw = searchParams.get('page');
+    const n = Number.parseInt(raw || '1', 10);
+    return Number.isFinite(n) && n > 0 ? n : 1;
+  };
+  const [page, setPage] = useState(getPageFromSearchParams);
+
+  // Keep state in sync if URL changes (back/forward / shared links)
+  useEffect(() => {
+    const urlPage = getPageFromSearchParams();
+    if (urlPage !== page) setPage(urlPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Filter states
   const [filterStatus, setFilterStatus] = useState("all"); // 'all', 'available', 'reserved'
@@ -107,6 +143,18 @@ const Rooms = () => {
   const [filterAmenity, setFilterAmenity] = useState("");
   const [filterSecurity, setFilterSecurity] = useState("");
   const [filterCity, setFilterCity] = useState("");
+
+  // Server-side pagination is enabled only for the default browse mode
+  // (search + filters need the full dataset for correct matching).
+  const useServerPagination =
+    query.trim() === "" &&
+    filterStatus === "all" &&
+    !filterVehicle &&
+    !filterAmenity &&
+    !filterSecurity &&
+    !filterCity;
+
+  const [serverCounts, setServerCounts] = useState({ total: 0, available: 0, reserved: 0 });
 
   // Filter options
   const vehicleTypeOptions = [
@@ -130,20 +178,16 @@ const Rooms = () => {
   // Fetch rooms
   useEffect(() => {
     let mounted = true;
-    const fetchRooms = async () => {
-      try {
-        const roomCollection = collection(db, "rooms");
-        const roomSnapshot = await getDocs(roomCollection);
-        const roomData = roomSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
 
-        // Fetch photoURLs for each room's owner
-        const roomsWithPhotos = await Promise.all(roomData.map(async (room) => {
+    const enrichRoomsWithOwnerPhotos = async (roomData) => {
+      const roomsWithPhotos = await Promise.all(
+        roomData.map(async (room) => {
           if (room.createdBy) {
             try {
-              const userQuery = firebaseQuery(collection(db, 'users'), where('uid', '==', room.createdBy));
+              const userQuery = firebaseQuery(
+                collection(db, 'users'),
+                where('uid', '==', room.createdBy)
+              );
               const userSnapshot = await getDocs(userQuery);
               if (!userSnapshot.empty) {
                 const userData = userSnapshot.docs[0].data();
@@ -154,19 +198,72 @@ const Rooms = () => {
             }
           }
           return room;
-        }));
+        })
+      );
 
-        if (mounted) setRooms(roomsWithPhotos);
-        setLoading(false);
+      return roomsWithPhotos;
+    };
+
+    const fetchRooms = async () => {
+      setLoading(true);
+      try {
+        const roomCollection = collection(db, "rooms");
+
+        if (useServerPagination) {
+          // Counts (for pageCount + chips)
+          const [totalAgg, reservedLegacyAgg, reservedCapacityAgg] = await Promise.all([
+            getCountFromServer(roomCollection),
+            // Legacy docs
+            getCountFromServer(firebaseQuery(roomCollection, where('available', '==', false))),
+            // New docs
+            getCountFromServer(firebaseQuery(roomCollection, where('capacity', '==', 0))),
+          ]);
+          const total = totalAgg.data().count || 0;
+          const reservedLegacy = reservedLegacyAgg.data().count || 0;
+          const reservedNew = reservedCapacityAgg.data().count || 0;
+          const reserved = Math.min(total, reservedLegacy + reservedNew);
+          const available = Math.max(0, total - reserved);
+          if (mounted) setServerCounts({ total, available, reserved });
+
+          const effectivePageCount = Math.max(1, Math.ceil(total / roomsPerPage));
+          const clampedPage = Math.min(Math.max(page, 1), effectivePageCount);
+
+          // Fetch only what's needed to render the requested page.
+          // Firestore doesn't support offsets, so we read up to the end of the page.
+          const fetchLimit = clampedPage * roomsPerPage;
+          const snap = await getDocs(
+            firebaseQuery(roomCollection, orderBy(documentId()), limit(fetchLimit))
+          );
+
+          const allFetched = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+          const start = (clampedPage - 1) * roomsPerPage;
+          const pageRooms = allFetched.slice(start, start + roomsPerPage);
+          const enriched = await enrichRoomsWithOwnerPhotos(pageRooms);
+
+          if (mounted) {
+            setRooms(enriched);
+            // Only clamp AFTER we know how many pages exist.
+            if (clampedPage !== page) setPage(clampedPage);
+          }
+        } else {
+          // Full fetch mode (needed for search + multi-field filtering)
+          const roomSnapshot = await getDocs(roomCollection);
+          const roomData = roomSnapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+          const enriched = await enrichRoomsWithOwnerPhotos(roomData);
+          if (mounted) setRooms(enriched);
+        }
       } catch (err) {
         console.error("Failed to fetch rooms", err);
+      } finally {
+        if (mounted) setLoading(false);
       }
     };
+
     fetchRooms();
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [useServerPagination, page, roomsPerPage, query, filterStatus, filterVehicle, filterAmenity, filterSecurity, filterCity]);
 
   // helpers
   const incrementView = async (roomId) => {
@@ -201,11 +298,14 @@ const Rooms = () => {
 
   const handleBookClick = () => {
     if (selectedRoom) {
-      navigate(`/booking/${selectedRoom.id}`, {
+      const roomToBook = selectedRoom;
+      setOpenDialog(false);
+      setSelectedRoom(null);
+      navigate(`/booking/${roomToBook.id}`, {
         state: {
-          room: selectedRoom,
-          self: selectedRoom.ownerEmail === currentUser.email ? true : false
-        }
+          room: roomToBook,
+          self: !!(currentUser?.email && roomToBook?.ownerEmail && roomToBook.ownerEmail === currentUser.email),
+        },
       });
     }
   };
@@ -240,9 +340,9 @@ const Rooms = () => {
 
     // Apply filters
     if (filterStatus === 'available') {
-      filtered = filtered.filter(r => r.available !== false);
+      filtered = filtered.filter((r) => isRoomAvailable(r));
     } else if (filterStatus === 'reserved') {
-      filtered = filtered.filter(r => r.available === false);
+      filtered = filtered.filter((r) => !isRoomAvailable(r));
     }
 
     if (filterVehicle) {
@@ -262,13 +362,15 @@ const Rooms = () => {
     }
 
     // stable partition: available first, reserved last
-    const available = filtered.filter((r) => r.available !== false);
-    const reserved = filtered.filter((r) => r.available === false);
+    const available = filtered.filter((r) => isRoomAvailable(r));
+    const reserved = filtered.filter((r) => !isRoomAvailable(r));
     return [...available, ...reserved];
   }, [rooms, query, filterStatus, filterVehicle, filterAmenity, filterSecurity, filterCity]);
 
   // counts for badges (ignoring status filter)
   const counts = useMemo(() => {
+    if (useServerPagination) return serverCounts;
+
     let filtered = rooms.filter(r => matchesQuery(r, query));
 
     if (filterVehicle) filtered = filtered.filter(r => r.vehicleTypes && r.vehicleTypes.includes(filterVehicle));
@@ -278,21 +380,32 @@ const Rooms = () => {
 
     return {
       total: filtered.length,
-      available: filtered.filter(r => r.available !== false).length,
-      reserved: filtered.filter(r => r.available === false).length
+      available: filtered.filter((r) => isRoomAvailable(r)).length,
+      reserved: filtered.filter((r) => !isRoomAvailable(r)).length
     };
-  }, [rooms, query, filterVehicle, filterAmenity, filterSecurity, filterCity]);
+  }, [rooms, query, filterVehicle, filterAmenity, filterSecurity, filterCity, serverCounts, useServerPagination]);
 
   // pagination
-  const pageCount = Math.max(1, Math.ceil(filteredOrdered.length / ROOMS_PER_PAGE));
+  const pageCount = useServerPagination
+    ? Math.max(1, Math.ceil((serverCounts.total || 0) / roomsPerPage))
+    : Math.max(1, Math.ceil(filteredOrdered.length / roomsPerPage));
+
+  // Sync page -> URL (?page=) for easy sharing
   useEffect(() => {
-    if (page > pageCount) setPage(1);
-  }, [pageCount]); // reset page if pageCount changes
+    const next = new URLSearchParams(searchParams);
+    if (page <= 1) next.delete('page');
+    else next.set('page', String(page));
+
+    if (next.toString() !== searchParams.toString()) {
+      setSearchParams(next, { replace: true });
+    }
+  }, [page, searchParams, setSearchParams]);
 
   const displayed = useMemo(() => {
-    const start = (page - 1) * ROOMS_PER_PAGE;
-    return filteredOrdered.slice(start, start + ROOMS_PER_PAGE);
-  }, [filteredOrdered, page]);
+    if (useServerPagination) return filteredOrdered;
+    const start = (page - 1) * roomsPerPage;
+    return filteredOrdered.slice(start, start + roomsPerPage);
+  }, [useServerPagination, filteredOrdered, page, roomsPerPage]);
 
   // small helper for nice date
   const prettyDate = (iso) => {
@@ -583,8 +696,10 @@ const Rooms = () => {
           <Box>
             <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }}>
               {displayed.map((room, index) => {
-                const isAvailable = room.available !== false;
-                const img = room.images && room.images.length ? room.images[0] : "";
+                const capacity = getRoomCapacity(room);
+                const isAvailable = capacity > 0;
+                const imgSrc = (room.images && room.images.length ? room.images[0] : "") || "/placeholder-park.jpg";
+                const isImgLoaded = loadedMediaSrcRef.current.has(imgSrc);
                 return (
                   <Grid item xs={12} sm={6} md={4} lg={3} key={room.id}>
                     <Fade in timeout={300}>
@@ -636,6 +751,27 @@ const Rooms = () => {
                           {isAvailable ? "AVAILABLE" : "RESERVED"}
                         </Box>
 
+                        {/* Capacity Badge */}
+                        <Box
+                          sx={{
+                            position: "absolute",
+                            top: 54,
+                            left: 16,
+                            zIndex: 2,
+                            px: 1.25,
+                            py: 0.5,
+                            borderRadius: 100,
+                            bgcolor: alpha(theme.palette.background.paper, 0.9),
+                            color: theme.palette.text.primary,
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.08)',
+                            backdropFilter: 'blur(4px)',
+                          }}
+                        >
+                          Spaces: {capacity}
+                        </Box>
+
                         {/* Price Tag */}
                         <Box
                           sx={{
@@ -675,17 +811,38 @@ const Rooms = () => {
                         >
                           {/* Image Container with Fixed Aspect Ratio */}
                           <Box sx={{ position: 'relative', overflow: 'hidden', height: 220 }}>
+                            {!isImgLoaded && (
+                              <Skeleton
+                                variant="rectangular"
+                                width="100%"
+                                height="100%"
+                                sx={{ position: 'absolute', inset: 0, zIndex: 1 }}
+                              />
+                            )}
                             <CardMedia
                               component="img"
                               className="room-image"
-                              image={img || "/placeholder-park.jpg"}
+                              image={imgSrc}
                               alt={room.title}
+                              onLoad={() => {
+                                if (!loadedMediaSrcRef.current.has(imgSrc)) {
+                                  loadedMediaSrcRef.current.add(imgSrc);
+                                  setMediaLoadTick((t) => t + 1);
+                                }
+                              }}
+                              onError={() => {
+                                if (!loadedMediaSrcRef.current.has(imgSrc)) {
+                                  loadedMediaSrcRef.current.add(imgSrc);
+                                  setMediaLoadTick((t) => t + 1);
+                                }
+                              }}
                               sx={{
                                 width: '100%',
                                 height: '100%',
                                 objectFit: "cover",
                                 transition: "transform 0.6s ease",
                                 filter: !isAvailable ? 'grayscale(0.8)' : 'none',
+                                opacity: isImgLoaded ? 1 : 0,
                               }}
                             />
                             {/* Gradient Overlay */}
@@ -878,25 +1035,58 @@ const Rooms = () => {
         )}
 
         {/* Pagination - responsive size */}
-        {pageCount > 1 && (
-          <Box sx={{ mt: 6, display: "flex", justifyContent: "center", animation: "fadeIn 0.6s ease-out" }}>
-            <Pagination
-              count={pageCount}
-              page={page}
-              onChange={(e, v) => setPage(v)}
-              color="primary"
-              shape="rounded"
-              size={{ xs: "medium", sm: "large" }}
-              siblingCount={{ xs: 0, sm: 1 }}
-              boundaryCount={{ xs: 1, sm: 1 }}
-              sx={{
-                '& .MuiPaginationItem-root': {
-                  borderRadius: 2,
-                  fontWeight: 600,
-                }
-              }}
-            />
-          </Box>
+        {!loading && filteredOrdered.length > 0 && (
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={2}
+            sx={{
+              mt: 6,
+              alignItems: "center",
+              justifyContent: "center",
+              animation: "fadeIn 0.6s ease-out",
+            }}
+          >
+            <FormControl size="small" sx={{ minWidth: 180 }}>
+              <InputLabel id="rooms-per-page-label">Results per page</InputLabel>
+              <Select
+                labelId="rooms-per-page-label"
+                value={roomsPerPage}
+                label="Results per page"
+                onChange={(e) => {
+                  const nextRoomsPerPage = Number(e.target.value);
+                  const currentStartIndex = (page - 1) * roomsPerPage;
+                  const nextPage = Math.floor(currentStartIndex / nextRoomsPerPage) + 1;
+                  setRoomsPerPage(nextRoomsPerPage);
+                  setPage(nextPage);
+                }}
+              >
+                {resultsPerPageOptions.map((n) => (
+                  <MenuItem key={n} value={n}>
+                    {n}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {pageCount > 1 && (
+              <Pagination
+                count={pageCount}
+                page={page}
+                onChange={(e, v) => setPage(v)}
+                color="primary"
+                shape="rounded"
+                size={isSmUp ? "large" : "medium"}
+                siblingCount={isSmUp ? 1 : 0}
+                boundaryCount={1}
+                sx={{
+                  '& .MuiPaginationItem-root': {
+                    borderRadius: 2,
+                    fontWeight: 600,
+                  }
+                }}
+              />
+            )}
+          </Stack>
         )}
       </Container>
 
@@ -979,20 +1169,38 @@ const Rooms = () => {
                       justifyContent: 'center'
                     }}
                   >
+                    {!activeMediaLoaded && (
+                      <Skeleton
+                        variant="rectangular"
+                        width="100%"
+                        height="100%"
+                        sx={{ position: 'absolute', inset: 0, zIndex: 1 }}
+                      />
+                    )}
                     {/* Media Display */}
                     {mediaList[photoIndex]?.type === 'video' ? (
                       <CardMedia
                         component="video"
                         controls
                         src={mediaList[photoIndex].src}
-                        sx={{ width: '100%', height: '100%' }}
+                        onLoadedData={() => setActiveMediaLoaded(true)}
+                        sx={{ width: '100%', height: '100%', opacity: activeMediaLoaded ? 1 : 0 }}
                       />
                     ) : (
                       <CardMedia
                         component="img"
                         src={mediaList[photoIndex]?.src}
                         alt={selectedRoom.title}
-                        sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        onLoad={() => {
+                          const src = mediaList[photoIndex]?.src;
+                          if (src && !loadedMediaSrcRef.current.has(src)) {
+                            loadedMediaSrcRef.current.add(src);
+                            setMediaLoadTick((t) => t + 1);
+                          }
+                          setActiveMediaLoaded(true);
+                        }}
+                        onError={() => setActiveMediaLoaded(true)}
+                        sx={{ width: '100%', height: '100%', objectFit: 'cover', opacity: activeMediaLoaded ? 1 : 0 }}
                       />
                     )}
 
@@ -1030,6 +1238,9 @@ const Rooms = () => {
                   {/* Thumbnails */}
                   <Stack direction="row" spacing={1} sx={{ overflowX: 'auto', pb: 1 }}>
                     {mediaList.map((item, i) => (
+                      (() => {
+                        const thumbLoaded = item.type !== 'image' || loadedMediaSrcRef.current.has(item.src);
+                        return (
                       <Box
                         key={i}
                         onClick={() => setPhotoIndex(i)}
@@ -1046,6 +1257,9 @@ const Rooms = () => {
                           flexShrink: 0,
                         }}
                       >
+                        {!thumbLoaded && (
+                          <Skeleton variant="rectangular" width="100%" height="100%" sx={{ position: 'absolute', inset: 0 }} />
+                        )}
                         {item.type === 'video' ? (
                           <Box sx={{ width: '100%', height: '100%', bgcolor: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <PlayCircle sx={{ color: 'white' }} />
@@ -1055,10 +1269,24 @@ const Rooms = () => {
                             component="img"
                             src={item.src}
                             alt={`thumb-${i}`}
+                            onLoad={() => {
+                              if (!loadedMediaSrcRef.current.has(item.src)) {
+                                loadedMediaSrcRef.current.add(item.src);
+                                setMediaLoadTick((t) => t + 1);
+                              }
+                            }}
+                            onError={() => {
+                              if (!loadedMediaSrcRef.current.has(item.src)) {
+                                loadedMediaSrcRef.current.add(item.src);
+                                setMediaLoadTick((t) => t + 1);
+                              }
+                            }}
                             sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           />
                         )}
                       </Box>
+                        );
+                      })()
                     ))}
                   </Stack>
                 </Box>
@@ -1075,9 +1303,9 @@ const Rooms = () => {
                           ${Number(selectedRoom.price || 0).toFixed(2)}
                         </Typography>
                         <Chip
-                          label={selectedRoom.available ? "Available" : "Reserved"}
-                          color={selectedRoom.available ? "success" : "error"}
-                          icon={selectedRoom.available ? <CheckCircle /> : <Warning />}
+                          label={isRoomAvailable(selectedRoom) ? `Available (${getRoomCapacity(selectedRoom)})` : "Reserved"}
+                          color={isRoomAvailable(selectedRoom) ? "success" : "error"}
+                          icon={isRoomAvailable(selectedRoom) ? <CheckCircle /> : <Warning />}
                           sx={{ fontWeight: 600 }}
                         />
                       </Stack>
@@ -1242,7 +1470,10 @@ const Rooms = () => {
                               startIcon={<ChatIcon />}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                if (!currentUser) return navigate('/login');
+                                if (!currentUser)
+                                  return navigate('/login', {
+                                    state: { redirectTo: location.pathname + location.search },
+                                  });
                                 setOpenDialog(false);
                                 dispatch({
                                   type: 'UPDATE_CHAT',
@@ -1271,23 +1502,53 @@ const Rooms = () => {
           </DialogContent>
         )}
 
-        <DialogActions sx={{ p: 3, borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
+        <DialogActions
+          sx={{
+            p: 3,
+            borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: { xs: 'stretch', sm: 'center' },
+            justifyContent: { xs: 'flex-start', sm: 'flex-end' },
+            gap: { xs: 1, sm: 1.5 },
+            // MUI DialogActions adds `margin-left` between actions by default.
+            // When stacked (column) this creates the "stepped" indentation.
+            '& > :not(style) + :not(style)': { marginLeft: 0 },
+          }}
+        >
           <Button
             onClick={handleViewOnMap}
             variant="outlined"
             startIcon={<PlaceIcon />}
-            sx={{ borderRadius: 2 }}>
+            fullWidth
+            sx={{
+              borderRadius: 2,
+              width: { xs: '100%', sm: 'auto' },
+            }}
+          >
             View on Map
           </Button>
-          <Button onClick={handleCloseDialog} variant="outlined" sx={{ borderRadius: 2 }}>
+          <Button
+            onClick={handleCloseDialog}
+            variant="outlined"
+            fullWidth
+            sx={{
+              borderRadius: 2,
+              width: { xs: '100%', sm: 'auto' },
+            }}
+          >
             Close
           </Button>
           <Button
             variant="contained"
             onClick={handleBookClick}
-            disabled={!selectedRoom?.available}
-            sx={{ borderRadius: 2, px: 4 }}
+            disabled={!isRoomAvailable(selectedRoom)}
             startIcon={<CheckCircle />}
+            fullWidth
+            sx={{
+              borderRadius: 2,
+              px: { xs: 2, sm: 4 },
+              width: { xs: '100%', sm: 'auto' },
+            }}
           >
             Book This Space
           </Button>

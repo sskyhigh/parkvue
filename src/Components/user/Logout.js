@@ -25,7 +25,7 @@ const Logout = () => {
         sessionStorage.removeItem("userData");
 
         // Clear user state immediately
-        setCurrentUser(null);
+        setCurrentUser("");
 
         // Then perform async cleanup
         await signOut(auth);

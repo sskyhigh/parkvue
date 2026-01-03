@@ -4,7 +4,6 @@ import { db } from "../../firebase/config";
 import { useValue, Context } from "../../context/ContextProvider";
 import {
   doc,
-  addDoc,
   collection,
   updateDoc,
   serverTimestamp,
@@ -14,6 +13,7 @@ import {
   getDoc,
   setDoc,
   increment,
+  runTransaction,
 } from "firebase/firestore";
 import {
   Box,
@@ -39,6 +39,11 @@ import {
   ListItemText,
   Fade,
   Skeleton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 import {
   Home,
@@ -57,6 +62,7 @@ import {
 } from "@mui/icons-material";
 import NotFound from "../../NotFound/NotFound";
 import { sanitizeText, sanitizeCardNumber, sanitizeCVV } from "../../utils/sanitize";
+import { getRoomCapacity, isRoomAvailable } from "../../utils/capacity";
 
 // ---------- helper utilities ----------
 const luhnCheck = (num) => {
@@ -109,6 +115,8 @@ const Booking = () => {
   const navigate = useNavigate();
   const theme = useTheme();
 
+  const bookingDraftKey = `parkvue_booking_draft:${roomId || "unknown"}`;
+
   // room data state
   const [room, setRoom] = useState(
     location.state?.room ?? undefined
@@ -125,13 +133,93 @@ const Booking = () => {
   const [processing, setProcessing] = useState(false);
   const [errors, setErrors] = useState({});
 
+  // auth-required dialog
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+
   // booking duration state
   const [bookingStart, setBookingStart] = useState("");
   const [bookingEnd, setBookingEnd] = useState("");
+  const [spacesRequested, setSpacesRequested] = useState(1);
   const [duration, setDuration] = useState(0);
   const [totalPrice, setTotalPrice] = useState(0);
   const [serviceFee, setServiceFee] = useState(0);
   const [totalWithFee, setTotalWithFee] = useState(0);
+
+  const saveBookingDraft = () => {
+    try {
+      if (!roomId) return;
+      const draft = {
+        roomId,
+        bookingStart,
+        bookingEnd,
+        spacesRequested,
+        cardName,
+        cardNumber,
+        cardExpiry,
+        cardCvc,
+        savedAt: Date.now(),
+      };
+      sessionStorage.setItem(bookingDraftKey, JSON.stringify(draft));
+    } catch {
+      // best-effort: ignore storage failures
+    }
+  };
+
+  const clearBookingDraft = () => {
+    try {
+      if (!roomId) return;
+      sessionStorage.removeItem(bookingDraftKey);
+    } catch {
+      // ignore
+    }
+  };
+
+  // Restore draft after login/signup (or after accidental navigation)
+  useEffect(() => {
+    if (!roomId) return;
+
+    // Only restore into a fresh form (avoid overwriting active edits)
+    const looksEmpty =
+      !bookingStart &&
+      !bookingEnd &&
+      (!spacesRequested || spacesRequested === 1) &&
+      !cardName &&
+      !cardNumber &&
+      !cardExpiry &&
+      !cardCvc;
+
+    if (!looksEmpty) return;
+
+    try {
+      const raw = sessionStorage.getItem(bookingDraftKey);
+      if (!raw) return;
+      const draft = JSON.parse(raw);
+      if (!draft || draft.roomId !== roomId) return;
+
+      if (typeof draft.bookingStart === "string") setBookingStart(draft.bookingStart);
+      if (typeof draft.bookingEnd === "string") setBookingEnd(draft.bookingEnd);
+      if (draft.spacesRequested != null) {
+        const n = Number.parseInt(String(draft.spacesRequested), 10);
+        setSpacesRequested(Number.isFinite(n) && n > 0 ? n : 1);
+      }
+
+      if (typeof draft.cardName === "string") setCardName(draft.cardName);
+      if (typeof draft.cardNumber === "string") setCardNumber(draft.cardNumber);
+      if (typeof draft.cardExpiry === "string") setCardExpiry(draft.cardExpiry);
+      if (typeof draft.cardCvc === "string") setCardCvc(draft.cardCvc);
+
+      dispatch({
+        type: "UPDATE_ALERT",
+        payload: { open: true, severity: "info", message: "Restored your booking details." },
+      });
+    } catch {
+      // ignore
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomId]);
+
+  const remainingCapacity = getRoomCapacity(room);
+  const availableNow = isRoomAvailable(room);
 
   // fetch room data if not passed via state
   useEffect(() => {
@@ -161,6 +249,17 @@ const Booking = () => {
     fetchRoomById();
   }, [room, roomId]);
 
+  // Keep spacesRequested within bounds as room/capacity changes
+  useEffect(() => {
+    if (!room) return;
+    const cap = getRoomCapacity(room);
+    const max = Math.max(1, cap);
+    setSpacesRequested((prev) => {
+      const next = Number.isFinite(prev) ? prev : 1;
+      return Math.min(Math.max(1, next), max);
+    });
+  }, [room]);
+
   // Calculate duration and total price when booking dates change
   useEffect(() => {
     if (bookingStart && bookingEnd && room) {
@@ -174,9 +273,9 @@ const Booking = () => {
 
         setDuration(durationHours);
 
-        // Calculate total price (daily rate / 24 for hourly rate)
+        // Calculate total price per space (daily rate / 24 for hourly rate)
         const hourlyRate = (room.price || 0) / 24;
-        const calculatedTotal = durationHours * hourlyRate;
+        const calculatedTotal = durationHours * hourlyRate * Math.max(1, spacesRequested);
         setTotalPrice(calculatedTotal);
 
         // Calculate service fee and total with fee
@@ -195,7 +294,7 @@ const Booking = () => {
       setServiceFee(0);
       setTotalWithFee(0);
     }
-  }, [bookingStart, bookingEnd, room]);
+  }, [bookingStart, bookingEnd, room, spacesRequested]);
 
   // Increment view count
   useEffect(() => {
@@ -249,6 +348,17 @@ const Booking = () => {
       }
     }
 
+    // Capacity validation (new model)
+    const cap = getRoomCapacity(room);
+    if (cap <= 0) {
+      err.capacity = "This listing has no spaces available right now";
+    } else {
+      const requested = Number.isFinite(spacesRequested) ? spacesRequested : 1;
+      if (requested < 1) err.capacity = "You must book at least 1 space";
+      else if (requested > cap) err.capacity = `Only ${cap} space${cap !== 1 ? 's' : ''} available`;
+      else if (cap <= 1 && requested !== 1) err.capacity = "Only 1 space remaining for this listing";
+    }
+
     setErrors(err);
     return Object.keys(err).length === 0;
   };
@@ -256,10 +366,7 @@ const Booking = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!currentUser || !currentUser.uid) {
-      dispatch({
-        type: "UPDATE_ALERT",
-        payload: { open: true, severity: "error", message: "You must be logged in to book." },
-      });
+      setLoginDialogOpen(true);
       return;
     }
     if (!validate()) return;
@@ -271,9 +378,9 @@ const Booking = () => {
       await new Promise((res) => setTimeout(res, 900));
 
       // Sanitize card inputs
-      const sanitizedCardName = sanitizeText(cardName);
       const sanitizedCardNumber = sanitizeCardNumber(cardNumber);
-      const sanitizedCardCvc = sanitizeCVV(cardCvc);
+      sanitizeText(cardName);
+      sanitizeCVV(cardCvc);
 
       // build reservation payload
       const cardDigits = sanitizedCardNumber.replace(/\D/g, "");
@@ -282,11 +389,19 @@ const Booking = () => {
 
       const reservationPayload = {
         reserverId: currentUser.uid,
+        ownerId: room.createdBy,
         roomId: room.id,
+        spaces: Math.max(1, spacesRequested),
+        unitPrice: room.price || 0,
         bookingStart: bookingStart,
         bookingEnd: bookingEnd,
         duration: duration,
-        totalPrice: totalWithFee,
+        // Payment breakdown
+        // totalPrice: booking subtotal (host payout when service fee is charged to renter on top)
+        totalPrice: totalPrice,
+        serviceFee: serviceFee,
+        totalPaid: totalWithFee,
+        hostPayout: totalPrice,
         paymentMethod: "card",
         paymentDetails: {
           cardBrand,
@@ -295,44 +410,62 @@ const Booking = () => {
         reservedAt: serverTimestamp(),
       };
 
-      // 1) add reservation doc (includes reserverId)
-      const reservationRef = collection(db, "reservations");
-      await addDoc(reservationRef, reservationPayload);
-
-      // 2) update room availability + add lastReservedBy + updatedAt
+      // Atomically reserve and decrement capacity
       const roomRef = doc(db, "rooms", room.id);
-      await updateDoc(roomRef, {
-        available: false,
-        lastReservedBy: currentUser.uid,
-        updatedAt: serverTimestamp(),
+      const requestedSpaces = Math.max(1, spacesRequested);
+
+      // Resolve owner's user document (Firestore id) ahead of time.
+      // We can't run collection queries inside Firestore transactions.
+      let ownerUserRef = null;
+      try {
+        const usersRef = collection(db, "users");
+        const ownerQ = query(usersRef, where("uid", "==", room.createdBy));
+        const ownerSnap = await getDocs(ownerQ);
+        if (!ownerSnap.empty) {
+          ownerUserRef = doc(db, "users", ownerSnap.docs[0].id);
+        }
+      } catch (e) {
+        // Non-fatal: booking should still succeed even if stats cannot be updated.
+        ownerUserRef = null;
+      }
+
+      await runTransaction(db, async (transaction) => {
+        const snap = await transaction.get(roomRef);
+        if (!snap.exists()) throw new Error("Listing not found");
+        const roomData = { id: snap.id, ...snap.data() };
+        const currentCap = getRoomCapacity(roomData);
+        if (currentCap < requestedSpaces) {
+          throw new Error(`Not enough spaces available (requested ${requestedSpaces}, available ${currentCap})`);
+        }
+        const newCap = currentCap - requestedSpaces;
+
+        const reservationDocRef = doc(collection(db, "reservations"));
+        transaction.set(reservationDocRef, reservationPayload);
+
+        transaction.update(roomRef, {
+          // Keep legacy boolean out of the way: once capacity exists, we consider `available` deprecated.
+          available: true,
+          capacity: newCap,
+          lastReservedBy: currentUser.uid,
+          updatedAt: serverTimestamp(),
+        });
+
+        // Update host earnings only when the booking transaction succeeds.
+        // Current model: renter pays serviceFee on top, so host payout is the subtotal (totalPrice).
+        if (ownerUserRef) {
+          transaction.update(ownerUserRef, {
+            totalEarnings: increment(Number.isFinite(totalPrice) ? totalPrice : 0),
+            lastEarningUpdate: serverTimestamp(),
+          });
+        }
       });
-
-      // 3) update total earnings for owner (optional, can be computed on the fly instead)
-      const usersRef = collection(db, "users");
-      const q = query(usersRef, where("uid", "==", room.createdBy));
-      const querySnapshot = await getDocs(q);
-
-      if (!querySnapshot.empty) {
-        // Assuming there's only one document per user uid
-        const userDoc = querySnapshot.docs[0];
-        const userRef = doc(db, "users", userDoc.id);
-        const userData = userDoc.data();
-
-        // Calculate new total earnings
-        const currentEarnings = userData.totalEarnings || 0;
-        const newTotalEarnings = currentEarnings + (totalWithFee - serviceFee);
-
-        // Update the user's document
-        await updateDoc(userRef, {
-          totalEarnings: newTotalEarnings,
-          lastEarningUpdate: serverTimestamp(),
-        })
-      };
 
       dispatch({
         type: "UPDATE_ALERT",
         payload: { open: true, severity: "success", message: "Payment accepted — room reserved!" },
       });
+
+      clearBookingDraft();
 
       // navigate to rooms list
       navigate("/dashboard");
@@ -658,6 +791,41 @@ if (!loading && !room) {
       }}
     >
       <Container maxWidth="lg">
+        <Dialog
+          open={loginDialogOpen}
+          onClose={() => setLoginDialogOpen(false)}
+          aria-labelledby="login-required-title"
+          aria-describedby="login-required-description"
+          fullWidth
+          maxWidth="xs"
+        >
+          <DialogTitle id="login-required-title">Log in required</DialogTitle>
+          <DialogContent>
+            <DialogContentText id="login-required-description">
+              You need to log in to complete this booking. Your entered booking details will be saved so you can
+              continue after signing in.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setLoginDialogOpen(false)} color="inherit">
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={() => {
+                setLoginDialogOpen(false);
+                saveBookingDraft();
+                navigate("/login", {
+                  state: { redirectTo: location.pathname + location.search },
+                  replace: false,
+                });
+              }}
+            >
+              Go to login
+            </Button>
+          </DialogActions>
+        </Dialog>
+
         {/* Header Section */}
         <Box sx={{ mb: 4, ...slideIn, animation: "slideIn 0.5s ease-out" }}>
           <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 1 }}>
@@ -767,8 +935,15 @@ if (!loading && !room) {
                     <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                       <Chip
                         icon={<CheckCircle fontSize="small" />}
-                        label={room.available ? "Available" : "Reserved"}
-                        color={room.available ? "success" : "error"}
+                        label={availableNow ? "Available" : "Reserved"}
+                        color={availableNow ? "success" : "error"}
+                        sx={{ fontWeight: 600 }}
+                      />
+                      <Chip
+                        icon={<DirectionsCar fontSize="small" />}
+                        label={`Spaces left: ${remainingCapacity}`}
+                        color={availableNow ? "primary" : "default"}
+                        variant={availableNow ? "filled" : "outlined"}
                         sx={{ fontWeight: 600 }}
                       />
                       <Chip
@@ -1000,14 +1175,14 @@ if (!loading && !room) {
                   </Typography>
                 </Box>
 
-                {!room.available && (
+                {!availableNow && (
                   <Alert
                     severity="warning"
                     sx={{ mb: 3, borderRadius: 2 }}
                     icon={<Warning fontSize="small" />}
                   >
-                    This room is currently reserved. Please check back later or explore other
-                    available rooms.
+                    This listing currently has no spaces available. Please check back later or explore other
+                    available listings.
                   </Alert>
                 )}
 
@@ -1032,7 +1207,7 @@ if (!loading && !room) {
                             helperText={errors.bookingStart}
                             fullWidth
                             size="small"
-                            disabled={!room.available || processing}
+                            disabled={!availableNow || processing}
                             InputLabelProps={{
                               shrink: true,
                             }}
@@ -1050,10 +1225,32 @@ if (!loading && !room) {
                             helperText={errors.bookingEnd}
                             fullWidth
                             size="small"
-                            disabled={!room.available || processing}
+                            disabled={!availableNow || processing}
                             InputLabelProps={{
                               shrink: true,
                             }}
+                          />
+                        </Grid>
+
+                        <Grid item xs={12} sm={6}>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+                            Spaces
+                          </Typography>
+                          <TextField
+                            type="number"
+                            value={spacesRequested}
+                            onChange={(e) => {
+                              const next = Number.parseInt(e.target.value, 10);
+                              const cap = getRoomCapacity(room);
+                              const upper = Math.max(1, cap);
+                              setSpacesRequested(Number.isFinite(next) ? Math.min(Math.max(1, next), upper) : 1);
+                            }}
+                            error={!!errors.capacity}
+                            helperText={errors.capacity || (remainingCapacity <= 1 ? "Only 1 space remaining" : "Book multiple spaces if needed")}
+                            fullWidth
+                            size="small"
+                            disabled={!availableNow || processing || remainingCapacity <= 1}
+                            inputProps={{ min: 1, max: Math.max(1, remainingCapacity), step: 1 }}
                           />
                         </Grid>
                       </Grid>
@@ -1085,7 +1282,7 @@ if (!loading && !room) {
                         helperText={errors.cardName}
                         fullWidth
                         size="small"
-                        disabled={!room.available || processing}
+                        disabled={!availableNow || processing}
                       />
                     </Box>
 
@@ -1106,7 +1303,7 @@ if (!loading && !room) {
                         helperText={errors.cardNumber}
                         fullWidth
                         size="small"
-                        disabled={!room.available || processing}
+                        disabled={!availableNow || processing}
                       />
                       {cardNumber && (
                         <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
@@ -1135,7 +1332,7 @@ if (!loading && !room) {
                           helperText={errors.cardExpiry}
                           fullWidth
                           size="small"
-                          disabled={!room.available || processing}
+                          disabled={!availableNow || processing}
                         />
                       </Grid>
                       <Grid item xs={6}>
@@ -1151,7 +1348,7 @@ if (!loading && !room) {
                           fullWidth
                           sx={{ ml: 0.5, pr: 0.5 }}
                           size="small"
-                          disabled={!room.available || processing}
+                          disabled={!availableNow || processing}
                         />
                       </Grid>
                     </Grid>
@@ -1235,7 +1432,7 @@ if (!loading && !room) {
                       type="submit"
                       variant="contained"
                       size="large"
-                      disabled={!room.available || processing}
+                      disabled={!availableNow || processing}
                       fullWidth
                       sx={{
                         py: 1.5,

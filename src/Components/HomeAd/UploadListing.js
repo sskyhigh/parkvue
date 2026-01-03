@@ -272,7 +272,11 @@ function UploadListing() {
         <Box sx={{ textAlign: "center", mt: 8 }}>
           <Box
             component="button"
-            onClick={() => currentUser ? navigate('/upload') : navigate('/login')}
+            onClick={() =>
+              currentUser
+                ? navigate('/upload')
+                : navigate('/login', { state: { redirectTo: '/upload' } })
+            }
             sx={{
               background: isDarkMode
                 ? theme.customStyles?.neonGradient || "linear-gradient(45deg, #6C63FF, #FF6584)"

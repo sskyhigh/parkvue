@@ -37,6 +37,7 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { useValue } from "../../context/ContextProvider";
+import { getRoomCapacity, isRoomAvailable } from "../../utils/capacity";
 
 const SellerProfile = () => {
   const { sellerId } = useParams();
@@ -106,10 +107,12 @@ const SellerProfile = () => {
           ...doc.data(),
         }));
 
-        // Sort by availability - available first
+        // Sort by availability - available first (capacity-aware)
         roomData.sort((a, b) => {
-          if (a.available === b.available) return 0;
-          return a.available ? -1 : 1;
+          const aAvail = isRoomAvailable(a);
+          const bAvail = isRoomAvailable(b);
+          if (aAvail === bAvail) return 0;
+          return aAvail ? -1 : 1;
         });
 
         setSellerRooms(roomData);
@@ -197,8 +200,8 @@ const SellerProfile = () => {
     );
   }
 
-  const availableCount = sellerRooms.filter((r) => r.available !== false).length;
-  const reservedCount = sellerRooms.filter((r) => r.available === false).length;
+  const availableCount = sellerRooms.filter((r) => isRoomAvailable(r)).length;
+  const reservedCount = sellerRooms.filter((r) => !isRoomAvailable(r)).length;
 
   return (
     <Box
@@ -377,7 +380,8 @@ const SellerProfile = () => {
           ) : (
             <Grid container spacing={3}>
               {sellerRooms.map((room) => {
-                const isAvailable = room.available !== false;
+                const isAvailable = isRoomAvailable(room);
+                const capacity = getRoomCapacity(room);
                 const firstImage =
                   room.images && room.images.length > 0
                     ? room.images[0]
@@ -423,7 +427,7 @@ const SellerProfile = () => {
                             }}
                           />
                           <Chip
-                            label={isAvailable ? "Available" : "Reserved"}
+                            label={isAvailable ? `Available (${capacity})` : "Reserved"}
                             size="small"
                             icon={
                               isAvailable ? (

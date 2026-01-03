@@ -29,12 +29,15 @@ import ReactMapGL, {
 import { useNavigate, useLocation } from "react-router-dom";
 import { useValue } from "../../context/ContextProvider";
 import { db, collection, getDocs } from "../../firebase/config";
+import { getRoomCapacity, isRoomAvailable } from "../../utils/capacity";
 import "mapbox-gl/dist/mapbox-gl.css";
 import Geocoder from "./Geocoder";
 import {
   LocationOn as LocationIcon,
   LocalParking as ParkingIcon,
 } from "@mui/icons-material";
+
+const DEFAULT_LOCATION = { lng: -74.006, lat: 40.7128 };
 
 const ClusterMap = () => {
   const theme = useTheme();
@@ -45,8 +48,6 @@ const ClusterMap = () => {
   const mapStyle = isDark
     ? "mapbox://styles/mapbox/navigation-night-v1"
     : "mapbox://styles/mapbox/streets-v12";
-
-  const defaultLocation = { lng: -74.006, lat: 40.7128 };
 
   const {
     state: {
@@ -69,8 +70,8 @@ const ClusterMap = () => {
     }
 
     return {
-      longitude: lng || defaultLocation.lng,
-      latitude: lat || defaultLocation.lat,
+      longitude: lng || DEFAULT_LOCATION.lng,
+      latitude: lat || DEFAULT_LOCATION.lat,
       zoom: 12,
     };
   });
@@ -78,7 +79,22 @@ const ClusterMap = () => {
   // Center map on selected room
   useEffect(() => {
     if (selectedRoom?.lat && selectedRoom?.lng) {
-      setViewState(prev => ({
+      // Offset the camera so the marker appears a bit LOWER on screen.
+      // This keeps the popup from being hidden under the navbar.
+      const offsetY = window.innerWidth < 600 ? 170 : 220;
+
+      try {
+        mapRef.current?.flyTo?.({
+          center: [selectedRoom.lng, selectedRoom.lat],
+          zoom: mapRef.current?.getZoom?.() ?? 12,
+          essential: true,
+          offset: [0, offsetY],
+        });
+      } catch (e) {
+        // If flyTo isn't available for some reason, fall back to state update.
+      }
+
+      setViewState((prev) => ({
         ...prev,
         longitude: selectedRoom.lng,
         latitude: selectedRoom.lat,
@@ -112,13 +128,10 @@ const ClusterMap = () => {
     fetchRooms();
   }, []);
 
-  // Auto-locate user (only on development/localhost)
+  // Auto-locate user
   useEffect(() => {
     if (!lng && !lat) {
-      // Only attempt geolocation on localhost/development to avoid permission prompts on production
-      const isProduction = window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1";
-      
-      if (!isProduction && navigator.geolocation) {
+      if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
@@ -141,13 +154,10 @@ const ClusterMap = () => {
           },
           (error) => {
             console.warn("Geolocation access denied or unavailable, using default location");
-            dispatch({ type: "UPDATE_LOCATION", payload: defaultLocation });
+            dispatch({ type: "UPDATE_LOCATION", payload: DEFAULT_LOCATION });
           },
           { enableHighAccuracy: true, timeout: 5000 }
         );
-      } else if (isProduction) {
-        // On production, use default location without prompting
-        dispatch({ type: "UPDATE_LOCATION", payload: defaultLocation });
       }
     }
   }, [dispatch, lng, lat]);
@@ -165,7 +175,7 @@ const ClusterMap = () => {
 
   // Custom marker component
   const CustomMarker = ({ room, onClick }) => {
-    const isAvailable = room.available !== false;
+    const isAvailable = isRoomAvailable(room);
 
     return (
       <Marker
@@ -232,8 +242,8 @@ const ClusterMap = () => {
         <Box
           sx={{
             position: "fixed",
-            top: 137,
-            left: "10%",
+            top: { xs: 90, sm: 137 },
+            left: { xs: "40%", sm: "10%" },
             transform: "translateX(-50%)",
             px: 2.5,
             py: 1.2,
@@ -351,7 +361,7 @@ const ClusterMap = () => {
                     sx={{
                       objectFit: "cover",
                       width: "100%",
-                      filter: selectedRoom.available !== false ? "none" : "grayscale(0.7) brightness(0.4)",
+                      filter: isRoomAvailable(selectedRoom) ? "none" : "grayscale(0.7) brightness(0.4)",
                     }}
                   />
 
@@ -372,9 +382,9 @@ const ClusterMap = () => {
 
                   {/* Availability badge */}
                   <Chip
-                    icon={selectedRoom.available !== false ? <CheckCircle fontSize="small" /> : <Warning fontSize="small" />}
-                    label={selectedRoom.available !== false ? "Available" : "Reserved"}
-                    color={selectedRoom.available !== false ? "success" : "error"}
+                    icon={isRoomAvailable(selectedRoom) ? <CheckCircle fontSize="small" /> : <Warning fontSize="small" />}
+                    label={isRoomAvailable(selectedRoom) ? `Available (${getRoomCapacity(selectedRoom)})` : "Reserved"}
+                    color={isRoomAvailable(selectedRoom) ? "success" : "error"}
                     sx={{
                       position: "absolute",
                       top: 12,
@@ -538,14 +548,14 @@ const ClusterMap = () => {
           sx={{
             position: "absolute",
             top: { xs: 5, sm: 5 },
-            left: { xs: 5, sm: 45 },
+            left: { xs: 45, sm: 45 },
             right: { xs: 5, sm: 'auto' },
             bgcolor: alpha(theme.palette.background.paper, 0.95),
             borderRadius: 2,
             p: { xs: 1.5, sm: 2 },
             boxShadow: theme.shadows[4],
             zIndex: 1,
-            maxWidth: { xs: '100%', sm: 250 },
+            maxWidth: { xs: 150, sm: 250 },
           }}
         >
           <Stack spacing={1}>
@@ -574,7 +584,7 @@ const ClusterMap = () => {
                   color="text.secondary"
                   sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
                 >
-                  {rooms.filter(r => r.available !== false).length} Available
+                  {rooms.filter((r) => isRoomAvailable(r)).length} Available
                 </Typography>
               </Stack>
               <Stack direction="row" alignItems="center" spacing={1}>
@@ -591,7 +601,7 @@ const ClusterMap = () => {
                   color="text.secondary"
                   sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
                 >
-                  {rooms.filter(r => r.available === false).length} Reserved
+                  {rooms.filter((r) => !isRoomAvailable(r)).length} Reserved
                 </Typography>
               </Stack>
               <Stack direction="row" alignItems="center" spacing={1}>

@@ -126,6 +126,20 @@ const Footer = () => {
             >
               Security
             </Box>
+
+            <Typography
+              sx={{ color: alpha(theme.palette.text.secondary, 0.5), mx: 0.5 }}
+            >
+              |
+            </Typography>
+
+            <Box
+              component={Link}
+              to="/contact"
+              sx={linkStyle}
+            >
+              Contact Us
+            </Box>
           </Box>
 
           {/* Right Side - Social Icons */}

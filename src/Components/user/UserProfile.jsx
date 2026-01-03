@@ -30,7 +30,7 @@ import {
     PhotoCamera,
 } from '@mui/icons-material';
 import { useValue, Context } from '../../context/ContextProvider';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { updateProfile, updatePassword, sendEmailVerification } from 'firebase/auth';
 import { auth, db, doc, updateDoc, collection, query, where, getDocs } from '../../firebase/config';
 import { PulseLoader } from 'react-spinners';
@@ -50,6 +50,7 @@ const UserProfile = () => {
     const theme = useTheme();
     const isDarkMode = theme.palette.mode === 'dark';
     const navigate = useNavigate();
+    const location = useLocation();
 
     const [openDialog, setOpenDialog] = useState(DIALOG_TYPES.NONE);
     const [loading, setLoading] = useState(false);
@@ -72,7 +73,10 @@ const UserProfile = () => {
 
     useEffect(() => {
         if (!currentUser) {
-            navigate('/login');
+            navigate('/login', {
+                state: { redirectTo: location.pathname + location.search },
+                replace: true,
+            });
             return;
         }
         

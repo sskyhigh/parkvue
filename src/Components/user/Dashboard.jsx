@@ -15,6 +15,7 @@ import {
   DialogActions,
   TextField,
   Chip,
+  CircularProgress,
   Skeleton,
   Divider,
   useTheme,
@@ -46,28 +47,75 @@ import {
   query,
   where,
   getDocs,
-  updateDoc,
   deleteDoc,
   doc,
   serverTimestamp,
   getDoc,
   runTransaction,
+  increment,
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { getRoomCapacity, getRoomMaxCapacity, isRoomAvailable, MAX_LISTING_CAPACITY } from "../../utils/capacity";
 
 // UserDashboard component
 export default function UserDashboard() {
   const theme = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
   const { dispatch } = useValue();
   const { currentUser } = useContext(Context) || {};
+
+  const formatRoomDate = (value) => {
+    if (!value) return "N/A";
+
+    // Firestore Timestamp
+    if (typeof value?.toDate === "function") {
+      const d = value.toDate();
+      return Number.isNaN(d?.getTime?.()) ? "N/A" : d.toLocaleDateString();
+    }
+
+    // Firestore Timestamp-like plain object
+    if (typeof value === "object" && typeof value.seconds === "number") {
+      const d = new Date(value.seconds * 1000);
+      return Number.isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString();
+    }
+
+    // ISO string, millis, Date
+    const d = value instanceof Date ? value : new Date(value);
+    return Number.isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString();
+  };
+
+  const formatBookingDateTime = (value) => {
+    if (!value) return "—";
+
+    // Firestore Timestamp
+    if (typeof value?.toDate === "function") {
+      const d = value.toDate();
+      if (Number.isNaN(d?.getTime?.())) return "—";
+      return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    }
+
+    // Firestore Timestamp-like plain object
+    if (typeof value === "object" && typeof value.seconds === "number") {
+      const d = new Date(value.seconds * 1000);
+      if (Number.isNaN(d.getTime())) return "—";
+      return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    }
+
+    const d = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(d.getTime())) return "—";
+    return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  };
   
   useEffect(() => {
     if (!currentUser) {
-      navigate("/login");
+      navigate("/login", {
+        state: { redirectTo: location.pathname + location.search },
+        replace: true,
+      });
     }
-  }, [currentUser, navigate]);
+  }, [currentUser, navigate, location.pathname, location.search]);
 
   // local state
   const [myRooms, setMyRooms] = useState([]);
@@ -88,6 +136,11 @@ export default function UserDashboard() {
   const [selectedRating, setSelectedRating] = useState(0);
   const [ratingSubmitting, setRatingSubmitting] = useState(false);
 
+  const [releaseOpen, setReleaseOpen] = useState(false);
+  const [releaseTarget, setReleaseTarget] = useState(null); // reservation row
+  const [releaseCount, setReleaseCount] = useState("1");
+  const [releaseSubmitting, setReleaseSubmitting] = useState(false);
+
   const [userStats, setUserStats] = useState({
     totalEarnings: 0,
     totalBookings: 0,
@@ -106,7 +159,12 @@ export default function UserDashboard() {
         if (!mounted) return;
         const data = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
         // sort: available first
-        data.sort((a, b) => (a.available === b.available ? 0 : a.available ? -1 : 1));
+        data.sort((a, b) => {
+          const aAvail = isRoomAvailable(a);
+          const bAvail = isRoomAvailable(b);
+          if (aAvail === bAvail) return 0;
+          return aAvail ? -1 : 1;
+        });
         setMyRooms(data);
       } catch (err) {
         console.error(err);
@@ -210,10 +268,18 @@ export default function UserDashboard() {
     return () => { mounted = false; };
   }, [currentUser, dispatch]);
 
-  // Handlers: Edit, Save, Delete, Toggle availability, Unreserve
+  // Handlers: Edit, Save, Delete, Pause/Restore (capacity), Release reservation
   const openEdit = (room) => {
     setEditingRoom(room);
-    setEditValues({ title: room.title || "", price: room.price || "", description: room.description || "" });
+    const currentCap = getRoomCapacity(room);
+    const maxCap = Math.min(MAX_LISTING_CAPACITY, getRoomMaxCapacity(room) || currentCap || 1);
+    setEditValues({
+      title: room.title || "",
+      price: room.price || "",
+      description: room.description || "",
+      maxCapacity: String(maxCap),
+      capacity: String(currentCap),
+    });
     setEditOpen(true);
   };
   const closeEdit = () => { setEditOpen(false); setEditingRoom(null); setEditValues({}); };
@@ -222,9 +288,46 @@ export default function UserDashboard() {
     if (!editingRoom) return;
     try {
       const roomRef = doc(db, "rooms", editingRoom.id);
-      await updateDoc(roomRef, { ...editValues, updatedAt: serverTimestamp() });
+
+      const parsedMax = Number.parseInt(String(editValues.maxCapacity ?? "").trim(), 10);
+      const parsedCap = Number.parseInt(String(editValues.capacity ?? "").trim(), 10);
+
+      await runTransaction(db, async (transaction) => {
+        const snap = await transaction.get(roomRef);
+        if (!snap.exists()) throw new Error('Room not found');
+        const data = { id: snap.id, ...snap.data() };
+        const currentCap = getRoomCapacity(data);
+        const currentMax = getRoomMaxCapacity(data) || currentCap || 1;
+
+        const nextMax = Number.isFinite(parsedMax)
+          ? Math.min(MAX_LISTING_CAPACITY, Math.max(1, parsedMax))
+          : Math.min(MAX_LISTING_CAPACITY, currentMax);
+        const nextCapRaw = Number.isFinite(parsedCap) ? Math.max(0, parsedCap) : currentCap;
+        const nextCap = Math.min(nextMax, nextCapRaw);
+
+        transaction.update(roomRef, {
+          title: editValues.title,
+          price: editValues.price,
+          description: editValues.description,
+          maxCapacity: nextMax,
+          capacity: nextCap,
+          // legacy compatibility: once capacity is present, deprecate boolean
+          available: true,
+          updatedAt: serverTimestamp(),
+        });
+      });
       // refresh
-      setMyRooms((prev) => prev.map((r) => (r.id === editingRoom.id ? { ...r, ...editValues } : r)));
+      setMyRooms((prev) =>
+        prev.map((r) => {
+          if (r.id !== editingRoom.id) return r;
+          const maxCapacity = Math.min(
+            MAX_LISTING_CAPACITY,
+            Math.max(1, Number.parseInt(String(editValues.maxCapacity ?? "1"), 10) || getRoomMaxCapacity(r) || 1)
+          );
+          const capacity = Math.min(maxCapacity, Math.max(0, Number.parseInt(String(editValues.capacity ?? "0"), 10) || getRoomCapacity(r)));
+          return { ...r, ...editValues, maxCapacity, capacity };
+        })
+      );
       dispatch({ type: "UPDATE_ALERT", payload: { open: true, severity: "success", message: "Room updated" } });
       closeEdit();
     } catch (err) {
@@ -234,6 +337,146 @@ export default function UserDashboard() {
   };
 
   const confirmAction = (payload) => { setConfirmPayload(payload); setConfirmOpen(true); };
+
+  const unreserveReservation = async ({ kind, reservationId, roomId, count }) => {
+    const requestedRelease = Math.max(1, Number.parseInt(String(count ?? 1), 10) || 1);
+    if (!reservationId) throw new Error('Missing reservation id');
+
+    const resRef = doc(db, "reservations", reservationId);
+    const roomRef = roomId ? doc(db, "rooms", roomId) : null;
+
+    // Resolve host's user doc (Firestore id) outside the transaction.
+    // Prefer the ownerId stored on the reservation; fallback to room.createdBy.
+    let hostUserRef = null;
+    try {
+      let hostUid = null;
+      const resSnapOutside = await getDoc(resRef);
+      if (resSnapOutside.exists()) {
+        const resData = resSnapOutside.data() || {};
+        hostUid = resData.ownerId || resData.createdBy || null;
+      }
+      if (!hostUid && roomRef) {
+        const roomSnapOutside = await getDoc(roomRef);
+        if (roomSnapOutside.exists()) {
+          const roomData = roomSnapOutside.data() || {};
+          hostUid = roomData.createdBy || null;
+        }
+      }
+      if (hostUid) {
+        const usersRef = collection(db, "users");
+        const uq = query(usersRef, where("uid", "==", hostUid));
+        const us = await getDocs(uq);
+        if (!us.empty) {
+          hostUserRef = doc(db, "users", us.docs[0].id);
+        }
+      }
+    } catch (e) {
+      hostUserRef = null;
+    }
+
+    let delta = 0;
+    let updatedReservationSpaces = null;
+    let earningsDelta = 0;
+
+    await runTransaction(db, async (transaction) => {
+      // IMPORTANT: all reads must happen before any writes.
+      const resSnap = await transaction.get(resRef);
+      if (!resSnap.exists()) throw new Error('Reservation not found');
+      const resData = resSnap.data() || {};
+
+      const roomSnap = roomRef ? await transaction.get(roomRef) : null;
+      const roomData = roomSnap && roomSnap.exists() ? { id: roomSnap.id, ...roomSnap.data() } : null;
+
+      const currentSpaces = Math.max(1, Number.parseInt(String(resData.spaces ?? 1), 10) || 1);
+      const requested = kind === 'unreserveAll' ? currentSpaces : (kind === 'unreserveOne' ? 1 : requestedRelease);
+      const effectiveRelease = Math.min(currentSpaces, Math.max(1, requested));
+
+      // Compute host payout per space.
+      // Prefer stored hostPayout/totalPrice; fallback to unitPrice/duration.
+      const storedTotal =
+        typeof resData.hostPayout === 'number'
+          ? resData.hostPayout
+          : (typeof resData.totalPrice === 'number' ? resData.totalPrice : null);
+      const unitPrice = typeof resData.unitPrice === 'number' ? resData.unitPrice : 0;
+      const duration = typeof resData.duration === 'number' ? resData.duration : 0;
+      const computedPerSpace = duration * (unitPrice / 24);
+      const perSpacePayout = storedTotal !== null ? (storedTotal / currentSpaces) : computedPerSpace;
+
+      if (effectiveRelease >= currentSpaces) {
+        // full cancel
+        delta = currentSpaces;
+        updatedReservationSpaces = 0;
+        earningsDelta = Math.max(0, perSpacePayout * delta);
+        transaction.delete(resRef);
+      } else {
+        delta = effectiveRelease;
+        const nextSpaces = currentSpaces - effectiveRelease;
+        updatedReservationSpaces = nextSpaces;
+
+        earningsDelta = Math.max(0, perSpacePayout * delta);
+
+        const scale = nextSpaces / currentSpaces;
+        const nextTotalPrice = typeof resData.totalPrice === 'number' ? (resData.totalPrice * scale) : undefined;
+        const nextTotalPaid = typeof resData.totalPaid === 'number' ? (resData.totalPaid * scale) : undefined;
+        const nextServiceFee = typeof resData.serviceFee === 'number' ? (resData.serviceFee * scale) : undefined;
+        const nextHostPayout = typeof resData.hostPayout === 'number' ? (resData.hostPayout * scale) : undefined;
+
+        transaction.update(resRef, {
+          spaces: nextSpaces,
+          ...(nextTotalPrice !== undefined ? { totalPrice: nextTotalPrice } : {}),
+          ...(nextTotalPaid !== undefined ? { totalPaid: nextTotalPaid } : {}),
+          ...(nextServiceFee !== undefined ? { serviceFee: nextServiceFee } : {}),
+          ...(nextHostPayout !== undefined ? { hostPayout: nextHostPayout } : {}),
+          updatedAt: serverTimestamp(),
+        });
+      }
+
+      if (roomRef && roomData) {
+        const currentCap = getRoomCapacity(roomData);
+        const maxCap = getRoomMaxCapacity(roomData) || (currentCap + delta);
+        const nextCap = Math.min(maxCap, currentCap + delta);
+        transaction.update(roomRef, { capacity: nextCap, available: true, updatedAt: serverTimestamp() });
+      }
+
+      // Adjust host earnings when a reservation is reduced/cancelled.
+      if (hostUserRef && Number.isFinite(earningsDelta) && earningsDelta > 0) {
+        transaction.update(hostUserRef, {
+          totalEarnings: increment(-earningsDelta),
+          lastEarningUpdate: serverTimestamp(),
+        });
+      }
+    });
+
+    if (updatedReservationSpaces === 0) {
+      setMyReservations((prev) => prev.filter((x) => x.reservationId !== reservationId));
+    } else {
+      setMyReservations((prev) =>
+        prev.map((r) => (r.reservationId === reservationId ? { ...r, spaces: updatedReservationSpaces } : r))
+      );
+    }
+
+    if (roomId) {
+      // only updates if this user owns the room (it will exist in myRooms)
+      setMyRooms((prev) =>
+        prev.map((r) => {
+          if (r.id !== roomId) return r;
+          const currentCap = getRoomCapacity(r);
+          const maxCap = getRoomMaxCapacity(r) || (currentCap + delta);
+          return { ...r, capacity: Math.min(maxCap, currentCap + delta) };
+        })
+      );
+    }
+
+    dispatch({
+      type: "UPDATE_ALERT",
+      payload: {
+        open: true,
+        severity: "success",
+        message: updatedReservationSpaces === 0 ? 'Reservation updated' : `Released ${delta} space${delta !== 1 ? 's' : ''}`,
+      },
+    });
+  };
+
   const runConfirm = async () => {
     if (!confirmPayload) return;
     const { type, id, extra } = confirmPayload;
@@ -243,25 +486,123 @@ export default function UserDashboard() {
         await deleteDoc(doc(db, "rooms", id));
         setMyRooms((prev) => prev.filter((r) => r.id !== id));
         dispatch({ type: "UPDATE_ALERT", payload: { open: true, severity: "success", message: "Room deleted" } });
-      } else if (type === "toggleAvail") {
-        await updateDoc(doc(db, "rooms", id), { available: extra.newVal, updatedAt: serverTimestamp() });
-        setMyRooms((prev) => prev.map((r) => (r.id === id ? { ...r, available: extra.newVal } : r)));
-        dispatch({ type: "UPDATE_ALERT", payload: { open: true, severity: "success", message: `Room marked ${extra.newVal ? "available" : "reserved"}` } });
-      } else if (type === "unreserve") {
-        // confirmPayload.extra should contain reservationId and roomId
-        const { reservationId, roomId } = extra;
-        if (reservationId) await deleteDoc(doc(db, "reservations", reservationId));
-        if (roomId) await updateDoc(doc(db, "rooms", roomId), { available: true, updatedAt: serverTimestamp() });
-        // refresh lists locally
-        setMyReservations((prev) => prev.filter((x) => x.reservationId !== reservationId));
-        setMyRooms((prev) => prev.map((r) => (r.id === roomId ? { ...r, available: true } : r)));
-        dispatch({ type: "UPDATE_ALERT", payload: { open: true, severity: "success", message: "Reservation cancelled" } });
+      } else if (type === "toggleCapacity") {
+        // Pause listing (set capacity=0) or restore to maxCapacity
+        const roomId = id;
+        if (!roomId) throw new Error('Missing room id');
+        const roomRef = doc(db, "rooms", roomId);
+
+        let newCapacity = 0;
+        let newMaxCapacity = undefined;
+
+        await runTransaction(db, async (transaction) => {
+          const snap = await transaction.get(roomRef);
+          if (!snap.exists()) throw new Error('Room not found');
+          const roomData = { id: snap.id, ...snap.data() };
+          const currentCap = getRoomCapacity(roomData);
+          const maxCap = getRoomMaxCapacity(roomData) || (currentCap > 0 ? currentCap : 1);
+
+          if (currentCap > 0) {
+            newCapacity = 0;
+          } else {
+            newCapacity = maxCap > 0 ? maxCap : 1;
+          }
+
+          // For legacy docs, ensure maxCapacity exists once we touch it
+          if (!Number.isFinite(roomData.maxCapacity)) {
+            newMaxCapacity = maxCap;
+          }
+
+          transaction.update(roomRef, {
+            ...(newMaxCapacity !== undefined ? { maxCapacity: newMaxCapacity } : {}),
+            capacity: newCapacity,
+            available: true,
+            updatedAt: serverTimestamp(),
+          });
+        });
+
+        setMyRooms((prev) =>
+          prev.map((r) => {
+            if (r.id !== roomId) return r;
+            return {
+              ...r,
+              ...(newMaxCapacity !== undefined ? { maxCapacity: newMaxCapacity } : {}),
+              capacity: newCapacity,
+            };
+          })
+        );
+
+        dispatch({
+          type: "UPDATE_ALERT",
+          payload: {
+            open: true,
+            severity: "success",
+            message: newCapacity > 0 ? "Listing restored" : "Listing paused",
+          },
+        });
+      } else if (type === "unreserveAll" || type === "unreserveOne" || type === "unreserveN") {
+        const { reservationId, roomId } = extra || {};
+        await unreserveReservation({
+          kind: type,
+          reservationId,
+          roomId,
+          count: extra?.count ?? 1,
+        });
       }
     } catch (err) {
       console.error(err);
       dispatch({ type: "UPDATE_ALERT", payload: { open: true, severity: "error", message: err.message || "Action failed" } });
     } finally {
       setConfirmPayload(null);
+    }
+  };
+
+  const openRelease = (res) => {
+    setReleaseTarget(res);
+    setReleaseCount("1");
+    setReleaseOpen(true);
+  };
+
+  const closeRelease = () => {
+    if (releaseSubmitting) return;
+    setReleaseOpen(false);
+    setReleaseTarget(null);
+    setReleaseCount("1");
+  };
+
+  const submitRelease = async () => {
+    if (!releaseTarget) return;
+    const max = Math.max(1, Number.parseInt(String(releaseTarget?.spaces ?? 1), 10) || 1);
+    const requested = Number.parseInt(String(releaseCount ?? "").trim(), 10);
+
+    if (!Number.isFinite(requested) || requested < 1 || requested > max) {
+      dispatch({
+        type: "UPDATE_ALERT",
+        payload: {
+          open: true,
+          severity: "error",
+          message: `Please enter a number between 1 and ${max}.`,
+        },
+      });
+      return;
+    }
+
+    const n = requested;
+
+    setReleaseSubmitting(true);
+    try {
+      await unreserveReservation({
+        kind: 'unreserveN',
+        reservationId: releaseTarget.reservationId,
+        roomId: releaseTarget.room?.id,
+        count: n,
+      });
+      closeRelease();
+    } catch (err) {
+      console.error(err);
+      dispatch({ type: "UPDATE_ALERT", payload: { open: true, severity: "error", message: err.message || "Action failed" } });
+    } finally {
+      setReleaseSubmitting(false);
     }
   };
 
@@ -362,16 +703,21 @@ export default function UserDashboard() {
           </Box>
         )}
       </CardActionArea>
-      <CardContent sx={{ flex: "1 1 auto", p: 2 }}>
-        <Stack spacing={1.5}>
+      <CardContent sx={{ flex: "1 1 auto", p: 2, display: "flex", flexDirection: "column" }}>
+        <Stack spacing={1.5} sx={{ flexGrow: 1 }}>
           <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
             <Box>
+              {(() => {
+                const cap = getRoomCapacity(room);
+                const isAvail = cap > 0;
+                return (
+                  <>
               <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.text.primary, mb: 0.5 }}>
                 {room.title}
               </Typography>
               <Chip
-                label={room.available ? "Available" : "Reserved"}
-                color={room.available ? "success" : "error"}
+                label={isAvail ? `Available (${cap})` : "Reserved"}
+                color={isAvail ? "success" : "error"}
                 size="small"
                 sx={{
                   fontWeight: 600,
@@ -379,6 +725,9 @@ export default function UserDashboard() {
                   height: 22
                 }}
               />
+                  </>
+                );
+              })()}
             </Box>
             <Typography variant="h6" sx={{
               fontWeight: 800,
@@ -401,12 +750,14 @@ export default function UserDashboard() {
           }}>
             {room.description}
           </Typography>
+        </Stack>
 
+        <Box sx={{ mt: "auto" }}>
           <Divider sx={{ my: 1 }} />
 
           <Stack direction="row" justifyContent="space-between" alignItems="center">
             <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <CalendarMonth fontSize="small" /> Last updated {room.updatedAt?.toDate ? room.updatedAt.toDate().toLocaleDateString() : 'N/A'}
+              <CalendarMonth fontSize="small" /> Last updated {formatRoomDate(room.updatedAt)}
             </Typography>
             <Stack direction="row" spacing={0.5}>
               <Tooltip title="Edit">
@@ -421,18 +772,18 @@ export default function UserDashboard() {
                   <Edit fontSize="small" />
                 </IconButton>
               </Tooltip>
-              <Tooltip title={room.available ? "Mark Reserved" : "Mark Available"}>
+              <Tooltip title={getRoomCapacity(room) > 0 ? "Pause Listing" : "Restore Listing"}>
                 <IconButton
-                  onClick={() => confirmAction({ type: "toggleAvail", id: room.id, extra: { newVal: !room.available } })}
+                  onClick={() => confirmAction({ type: "toggleCapacity", id: room.id })}
                   size="small"
                   sx={{
-                    bgcolor: room.available ? alpha(theme.palette.warning.main, 0.1) : alpha(theme.palette.success.main, 0.1),
+                    bgcolor: getRoomCapacity(room) > 0 ? alpha(theme.palette.warning.main, 0.1) : alpha(theme.palette.success.main, 0.1),
                     '&:hover': {
-                      bgcolor: room.available ? alpha(theme.palette.warning.main, 0.2) : alpha(theme.palette.success.main, 0.2)
+                      bgcolor: getRoomCapacity(room) > 0 ? alpha(theme.palette.warning.main, 0.2) : alpha(theme.palette.success.main, 0.2)
                     }
                   }}
                 >
-                  {room.available ? <ToggleOff fontSize="small" /> : <ToggleOn fontSize="small" />}
+                  {getRoomCapacity(room) > 0 ? <ToggleOff fontSize="small" /> : <ToggleOn fontSize="small" />}
                 </IconButton>
               </Tooltip>
               <Tooltip title="Delete">
@@ -449,7 +800,7 @@ export default function UserDashboard() {
               </Tooltip>
             </Stack>
           </Stack>
-        </Stack>
+        </Box>
       </CardContent>
     </Card>
   );
@@ -604,7 +955,7 @@ export default function UserDashboard() {
                     Your Listings
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {myRooms.length} room{myRooms.length !== 1 ? 's' : ''} listed • {myRooms.filter(r => r.available).length} available
+                    {myRooms.length} room{myRooms.length !== 1 ? 's' : ''} listed • {myRooms.filter((r) => getRoomCapacity(r) > 0).length} available
                   </Typography>
                 </Box>
               </Stack>
@@ -714,29 +1065,30 @@ export default function UserDashboard() {
                       key={res.reservationId}
                       sx={{
                         transition: 'all 0.2s ease',
+                        overflow: 'hidden',
                         '&:hover': {
                           transform: 'translateX(4px)',
                           boxShadow: theme.shadows[4]
                         }
                       }}
                     >
-                      <Grid container>
-                        <Grid item xs={4}>
+                      <Grid container sx={{ minHeight: 110 }}>
+                        <Grid item xs={4} sx={{ display: 'flex' }}>
                           {res.room?.images?.[0] ? (
                             <CardMedia
                               component="img"
                               image={res.room.images[0]}
                               alt={res.room.title}
                               sx={{
-                                height: 100,
+                                width: '100%',
+                                height: '100%',
                                 objectFit: 'cover',
-                                borderTopLeftRadius: '4px',
-                                borderBottomLeftRadius: '4px'
                               }}
                             />
                           ) : (
                             <Box sx={{
-                              height: 100,
+                              width: '100%',
+                              height: '100%',
                               bgcolor: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.secondary.light} 100%)`,
                               display: 'flex',
                               alignItems: 'center',
@@ -746,27 +1098,56 @@ export default function UserDashboard() {
                             </Box>
                           )}
                         </Grid>
-                        <Grid item xs={8}>
-                          <CardContent sx={{ p: 1.5 }}>
+                        <Grid item xs={8} sx={{ display: 'flex' }}>
+                          <CardContent sx={{ p: 1.5, flex: 1, display: 'flex', flexDirection: 'column' }}>
                             <Stack spacing={1}>
                               <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                                <Typography variant="subtitle2" sx={{
-                                  fontWeight: 700,
-                                  color: theme.palette.text.primary,
-                                  lineHeight: 1.2
-                                }}>
-                                  {res.room?.title || 'Room Unavailable'}
-                                </Typography>
-                                <Chip
-                                  label={`$${res.room?.price ?? '—'}`}
-                                  size="small"
-                                  color="primary"
-                                  sx={{
-                                    height: 20,
-                                    fontSize: '0.7rem',
-                                    fontWeight: 700
-                                  }}
-                                />
+                                <Stack spacing={0.5} sx={{ minWidth: 0 }}>
+                                  <Typography variant="subtitle2" sx={{
+                                    fontWeight: 700,
+                                    color: theme.palette.text.primary,
+                                    lineHeight: 1.2
+                                  }}>
+                                    {res.room?.title || 'Room Unavailable'}
+                                  </Typography>
+                                  <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap', rowGap: 0.5 }}>
+                                    {!!res?.bookingEnd && (
+                                      <Chip
+                                        label={`Reserved until ${formatBookingDateTime(res.bookingEnd)}`}
+                                        size="small"
+                                        variant="outlined"
+                                        color="secondary"
+                                        sx={{
+                                          height: 20,
+                                          fontSize: '0.7rem',
+                                          fontWeight: 700,
+                                        }}
+                                      />
+                                    )}
+                                    <Chip
+                                      label={`${Math.max(1, Number.parseInt(String(res.spaces ?? 1), 10) || 1)} space${Math.max(1, Number.parseInt(String(res.spaces ?? 1), 10) || 1) !== 1 ? 's' : ''}`}
+                                      size="small"
+                                      variant="outlined"
+                                      sx={{
+                                        height: 20,
+                                        fontSize: '0.7rem',
+                                        fontWeight: 700,
+                                      }}
+                                    />
+                                  </Stack>
+                                </Stack>
+                                <Stack direction="row" spacing={0.5} alignItems="center">
+                                  <Chip
+                                    label={`$${res.room?.price ?? '—'}`}
+                                    size="small"
+                                    color="primary"
+                                    sx={{
+                                      height: 20,
+                                      fontSize: '0.7rem',
+                                      fontWeight: 700
+                                    }}
+                                  />
+                                </Stack>
                               </Stack>
 
                               <Typography variant="caption" color="text.secondary" sx={{
@@ -778,49 +1159,59 @@ export default function UserDashboard() {
                               }}>
                                 {res.room?.description || 'No description available'}
                               </Typography>
+                            </Stack>
 
-                              <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                                <Button
-                                  size="small"
-                                  variant="outlined"
-                                  onClick={() => navigate(`/booking/${res.room?.id}`, { state: { room: res.room } })}
-                                  sx={{
-                                    fontSize: '0.75rem',
-                                    py: 0.25
-                                  }}
-                                >
-                                  View Details
-                                </Button>
-                                <Tooltip title={"Cancel This Reservation"}>
-                                  <Button
-                                    size="small"
-                                    color="error"
-                                    variant="outlined"
-                                    onClick={() => confirmAction({ type: 'unreserve', extra: { reservationId: res.reservationId, roomId: res.room?.id } })}
-                                    sx={{
-                                      fontSize: '0.75rem',
-                                      py: 0.25
-                                    }}
-                                  >
-                                    Release
-                                  </Button>
-                                </Tooltip>
-                                <Tooltip title={res.hasRated ? "Change Rating" : ""}>
-                                  <Button
-                                    size="small"
-                                    variant="contained"
-                                    onClick={() => openRating(res)}
-                                    sx={{
-                                      fontSize: '0.75rem',
-                                      py: 0.25,
-                                      bgcolor: theme.palette.secondary.main,
-                                      '&:hover': { bgcolor: theme.palette.secondary.dark }
-                                    }}
-                                  >
-                                    {res.hasRated ? `⭐ ${res.userRating}` : "Rate"}
-                                  </Button>
-                                </Tooltip>
-                              </Stack>
+                            <Stack
+                              direction="row"
+                              spacing={1}
+                              sx={{
+                                mt: 'auto',
+                                pt: 1,
+                                flexWrap: 'wrap',
+                                rowGap: 1,
+                              }}
+                            >
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                onClick={() => navigate(`/booking/${res.room?.id}`, { state: { room: res.room } })}
+                                sx={{
+                                  fontSize: '0.75rem',
+                                  py: 0.25,
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                Details
+                              </Button>
+
+                              <Button
+                                size="small"
+                                color="error"
+                                variant="outlined"
+                                onClick={() => openRelease(res)}
+                                sx={{
+                                  fontSize: '0.75rem',
+                                  py: 0.25,
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                Release
+                              </Button>
+
+                              <Button
+                                size="small"
+                                variant="contained"
+                                onClick={() => openRating(res)}
+                                sx={{
+                                  fontSize: '0.75rem',
+                                  py: 0.25,
+                                  whiteSpace: 'nowrap',
+                                  bgcolor: theme.palette.secondary.main,
+                                  '&:hover': { bgcolor: theme.palette.secondary.dark }
+                                }}
+                              >
+                                {res.hasRated ? `⭐ ${res.userRating}` : "Rate"}
+                              </Button>
                             </Stack>
                           </CardContent>
                         </Grid>
@@ -833,6 +1224,114 @@ export default function UserDashboard() {
           </Grid>
         </Grid>
       </Container>
+
+      {/* Release spaces dialog */}
+      <Dialog open={releaseOpen} onClose={closeRelease} maxWidth="xs" fullWidth sx={{ zIndex: 900 }}>
+        <DialogTitle sx={{ fontWeight: 700 }}>Release Spaces</DialogTitle>
+        <DialogContent sx={{ pt: 1.5 }}>
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+              {releaseTarget?.room?.title || "Room Unavailable"}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+              {releaseTarget?.room?.fullAddress ||
+                [releaseTarget?.room?.address, releaseTarget?.room?.city, releaseTarget?.room?.state, releaseTarget?.room?.zipCode]
+                  .filter(Boolean)
+                  .join(", ") ||
+                ""}
+            </Typography>
+
+            <Stack direction="column" spacing={1} sx={{ mt: 1, flexWrap: 'wrap' }}>
+              <Chip
+                size="small"
+                label={`${Math.max(1, Number.parseInt(String(releaseTarget?.spaces ?? 1), 10) || 1)} reserved`}
+              />
+              <Chip
+                size="small"
+                color="primary"
+                variant="outlined"
+                label={`$${releaseTarget?.room?.price ?? "—"}`}
+              />
+              {(releaseTarget?.bookingStart || releaseTarget?.bookingEnd) && (
+                <Tooltip
+                  title={`${releaseTarget?.bookingStart ? new Date(releaseTarget.bookingStart).toLocaleString() : "—"} – ${releaseTarget?.bookingEnd ? new Date(releaseTarget.bookingEnd).toLocaleString() : "—"}`}
+                  placement="top"
+                  arrow
+                >
+                  <Chip
+                    size="small"
+                    variant="outlined"
+                    sx={{ flexBasis: '100%', maxWidth: '100%' }}
+                    label={
+                      <Box
+                        component="span"
+                        sx={{
+                          display: 'block',
+                          maxWidth: '100%',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          py: 0.25
+                        }}
+                      >
+                        {`${formatBookingDateTime(releaseTarget?.bookingStart)} – ${formatBookingDateTime(releaseTarget?.bookingEnd)}`}
+                      </Box>
+                    }
+                  />
+                </Tooltip>
+              )}
+            </Stack>
+          </Box>
+
+          <Typography color="text.secondary" sx={{ mb: 2 }}>
+            Choose how many spaces you want to release from this reservation.
+          </Typography>
+
+          <TextField
+            label="Spaces to release"
+            type="number"
+            fullWidth
+            value={releaseCount}
+            onChange={(e) => setReleaseCount(e.target.value)}
+            disabled={releaseSubmitting}
+            inputProps={{
+              min: 1,
+              max: Math.max(1, Number.parseInt(String(releaseTarget?.spaces ?? 1), 10) || 1),
+              step: 1,
+            }}
+            error={(() => {
+              const max = Math.max(1, Number.parseInt(String(releaseTarget?.spaces ?? 1), 10) || 1);
+              const requested = Number.parseInt(String(releaseCount ?? "").trim(), 10);
+              if (!String(releaseCount ?? "").trim()) return false;
+              return !Number.isFinite(requested) || requested < 1 || requested > max;
+            })()}
+            helperText={(() => {
+              const max = Math.max(1, Number.parseInt(String(releaseTarget?.spaces ?? 1), 10) || 1);
+              const requested = Number.parseInt(String(releaseCount ?? "").trim(), 10);
+              if (String(releaseCount ?? "").trim() && (!Number.isFinite(requested) || requested < 1 || requested > max)) {
+                return `Enter a number between 1 and ${max}.`;
+              }
+              return `You have ${max} space${max !== 1 ? 's' : ''} reserved. Releasing all cancels the reservation.`;
+            })()}
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 2, pt: 0 }}>
+          <Button onClick={closeRelease} variant="outlined" disabled={releaseSubmitting}>Cancel</Button>
+          <Button
+            onClick={submitRelease}
+            variant="contained"
+            color="error"
+            disabled={releaseSubmitting || (() => {
+              const max = Math.max(1, Number.parseInt(String(releaseTarget?.spaces ?? 1), 10) || 1);
+              const requested = Number.parseInt(String(releaseCount ?? "").trim(), 10);
+              return !Number.isFinite(requested) || requested < 1 || requested > max;
+            })()}
+            startIcon={releaseSubmitting ? <CircularProgress size={16} color="inherit" /> : null}
+          >
+            {releaseSubmitting ? 'Releasing…' : 'Release'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Edit dialog */}
       <Dialog open={editOpen} onClose={closeEdit} fullWidth maxWidth="sm" sx={{ zIndex: 900 }}>
@@ -864,6 +1363,43 @@ export default function UserDashboard() {
                 startAdornment: <Typography color="text.secondary">$</Typography>
               }}
             />
+
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Total Spaces (Max)"
+                  fullWidth
+                  type="number"
+                  value={editValues.maxCapacity || ''}
+                  onChange={(e) => setEditValues((s) => ({ ...s, maxCapacity: e.target.value }))}
+                  variant="outlined"
+                  size="small"
+                  inputProps={{ min: 1, max: MAX_LISTING_CAPACITY, step: 1 }}
+                  helperText={`Total capacity for this listing (1-${MAX_LISTING_CAPACITY})`}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Spaces Available Now"
+                  fullWidth
+                  type="number"
+                  value={editValues.capacity || ''}
+                  onChange={(e) => setEditValues((s) => ({ ...s, capacity: e.target.value }))}
+                  variant="outlined"
+                  size="small"
+                  inputProps={{
+                    min: 0,
+                    max: Math.min(
+                      MAX_LISTING_CAPACITY,
+                      Math.max(1, Number.parseInt(String(editValues.maxCapacity ?? MAX_LISTING_CAPACITY), 10) || MAX_LISTING_CAPACITY)
+                    ),
+                    step: 1,
+                  }}
+                  helperText="Current remaining spaces (0 = reserved)"
+                />
+              </Grid>
+            </Grid>
+
             <TextField
               label="Description"
               fullWidth
@@ -893,9 +1429,9 @@ export default function UserDashboard() {
           <Typography color="text.secondary">
             {confirmPayload?.type === 'deleteRoom'
               ? 'Are you sure you want to delete this room? This action cannot be undone.'
-              : confirmPayload?.type === 'toggleAvail'
-                ? 'Do you want to change the availability status of this room?'
-                : 'Are you sure you want to cancel this reservation?'}
+              : confirmPayload?.type === 'toggleCapacity'
+                ? 'Do you want to pause/restore this listing? (Pausing sets capacity to 0.)'
+                : 'Are you sure you want to update this reservation?'}
           </Typography>
         </DialogContent>
         <DialogActions sx={{ p: 2, pt: 0 }}>

@@ -21,6 +21,7 @@ const AboutPage = lazy(() => import("./Pages/AboutPage"));
 const TermsPage = lazy(() => import("./Pages/TermsPage"));
 const PrivacyPage = lazy(() => import("./Pages/PrivacyPage"));
 const SecurityPage = lazy(() => import("./Pages/SecurityPage"));
+const ContactPage = lazy(() => import("./Pages/ContactPage"));
 const Register = lazy(() => import("./Components/user/Register"));
 const Login = lazy(() => import("./Components/user/Login"));
 const Logout = lazy(() => import("./Components/user/Logout"));
@@ -92,6 +93,7 @@ const App = () => {
               <Route path="/terms" element={<TermsPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/security" element={<SecurityPage />} />
+              <Route path="/contact" element={<ContactPage />} />
               <Route path="/map" element={<ClusterMap />} />
               <Route path="/upload" element={<AddRoom />} />
               <Route path="/rooms" element={<Rooms />} />

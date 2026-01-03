@@ -8,6 +8,8 @@ const Notification = () => {
         dispatch,
     } = useValue();
 
+    const autoHideDuration = alert?.severity === 'error' ? 6000 : 5000;
+
     const handleClose = (event, reason) => {
         if (reason === 'clickaway') return; //user chooses to close alert
         dispatch({ type: 'UPDATE_ALERT', payload: { ...alert, open: false } });
@@ -15,7 +17,7 @@ const Notification = () => {
     return (
         <Snackbar //toggle
             open={alert.open} //global variable from context provider
-            autoHideDuration={2000} //6sec. duration
+            autoHideDuration={autoHideDuration} // keep visible long enough
             onClose={handleClose}
             anchorOrigin={{ vertical: 'top', horizontal: 'center' }} //position
             sx={{ zIndex: 99999 }} // Ensure it appears above Dialogs

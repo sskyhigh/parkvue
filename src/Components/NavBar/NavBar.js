@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import "./NavBar.css";
 import Parkvue from "../ParkvueLogo/ParkvueLogo";
 import {
@@ -43,16 +43,18 @@ import CheckIcon from "@mui/icons-material/Check";
 import PLogo from "../ParkvueLogo/P_Logo";
 import { Context } from "../../context/ContextProvider";
 import { useAppTheme } from "../../context/themeContext";
-import { useLocation } from "react-router-dom";
+
+const ROUTE_TABS = ["/map", "/about", "/upload", "/rooms"];
 
 const NavBar = () => {
+  const location = useLocation();
+  const loginState = { redirectTo: location.pathname + location.search };
   const ctx = useContext(Context) || {};
   const { currentUser } = ctx;
 
   const muiTheme = useTheme();
   const { mode, toggleTheme } = useAppTheme();
   const alpha = muiAlpha;
-  const location = useLocation();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [dropDownOpen, setDropDownOpen] = useState(false);
@@ -72,9 +74,8 @@ const NavBar = () => {
   };
 
   // update selected tab on route change
-  const tabs = ["/map", "/about", "/upload", "/rooms"];
   useEffect(() => {
-    if (!tabs.includes(location.pathname)) {
+    if (!ROUTE_TABS.includes(location.pathname)) {
       setSelectedTab("null");
     }
   }, [location.pathname]);
@@ -417,6 +418,7 @@ const NavBar = () => {
                 <Button
                   component={Link}
                   to="/login"
+                  state={loginState}
                   startIcon={<Login />}
                   sx={{
                     background: `linear-gradient(45deg, ${muiTheme.palette.primary.main}, ${muiTheme.palette.info.main})`,
@@ -437,6 +439,7 @@ const NavBar = () => {
                 </Button>
               )}
             </Box>
+
 
             {/* Mobile Menu Button */}
             <Box sx={{ display: { xs: "flex", md: "none" }, ml: "auto" }}>
@@ -713,6 +716,7 @@ const NavBar = () => {
               <Button
                 component={Link}
                 to="/login"
+                state={loginState}
                 fullWidth
                 startIcon={<Login />}
                 sx={{
