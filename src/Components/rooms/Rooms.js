@@ -1502,23 +1502,53 @@ const Rooms = () => {
           </DialogContent>
         )}
 
-        <DialogActions sx={{ p: 3, borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
+        <DialogActions
+          sx={{
+            p: 3,
+            borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: { xs: 'stretch', sm: 'center' },
+            justifyContent: { xs: 'flex-start', sm: 'flex-end' },
+            gap: { xs: 1, sm: 1.5 },
+            // MUI DialogActions adds `margin-left` between actions by default.
+            // When stacked (column) this creates the "stepped" indentation.
+            '& > :not(style) + :not(style)': { marginLeft: 0 },
+          }}
+        >
           <Button
             onClick={handleViewOnMap}
             variant="outlined"
             startIcon={<PlaceIcon />}
-            sx={{ borderRadius: 2 }}>
+            fullWidth
+            sx={{
+              borderRadius: 2,
+              width: { xs: '100%', sm: 'auto' },
+            }}
+          >
             View on Map
           </Button>
-          <Button onClick={handleCloseDialog} variant="outlined" sx={{ borderRadius: 2 }}>
+          <Button
+            onClick={handleCloseDialog}
+            variant="outlined"
+            fullWidth
+            sx={{
+              borderRadius: 2,
+              width: { xs: '100%', sm: 'auto' },
+            }}
+          >
             Close
           </Button>
           <Button
             variant="contained"
             onClick={handleBookClick}
             disabled={!isRoomAvailable(selectedRoom)}
-            sx={{ borderRadius: 2, px: 4 }}
             startIcon={<CheckCircle />}
+            fullWidth
+            sx={{
+              borderRadius: 2,
+              px: { xs: 2, sm: 4 },
+              width: { xs: '100%', sm: 'auto' },
+            }}
           >
             Book This Space
           </Button>
