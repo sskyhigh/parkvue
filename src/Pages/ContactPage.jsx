@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Button,
+  CircularProgress,
   Container,
   FormControl,
   InputLabel,
@@ -24,12 +25,13 @@ import {
   MonetizationOn,
   Security,
 } from '@mui/icons-material';
+import { useForm, ValidationError } from '@formspree/react';
 import { useValue } from '../context/ContextProvider';
 import logo from '../img/parkvue_logo.png';
 
 const fadeInUp = keyframes`
   from { 
-    opacity: 0; 
+    opacity: 0;
     transform: translateY(20px); 
   }
   to { 
@@ -42,6 +44,7 @@ const ContactPage = () => {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
   const { dispatch } = useValue();
+  const [state, formspreeHandleSubmit] = useForm('xjgkoope');
 
   const requestTypeOptions = useMemo(
     () => [
@@ -82,72 +85,67 @@ const ContactPage = () => {
     setForm((prev) => ({ ...prev, [field]: event.target.value }));
   };
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-
-    // Custom validation with dispatch alerts
+  const validateForm = () => {
     if (!form.requestType) {
-      dispatch({
-        type: 'UPDATE_ALERT',
-        payload: { open: true, severity: 'error', message: 'Please select how we can help you' },
-      });
-      return;
+      return 'Please select how we can help you';
     }
 
     if (!form.firstName.trim()) {
-      dispatch({
-        type: 'UPDATE_ALERT',
-        payload: { open: true, severity: 'error', message: 'First name is required' },
-      });
-      return;
+      return 'First name is required';
     }
 
     if (!form.lastName.trim()) {
-      dispatch({
-        type: 'UPDATE_ALERT',
-        payload: { open: true, severity: 'error', message: 'Last name is required' },
-      });
-      return;
+      return 'Last name is required';
     }
 
     if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) {
-      dispatch({
-        type: 'UPDATE_ALERT',
-        payload: { open: true, severity: 'error', message: 'Please enter a valid email address' },
-      });
-      return;
+      return 'Please enter a valid email address';
     }
 
     if (!form.country) {
-      dispatch({
-        type: 'UPDATE_ALERT',
-        payload: { open: true, severity: 'error', message: 'Please select your country' },
-      });
-      return;
+      return 'Please select your country';
     }
 
     if (!form.description.trim()) {
+      return 'Please describe your request';
+    }
+
+    return '';
+  };
+
+  const handleSubmit = async (event) => {
+    const validationError = validateForm();
+    if (validationError) {
+      event.preventDefault();
       dispatch({
         type: 'UPDATE_ALERT',
-        payload: { open: true, severity: 'error', message: 'Please describe your request' },
+        payload: { open: true, severity: 'error', message: validationError },
       });
       return;
     }
 
-    // TODO: Submit form to backend
-    console.log('Form submitted:', form);
+    await formspreeHandleSubmit(event);
 
-    // Show success message
+    if (state.errors && state.errors.length > 0) {
+      dispatch({
+        type: 'UPDATE_ALERT',
+        payload: { open: true, severity: 'error', message: 'Submission failed. Please try again.' },
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (!state.succeeded) return;
+
     dispatch({
       type: 'UPDATE_ALERT',
       payload: {
         open: true,
         severity: 'success',
-        message: 'Thank you for contacting us! We\'ll get back to you within 24 hours.',
+        message: "Thanks! We received your message and will get back to you soon.",
       },
     });
 
-    // Reset form
     setForm({
       requestType: '',
       firstName: '',
@@ -158,7 +156,7 @@ const ContactPage = () => {
       country: '',
       description: '',
     });
-  };
+  }, [dispatch, state.succeeded]);
 
   const highlights = [
     {
@@ -378,14 +376,24 @@ const ContactPage = () => {
             </Typography>
 
             <Box component="form" onSubmit={handleSubmit} noValidate sx={{ display: 'grid', gap: 2.5 }}>
+              <input type="hidden" name="_subject" value="Parkvue Contact Request" />
               <FormControl fullWidth>
-                <InputLabel id="contact-request-type-label">How can we help you? *</InputLabel>
+                <InputLabel shrink id="contact-request-type-label">How can we help you? *</InputLabel>
                 <Select
                   labelId="contact-request-type-label"
+                  name="requestType"
                   value={form.requestType}
                   label="How can we help you? *"
                   onChange={handleChange('requestType')}
+                  displayEmpty
+                  renderValue={(selected) => {
+                    if (!selected) return 'Select...';
+                    return requestTypeOptions.find((o) => o.value === selected)?.label ?? 'Select...';
+                  }}
                 >
+                  <MenuItem value="">
+                    <em>Select...</em>
+                  </MenuItem>
                   {requestTypeOptions.map((opt) => (
                     <MenuItem key={opt.value} value={opt.value}>
                       {opt.label}
@@ -393,6 +401,8 @@ const ContactPage = () => {
                   ))}
                 </Select>
               </FormControl>
+
+              <ValidationError prefix="Request type" field="requestType" errors={state.errors} />
 
               <Box
                 sx={{
@@ -403,6 +413,7 @@ const ContactPage = () => {
               >
                 <TextField
                   label="First Name"
+                  name="firstName"
                   value={form.firstName}
                   onChange={handleChange('firstName')}
                   fullWidth
@@ -410,6 +421,7 @@ const ContactPage = () => {
                 />
                 <TextField
                   label="Last Name"
+                  name="lastName"
                   value={form.lastName}
                   onChange={handleChange('lastName')}
                   fullWidth
@@ -419,6 +431,7 @@ const ContactPage = () => {
 
               <TextField
                 label="Email Address"
+                name="email"
                 value={form.email}
                 onChange={handleChange('email')}
                 fullWidth
@@ -426,8 +439,11 @@ const ContactPage = () => {
                 type="email"
               />
 
+              <ValidationError prefix="Email" field="email" errors={state.errors} />
+
               <TextField
                 label="Job Title"
+                name="jobTitle"
                 value={form.jobTitle}
                 onChange={handleChange('jobTitle')}
                 fullWidth
@@ -435,19 +451,29 @@ const ContactPage = () => {
 
               <TextField
                 label="Company Name"
+                name="companyName"
                 value={form.companyName}
                 onChange={handleChange('companyName')}
                 fullWidth
               />
 
               <FormControl fullWidth>
-                <InputLabel id="contact-country-label">Country *</InputLabel>
+                <InputLabel shrink id="contact-country-label">Country *</InputLabel>
                 <Select
                   labelId="contact-country-label"
+                  name="country"
                   value={form.country}
                   label="Country *"
                   onChange={handleChange('country')}
+                  displayEmpty
+                  renderValue={(selected) => {
+                    if (!selected) return 'Select...';
+                    return countryOptions.find((o) => o.value === selected)?.label ?? 'Select...';
+                  }}
                 >
+                  <MenuItem value="">
+                    <em>Select...</em>
+                  </MenuItem>
                   {countryOptions.map((opt) => (
                     <MenuItem key={opt.value} value={opt.value}>
                       {opt.label}
@@ -456,8 +482,11 @@ const ContactPage = () => {
                 </Select>
               </FormControl>
 
+              <ValidationError prefix="Country" field="country" errors={state.errors} />
+
               <TextField
                 label="Describe your request"
+                name="description"
                 value={form.description}
                 onChange={handleChange('description')}
                 fullWidth
@@ -467,10 +496,14 @@ const ContactPage = () => {
                 placeholder="Tell us more about how we can help you..."
               />
 
+              <ValidationError prefix="Message" field="description" errors={state.errors} />
+
               <Button
                 type="submit"
                 variant="contained"
                 size="large"
+                disabled={state.submitting}
+                endIcon={state.submitting ? <CircularProgress size={20} color="inherit" /> : null}
                 sx={{
                   mt: 1,
                   py: 1.5,
@@ -485,7 +518,7 @@ const ContactPage = () => {
                   },
                 }}
               >
-                Submit Request
+                {state.submitting ? 'Submitting...' : 'Submit Request'}
               </Button>
             </Box>
           </Paper>

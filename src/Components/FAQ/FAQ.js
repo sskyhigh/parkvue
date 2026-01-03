@@ -282,7 +282,7 @@ function FAQ() {
           </Typography>
           <Box
             component="button"
-            onClick={() => navigate('/about')}
+            onClick={() => navigate('/contact')}
             sx={{
               background: isDarkMode
                 ? theme.customStyles?.neonGradient || "linear-gradient(45deg, #6C63FF, #FF6584)"
