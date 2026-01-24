@@ -1390,7 +1390,7 @@ CONSTRAINTS:
                 minWidth: 250,
               }}
             >
-              {uploading ? "Publishing..." : "Publish Parking Spot"}
+              {uploading ? "Publishing..." : "Publish Spot"}
             </Button>
           </Box>
         </Paper>

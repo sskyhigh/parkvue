@@ -19,6 +19,7 @@ import {
   Skeleton,
   Divider,
   useTheme,
+  useMediaQuery,
   Tooltip,
   Paper,
   Container,
@@ -61,10 +62,23 @@ import { getRoomCapacity, getRoomMaxCapacity, isRoomAvailable, MAX_LISTING_CAPAC
 // UserDashboard component
 export default function UserDashboard() {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
   const location = useLocation();
   const { dispatch } = useValue();
   const { currentUser } = useContext(Context) || {};
+
+  const chipSx = {
+    maxWidth: '100%',
+    height: 'auto',
+    '& .MuiChip-label': {
+      maxWidth: '100%',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
+      py: 0.25,
+    },
+  };
 
   const formatRoomDate = (value) => {
     if (!value) return "N/A";
@@ -722,7 +736,8 @@ export default function UserDashboard() {
                 sx={{
                   fontWeight: 600,
                   fontSize: '0.75rem',
-                  height: 22
+                  height: 22,
+                  ...chipSx,
                 }}
               />
                   </>
@@ -1072,8 +1087,8 @@ export default function UserDashboard() {
                         }
                       }}
                     >
-                      <Grid container sx={{ minHeight: 110 }}>
-                        <Grid item xs={4} sx={{ display: 'flex' }}>
+                      <Grid container sx={{ minHeight: { xs: 'auto', sm: 110 } }}>
+                        <Grid item xs={12} sm={4} sx={{ display: 'flex' }}>
                           {res.room?.images?.[0] ? (
                             <CardMedia
                               component="img"
@@ -1081,14 +1096,14 @@ export default function UserDashboard() {
                               alt={res.room.title}
                               sx={{
                                 width: '100%',
-                                height: '100%',
+                                height: { xs: 140, sm: '100%' },
                                 objectFit: 'cover',
                               }}
                             />
                           ) : (
                             <Box sx={{
                               width: '100%',
-                              height: '100%',
+                              height: { xs: 140, sm: '100%' },
                               bgcolor: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.secondary.light} 100%)`,
                               display: 'flex',
                               alignItems: 'center',
@@ -1098,10 +1113,15 @@ export default function UserDashboard() {
                             </Box>
                           )}
                         </Grid>
-                        <Grid item xs={8} sx={{ display: 'flex' }}>
+                        <Grid item xs={12} sm={8} sx={{ display: 'flex' }}>
                           <CardContent sx={{ p: 1.5, flex: 1, display: 'flex', flexDirection: 'column' }}>
                             <Stack spacing={1}>
-                              <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                              <Stack
+                                direction={{ xs: 'column', sm: 'row' }}
+                                justifyContent="space-between"
+                                alignItems={{ xs: 'flex-start', sm: 'flex-start' }}
+                                spacing={{ xs: 1, sm: 0 }}
+                              >
                                 <Stack spacing={0.5} sx={{ minWidth: 0 }}>
                                   <Typography variant="subtitle2" sx={{
                                     fontWeight: 700,
@@ -1110,7 +1130,12 @@ export default function UserDashboard() {
                                   }}>
                                     {res.room?.title || 'Room Unavailable'}
                                   </Typography>
-                                  <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap', rowGap: 0.5 }}>
+                                  <Stack
+                                    direction="row"
+                                    spacing={0.5}
+                                    useFlexGap
+                                    sx={{ flexWrap: 'wrap', rowGap: 0.5, maxWidth: '100%' }}
+                                  >
                                     {!!res?.bookingEnd && (
                                       <Chip
                                         label={`Reserved until ${formatBookingDateTime(res.bookingEnd)}`}
@@ -1121,6 +1146,7 @@ export default function UserDashboard() {
                                           height: 20,
                                           fontSize: '0.7rem',
                                           fontWeight: 700,
+                                          ...chipSx,
                                         }}
                                       />
                                     )}
@@ -1132,11 +1158,12 @@ export default function UserDashboard() {
                                         height: 20,
                                         fontSize: '0.7rem',
                                         fontWeight: 700,
+                                        ...chipSx,
                                       }}
                                     />
                                   </Stack>
                                 </Stack>
-                                <Stack direction="row" spacing={0.5} alignItems="center">
+                                <Stack direction="row" spacing={0.5} alignItems="center" sx={{ width: { xs: '100%', sm: 'auto' } }}>
                                   <Chip
                                     label={`$${res.room?.price ?? '—'}`}
                                     size="small"
@@ -1144,7 +1171,8 @@ export default function UserDashboard() {
                                     sx={{
                                       height: 20,
                                       fontSize: '0.7rem',
-                                      fontWeight: 700
+                                      fontWeight: 700,
+                                      ...chipSx,
                                     }}
                                   />
                                 </Stack>
@@ -1164,6 +1192,7 @@ export default function UserDashboard() {
                             <Stack
                               direction="row"
                               spacing={1}
+                              useFlexGap
                               sx={{
                                 mt: 'auto',
                                 pt: 1,
@@ -1179,6 +1208,7 @@ export default function UserDashboard() {
                                   fontSize: '0.75rem',
                                   py: 0.25,
                                   whiteSpace: 'nowrap',
+                                  flex: { xs: '1 1 calc(50% - 8px)', sm: '0 0 auto' },
                                 }}
                               >
                                 Details
@@ -1193,6 +1223,7 @@ export default function UserDashboard() {
                                   fontSize: '0.75rem',
                                   py: 0.25,
                                   whiteSpace: 'nowrap',
+                                  flex: { xs: '1 1 calc(50% - 8px)', sm: '0 0 auto' },
                                 }}
                               >
                                 Release
@@ -1207,7 +1238,8 @@ export default function UserDashboard() {
                                   py: 0.25,
                                   whiteSpace: 'nowrap',
                                   bgcolor: theme.palette.secondary.main,
-                                  '&:hover': { bgcolor: theme.palette.secondary.dark }
+                                  '&:hover': { bgcolor: theme.palette.secondary.dark },
+                                  flex: { xs: '1 1 100%', sm: '0 0 auto' },
                                 }}
                               >
                                 {res.hasRated ? `⭐ ${res.userRating}` : "Rate"}
@@ -1226,9 +1258,16 @@ export default function UserDashboard() {
       </Container>
 
       {/* Release spaces dialog */}
-      <Dialog open={releaseOpen} onClose={closeRelease} maxWidth="xs" fullWidth sx={{ zIndex: 900 }}>
+      <Dialog
+        open={releaseOpen}
+        onClose={closeRelease}
+        maxWidth="xs"
+        fullWidth
+        fullScreen={isMobile}
+        PaperProps={{ sx: { borderRadius: isMobile ? 0 : 2 } }}
+      >
         <DialogTitle sx={{ fontWeight: 700 }}>Release Spaces</DialogTitle>
-        <DialogContent sx={{ pt: 1.5 }}>
+        <DialogContent sx={{ pt: 1.5, pb: 1 }}>
           <Box sx={{ mb: 2 }}>
             <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
               {releaseTarget?.room?.title || "Room Unavailable"}
@@ -1245,12 +1284,14 @@ export default function UserDashboard() {
               <Chip
                 size="small"
                 label={`${Math.max(1, Number.parseInt(String(releaseTarget?.spaces ?? 1), 10) || 1)} reserved`}
+                sx={chipSx}
               />
               <Chip
                 size="small"
                 color="primary"
                 variant="outlined"
                 label={`$${releaseTarget?.room?.price ?? "—"}`}
+                sx={chipSx}
               />
               {(releaseTarget?.bookingStart || releaseTarget?.bookingEnd) && (
                 <Tooltip
@@ -1315,8 +1356,20 @@ export default function UserDashboard() {
             })()}
           />
         </DialogContent>
-        <DialogActions sx={{ p: 2, pt: 0 }}>
-          <Button onClick={closeRelease} variant="outlined" disabled={releaseSubmitting}>Cancel</Button>
+        <DialogActions
+          sx={{
+            p: 2,
+            pt: 0,
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: { xs: 'stretch', sm: 'center' },
+            gap: 1,
+            '& > :not(style) ~ :not(style)': {
+              ml: { xs: 0, sm: 1 },
+              mt: { xs: 1, sm: 0 },
+            },
+          }}
+        >
+          <Button onClick={closeRelease} variant="outlined" disabled={releaseSubmitting} fullWidth={isMobile}>Cancel</Button>
           <Button
             onClick={submitRelease}
             variant="contained"
@@ -1327,6 +1380,7 @@ export default function UserDashboard() {
               return !Number.isFinite(requested) || requested < 1 || requested > max;
             })()}
             startIcon={releaseSubmitting ? <CircularProgress size={16} color="inherit" /> : null}
+            fullWidth={isMobile}
           >
             {releaseSubmitting ? 'Releasing…' : 'Release'}
           </Button>
@@ -1334,7 +1388,14 @@ export default function UserDashboard() {
       </Dialog>
 
       {/* Edit dialog */}
-      <Dialog open={editOpen} onClose={closeEdit} fullWidth maxWidth="sm" sx={{ zIndex: 900 }}>
+      <Dialog
+        open={editOpen}
+        onClose={closeEdit}
+        fullWidth
+        maxWidth="sm"
+        fullScreen={isMobile}
+        PaperProps={{ sx: { borderRadius: isMobile ? 0 : 2 } }}
+      >
         <DialogTitle sx={{
           bgcolor: theme.palette.primary.main,
           color: 'white',
@@ -1342,7 +1403,7 @@ export default function UserDashboard() {
         }}>
           Edit Room Details
         </DialogTitle>
-        <DialogContent sx={{ mt: 2 }}>
+        <DialogContent sx={{ mt: 2, pb: 1 }}>
           <Stack spacing={3} sx={{ mt: 1 }}>
             <TextField
               label="Title"
@@ -1364,8 +1425,14 @@ export default function UserDashboard() {
               }}
             />
 
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', sm: 'row' },
+                gap: 2,
+              }}
+            >
+              <Box sx={{ flex: 1, minWidth: 0 }}>
                 <TextField
                   label="Total Spaces (Max)"
                   fullWidth
@@ -1377,8 +1444,8 @@ export default function UserDashboard() {
                   inputProps={{ min: 1, max: MAX_LISTING_CAPACITY, step: 1 }}
                   helperText={`Total capacity for this listing (1-${MAX_LISTING_CAPACITY})`}
                 />
-              </Grid>
-              <Grid item xs={12} sm={6}>
+              </Box>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
                 <TextField
                   label="Spaces Available Now"
                   fullWidth
@@ -1397,8 +1464,8 @@ export default function UserDashboard() {
                   }}
                   helperText="Current remaining spaces (0 = reserved)"
                 />
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
 
             <TextField
               label="Description"
@@ -1412,18 +1479,37 @@ export default function UserDashboard() {
             />
           </Stack>
         </DialogContent>
-        <DialogActions sx={{ p: 2, pt: 0 }}>
-          <Button onClick={closeEdit} variant="outlined">
+        <DialogActions
+          sx={{
+            p: 2,
+            pt: 0,
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: { xs: 'stretch', sm: 'center' },
+            gap: 1,
+            '& > :not(style) ~ :not(style)': {
+              ml: { xs: 0, sm: 1 },
+              mt: { xs: 1, sm: 0 },
+            },
+          }}
+        >
+          <Button onClick={closeEdit} variant="outlined" fullWidth={isMobile}>
             Cancel
           </Button>
-          <Button onClick={handleEditSave} variant="contained" sx={{ ml: 1 }}>
+          <Button onClick={handleEditSave} variant="contained" fullWidth={isMobile} sx={{ ml: { sm: 1 } }}>
             Save Changes
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Confirm dialog */}
-      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)} maxWidth="xs" sx={{ zIndex: 900 }}>
+      <Dialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        maxWidth="xs"
+        fullWidth
+        fullScreen={isMobile}
+        PaperProps={{ sx: { borderRadius: isMobile ? 0 : 2 } }}
+      >
         <DialogTitle sx={{ fontWeight: 700 }}>Confirm Action</DialogTitle>
         <DialogContent>
           <Typography color="text.secondary">
@@ -1434,18 +1520,37 @@ export default function UserDashboard() {
                 : 'Are you sure you want to update this reservation?'}
           </Typography>
         </DialogContent>
-        <DialogActions sx={{ p: 2, pt: 0 }}>
-          <Button onClick={() => setConfirmOpen(false)} variant="outlined">
+        <DialogActions
+          sx={{
+            p: 2,
+            pt: 0,
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: { xs: 'stretch', sm: 'center' },
+            gap: 1,
+            '& > :not(style) ~ :not(style)': {
+              ml: { xs: 0, sm: 1 },
+              mt: { xs: 1, sm: 0 },
+            },
+          }}
+        >
+          <Button onClick={() => setConfirmOpen(false)} variant="outlined" fullWidth={isMobile}>
             No, Keep
           </Button>
-          <Button onClick={runConfirm} variant="contained" color={confirmPayload?.type === 'deleteRoom' ? 'error' : 'primary'}>
+          <Button onClick={runConfirm} variant="contained" fullWidth={isMobile} color={confirmPayload?.type === 'deleteRoom' ? 'error' : 'primary'}>
             Yes, Continue
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Rating dialog */}
-      <Dialog open={ratingOpen} onClose={closeRating} maxWidth="sm" sx={{ zIndex: 900 }}>
+      <Dialog
+        open={ratingOpen}
+        onClose={closeRating}
+        maxWidth="sm"
+        fullWidth
+        fullScreen={isMobile}
+        PaperProps={{ sx: { borderRadius: isMobile ? 0 : 2 } }}
+      >
         <DialogTitle sx={{
           bgcolor: theme.palette.secondary.main,
           color: 'white',
@@ -1453,7 +1558,7 @@ export default function UserDashboard() {
         }}>
           Rate Your Experience
         </DialogTitle>
-        <DialogContent sx={{ mt: 2 }}>
+        <DialogContent sx={{ mt: 2, pb: 1 }}>
           <Stack spacing={2}>
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 600 }}>
@@ -1468,7 +1573,7 @@ export default function UserDashboard() {
               <Typography variant="body1" sx={{ mb: 2 }}>
                 How would you rate this parking space?
               </Typography>
-              <Stack direction="row" spacing={1} justifyContent="center">
+              <Stack direction="row" spacing={{ xs: 0.5, sm: 1 }} justifyContent="center" sx={{ flexWrap: 'wrap' }}>
                 {[1, 2, 3, 4, 5].map((star) => (
                   <IconButton
                     key={star}
@@ -1488,22 +1593,41 @@ export default function UserDashboard() {
             </Box>
           </Stack>
         </DialogContent>
-        <DialogActions sx={{ p: 2, pt: 0 }}>
-          <Button onClick={closeRating} variant="outlined">
+        <DialogActions
+          sx={{
+            p: 2,
+            pt: 0,
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: { xs: 'stretch', sm: 'center' },
+            gap: 1,
+            '& > :not(style) ~ :not(style)': {
+              ml: { xs: 0, sm: 1 },
+              mt: { xs: 1, sm: 0 },
+            },
+          }}
+        >
+          <Button onClick={closeRating} variant="outlined" fullWidth={isMobile}>
             Cancel
           </Button>
           <Button 
             onClick={submitRating} 
             variant="contained" 
             disabled={!selectedRating || ratingSubmitting}
-            loading={ratingSubmitting}
+            fullWidth={isMobile}
             sx={{ 
-              ml: 1,
+              ml: { sm: 1 },
               bgcolor: theme.palette.secondary.main,
               '&:hover': { bgcolor: theme.palette.secondary.dark }
             }}
           >
-            Rate
+            {ratingSubmitting ? (
+              <>
+                <CircularProgress size={16} color="inherit" sx={{ mr: 1 }} />
+                Rate
+              </>
+            ) : (
+              'Rate'
+            )}
           </Button>
         </DialogActions>
       </Dialog>

@@ -117,6 +117,17 @@ const Booking = () => {
   const navigate = useNavigate();
   const theme = useTheme();
 
+  const chipSx = {
+    maxWidth: '100%',
+    '& .MuiChip-label': {
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
+      maxWidth: '100%',
+      display: 'block',
+    },
+  };
+
   const bookingDraftKey = `parkvue_booking_draft:${roomId || "unknown"}`;
 
   // room data state
@@ -934,43 +945,59 @@ if (!loading && !room) {
                     >
                       {room.title}
                     </Typography>
-                    <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      useFlexGap
+                      alignItems="center"
+                      flexWrap="wrap"
+                      sx={{
+                        width: '100%',
+                        '& .MuiChip-root': { maxWidth: '100%' },
+                      }}
+                    >
                       <Chip
                         icon={<CheckCircle fontSize="small" />}
                         label={availableNow ? "Available" : "Reserved"}
                         color={availableNow ? "success" : "error"}
-                        sx={{ fontWeight: 600 }}
+                        sx={{ ...chipSx, fontWeight: 600 }}
                       />
                       <Chip
                         icon={isCommercialListing(room) ? <GarageIcon fontSize="small" /> : <ParkingIcon fontSize="small" />}
                         label={isCommercialListing(room) ? "Commercial" : "Single"}
                         color="secondary"
-                        sx={{ fontWeight: 700 }}
+                        sx={{ ...chipSx, fontWeight: 700 }}
                       />
                       <Chip
                         icon={<DirectionsCar fontSize="small" />}
                         label={`Spaces left: ${remainingCapacity}`}
                         color={availableNow ? "primary" : "default"}
                         variant={availableNow ? "filled" : "outlined"}
-                        sx={{ fontWeight: 600 }}
+                        sx={{ ...chipSx, fontWeight: 600 }}
                       />
                       <Chip
                         icon={<Person fontSize="small" />}
                         label={`Owner: ${room.ownerName || "Anonymous"}`}
                         color="default"
-                        variant="primary"
+                        variant="outlined"
                         onClick={() => {
                           if (room.createdBy) {
                             navigate(`/seller/${room.createdBy}`);
                           }
                         }}
-                        sx={{ cursor: room.createdBy ? 'pointer' : 'default' }}
+                        clickable={!!room.createdBy}
+                        sx={{
+                          ...chipSx,
+                          cursor: room.createdBy ? 'pointer' : 'default',
+                          width: { xs: '100%', sm: 'auto' },
+                          justifyContent: 'flex-start',
+                        }}
                       />
                       <Chip
                         icon={<AttachMoney fontSize="small" />}
                         label={`$${priceNice}`}
                         color="primary"
-                        sx={{ fontWeight: 600 }}
+                        sx={{ ...chipSx, fontWeight: 600 }}
                       />
                     </Stack>
                   </Box>
@@ -1118,14 +1145,14 @@ if (!loading && !room) {
                       >
                         Amenities
                       </Typography>
-                      <Stack direction="row" spacing={1} flexWrap="wrap">
+                      <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
                         {(room.amenities || []).map((amenity, index) => (
                           <Chip
                             key={index}
                             label={amenity}
                             size="small"
                             variant="outlined"
-                            sx={{ mb: 1 }}
+                            sx={{ ...chipSx, mb: 1 }}
                           />
                         ))}
                       </Stack>
@@ -1321,8 +1348,14 @@ if (!loading && !room) {
                     </Box>
 
                     {/* Expiry and CVC */}
-                    <Grid container>
-                      <Grid item xs={6}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexDirection: { xs: 'column', sm: 'row' },
+                        gap: 2,
+                      }}
+                    >
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
                           Expiry Date
                         </Typography>
@@ -1342,9 +1375,9 @@ if (!loading && !room) {
                           size="small"
                           disabled={!availableNow || processing}
                         />
-                      </Grid>
-                      <Grid item xs={6}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, ml: 0.3 }}>
+                      </Box>
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
                           CVC
                         </Typography>
                         <TextField
@@ -1354,12 +1387,11 @@ if (!loading && !room) {
                           error={!!errors.cardCvc}
                           helperText={errors.cardCvc}
                           fullWidth
-                          sx={{ ml: 0.5, pr: 0.5 }}
                           size="small"
                           disabled={!availableNow || processing}
                         />
-                      </Grid>
-                    </Grid>
+                      </Box>
+                    </Box>
 
                     <Divider />
 

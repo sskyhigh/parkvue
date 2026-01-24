@@ -13,6 +13,7 @@ import {
     DialogActions,
     TextField,
     useTheme,
+    useMediaQuery,
     alpha,
     Alert,
     IconButton,
@@ -48,6 +49,7 @@ const UserProfile = () => {
     const { dispatch } = useValue();
     const { currentUser, setCurrentUser } = useContext(Context);
     const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const isDarkMode = theme.palette.mode === 'dark';
     const navigate = useNavigate();
     const location = useLocation();
@@ -574,8 +576,16 @@ const UserProfile = () => {
                                     },
                                 }}
                             >
-                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: { xs: 'flex-start', sm: 'center' },
+                                        justifyContent: 'space-between',
+                                        flexDirection: { xs: 'column', sm: 'row' },
+                                        gap: 2,
+                                    }}
+                                >
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 0 }}>
                                         <Box
                                             sx={{
                                                 p: 1.5,
@@ -586,7 +596,7 @@ const UserProfile = () => {
                                         >
                                             <Badge />
                                         </Box>
-                                        <Box>
+                                        <Box sx={{ minWidth: 0 }}>
                                             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
                                                 Full Name
                                             </Typography>
@@ -601,6 +611,7 @@ const UserProfile = () => {
                                         sx={{
                                             borderRadius: 2,
                                             textTransform: 'none',
+                                            alignSelf: { xs: 'flex-end', sm: 'auto' },
                                         }}
                                     >
                                         Edit
@@ -664,6 +675,7 @@ const UserProfile = () => {
                                                 color: theme.palette.success.main,
                                                 whiteSpace: 'nowrap',
                                                 flexShrink: 0,
+                                                alignSelf: { xs: 'flex-end', sm: 'auto' },
                                             }}
                                         >
                                             Verified
@@ -679,6 +691,7 @@ const UserProfile = () => {
                                                 textTransform: 'none',
                                                 whiteSpace: 'nowrap',
                                                 flexShrink: 0,
+                                                alignSelf: { xs: 'flex-end', sm: 'auto' },
                                             }}
                                         >
                                             {sendingVerification ? <PulseLoader size={6} /> : 'Verify'}
@@ -703,8 +716,16 @@ const UserProfile = () => {
                                     },
                                 }}
                             >
-                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: { xs: 'flex-start', sm: 'center' },
+                                        justifyContent: 'space-between',
+                                        flexDirection: { xs: 'column', sm: 'row' },
+                                        gap: 2,
+                                    }}
+                                >
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 0 }}>
                                         <Box
                                             sx={{
                                                 p: 1.5,
@@ -715,7 +736,7 @@ const UserProfile = () => {
                                         >
                                             <Security />
                                         </Box>
-                                        <Box>
+                                        <Box sx={{ minWidth: 0 }}>
                                             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
                                                 Password
                                             </Typography>
@@ -731,6 +752,7 @@ const UserProfile = () => {
                                         sx={{
                                             borderRadius: 2,
                                             textTransform: 'none',
+                                            alignSelf: { xs: 'flex-end', sm: 'auto' },
                                         }}
                                     >
                                         Change
@@ -754,8 +776,16 @@ const UserProfile = () => {
                                     },
                                 }}
                             >
-                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: { xs: 'flex-start', sm: 'center' },
+                                        justifyContent: 'space-between',
+                                        flexDirection: { xs: 'column', sm: 'row' },
+                                        gap: 2,
+                                    }}
+                                >
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 0 }}>
                                         <Box
                                             sx={{
                                                 p: 1.5,
@@ -766,11 +796,11 @@ const UserProfile = () => {
                                         >
                                             <LocationOn />
                                         </Box>
-                                        <Box>
+                                        <Box sx={{ minWidth: 0 }}>
                                             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
                                                 Location
                                             </Typography>
-                                            <Typography variant="h6">
+                                            <Typography variant="h6" sx={{ wordBreak: 'break-word' }}>
                                                 {userData?.address ? `${userData?.address}, ${userData?.city}, ${userData?.state}` : 'Not set'}
                                             </Typography>
                                         </Box>
@@ -781,6 +811,7 @@ const UserProfile = () => {
                                         sx={{
                                             borderRadius: 2,
                                             textTransform: 'none',
+                                            alignSelf: { xs: 'flex-end', sm: 'auto' },
                                         }}
                                     >
                                         Edit
@@ -804,8 +835,16 @@ const UserProfile = () => {
                                     },
                                 }}
                             >
-                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: { xs: 'flex-start', sm: 'center' },
+                                        justifyContent: 'space-between',
+                                        flexDirection: { xs: 'column', sm: 'row' },
+                                        gap: 2,
+                                    }}
+                                >
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 0 }}>
                                         <Box
                                             sx={{
                                                 p: 1.5,
@@ -816,11 +855,11 @@ const UserProfile = () => {
                                         >
                                             <Description />
                                         </Box>
-                                        <Box>
+                                        <Box sx={{ minWidth: 0 }}>
                                             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
                                                 Profile Description
                                             </Typography>
-                                            <Typography variant="h6">
+                                            <Typography variant="h6" sx={{ wordBreak: 'break-word' }}>
                                                 {userData?.description || 'Not set'}
                                             </Typography>
                                         </Box>
@@ -831,6 +870,7 @@ const UserProfile = () => {
                                         sx={{
                                             borderRadius: 2,
                                             textTransform: 'none',
+                                            alignSelf: { xs: 'flex-end', sm: 'auto' },
                                         }}
                                     >
                                         Edit
@@ -846,12 +886,16 @@ const UserProfile = () => {
             <Dialog
                 open={openDialog !== DIALOG_TYPES.NONE}
                 onClose={closeDialogHandler}
-                sx={{ zIndex: 900 }}
+                fullWidth
+                maxWidth="sm"
+                scroll="paper"
+                fullScreen={isMobile}
                 PaperProps={{
                     sx: {
-                        borderRadius: 3,
+                        borderRadius: isMobile ? 0 : 3,
                         p: 1,
-                        minWidth: { xs: 300, sm: 400 }
+                        width: '100%',
+                        m: isMobile ? 0 : 2,
                     }
                 }}
             >
@@ -863,7 +907,12 @@ const UserProfile = () => {
                     {openDialog === DIALOG_TYPES.DESCRIPTION && 'Update Profile Description'}
                 </DialogTitle>
                 
-                <DialogContent>
+                <DialogContent
+                    sx={{
+                        pt: 1,
+                        pb: 1,
+                    }}
+                >
                     {/* Name Dialog Content */}
                     {openDialog === DIALOG_TYPES.NAME && (
                         <TextField
@@ -960,8 +1009,26 @@ const UserProfile = () => {
                     )}
                 </DialogContent>
                 
-                <DialogActions sx={{ px: 3, pb: 2 }}>
-                    <Button onClick={closeDialogHandler} color="inherit" sx={{ borderRadius: 2 }}>
+                <DialogActions
+                    sx={{
+                        px: 3,
+                        pb: 2,
+                        flexDirection: { xs: 'column', sm: 'row' },
+                        alignItems: { xs: 'stretch', sm: 'center' },
+                        gap: 1,
+                        '& > :not(style) ~ :not(style)': {
+                            ml: { xs: 0, sm: 1 },
+                            mt: { xs: 1, sm: 0 },
+                        },
+                    }}
+                >
+                    <Button
+                        onClick={closeDialogHandler}
+                        variant="contained"
+                        color="inherit"
+                        fullWidth={isMobile}
+                        sx={{ borderRadius: 2 }}
+                    >
                         Cancel
                     </Button>
                     <Button
@@ -981,7 +1048,8 @@ const UserProfile = () => {
                         }}
                         variant="contained"
                         disabled={loading}
-                        sx={{ borderRadius: 2, px: 3 }}
+                        fullWidth={isMobile}
+                        sx={{ borderRadius: 2, px: 3, minWidth: { sm: 160 } }}
                     >
                         {loading ? <PulseLoader size={8} color="#fff" /> : 'Save Changes'}
                     </Button>

@@ -1123,9 +1123,11 @@ const Rooms = () => {
         onClose={handleCloseDialog}
         maxWidth="md"
         fullWidth
+        scroll="paper"
+        fullScreen={!isSmUp}
         PaperProps={{
           sx: {
-            borderRadius: 2,
+            borderRadius: { xs: 0, sm: 2 },
             ...pulse,
             animation: "fadeIn 0.3s ease-out, pulse 2s infinite 2s",
           }
@@ -1136,29 +1138,40 @@ const Rooms = () => {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            p: 3,
-            pb: 2,
+            p: { xs: 2, sm: 3 },
+            pb: { xs: 1.5, sm: 2 },
             bgcolor: alpha(theme.palette.primary.main, 0.05),
             borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
           }}
         >
-          <Stack direction="row" alignItems="center" spacing={2}>
+          <Stack direction="row" alignItems="center" spacing={{ xs: 1.5, sm: 2 }} sx={{ minWidth: 0 }}>
             <Avatar
               sx={{
                 bgcolor: alpha(theme.palette.primary.main, 0.1),
                 color: theme.palette.primary.main,
-                width: 40,
-                height: 40,
+                width: { xs: 34, sm: 40 },
+                height: { xs: 34, sm: 40 },
+                flexShrink: 0,
               }}
             >
               <ParkingIcon />
             </Avatar>
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 700, color: theme.palette.text.primary }}>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 700,
+                  color: theme.palette.text.primary,
+                  fontSize: { xs: '1.05rem', sm: '1.25rem' },
+                  lineHeight: 1.2,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                }}
+              >
                 {selectedRoom?.title || "Parking Space Details"}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Complete information and booking options
               </Typography>
             </Box>
           </Stack>
@@ -1166,6 +1179,7 @@ const Rooms = () => {
             onClick={handleCloseDialog}
             sx={{
               bgcolor: alpha(theme.palette.error.main, 0.1),
+              alignSelf: 'flex-start',
               '&:hover': {
                 bgcolor: alpha(theme.palette.error.main, 0.2),
               }
@@ -1177,16 +1191,22 @@ const Rooms = () => {
 
         {selectedRoom && (
           <DialogContent dividers sx={{ p: 0 }}>
+            <Box sx={{ px: { xs: 2, sm: 3 }, pt: { xs: 2, sm: 2 }, pb: { xs: 1, sm: 2 } }}>
+              <Typography variant="body2" color="text.secondary">
+                Complete information and booking options
+              </Typography>
+            </Box>
+
             <Grid container>
               {/* Images Column */}
               {/* Images Column with Slider */}
               <Grid item xs={12} md={6}>
-                <Box sx={{ p: 3, height: '100%' }}>
+                <Box sx={{ p: { xs: 2, sm: 3 }, height: '100%' }}>
                   <Box
                     sx={{
                       position: 'relative',
                       width: "100%",
-                      height: 300,
+                      height: { xs: 220, sm: 300 },
                       bgcolor: '#000',
                       borderRadius: 2,
                       overflow: 'hidden',
@@ -1273,8 +1293,8 @@ const Rooms = () => {
                         onClick={() => setPhotoIndex(i)}
                         sx={{
                           position: 'relative',
-                          width: 80,
-                          height: 60,
+                          width: { xs: 64, sm: 80 },
+                          height: { xs: 48, sm: 60 },
                           borderRadius: 2,
                           overflow: 'hidden',
                           cursor: 'pointer',
@@ -1321,12 +1341,15 @@ const Rooms = () => {
 
               {/* Details Column */}
               <Grid item xs={12} md={6}>
-                <Box sx={{ p: 3 }}>
+                <Box sx={{ p: { xs: 2, sm: 3 } }}>
                   <Stack spacing={3}>
                     {/* Price and Status */}
                     <Box>
                       <Stack direction="row" justifyContent="space-between" alignItems="center">
-                        <Typography variant="h4" sx={{ fontWeight: 800, color: theme.palette.primary.main }}>
+                        <Typography
+                          variant={isSmUp ? 'h4' : 'h5'}
+                          sx={{ fontWeight: 800, color: theme.palette.primary.main }}
+                        >
                           ${Number(selectedRoom.price || 0).toFixed(2)}
                         </Typography>
                         <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" justifyContent="flex-end">
@@ -1539,7 +1562,7 @@ const Rooms = () => {
 
         <DialogActions
           sx={{
-            p: 3,
+            p: { xs: 2, sm: 3 },
             borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
             flexDirection: { xs: 'column', sm: 'row' },
             alignItems: { xs: 'stretch', sm: 'center' },
@@ -1554,7 +1577,7 @@ const Rooms = () => {
             onClick={handleViewOnMap}
             variant="outlined"
             startIcon={<PlaceIcon />}
-            fullWidth
+            fullWidth={!isSmUp}
             sx={{
               borderRadius: 2,
               width: { xs: '100%', sm: 'auto' },
@@ -1565,7 +1588,7 @@ const Rooms = () => {
           <Button
             onClick={handleCloseDialog}
             variant="outlined"
-            fullWidth
+            fullWidth={!isSmUp}
             sx={{
               borderRadius: 2,
               width: { xs: '100%', sm: 'auto' },
@@ -1578,7 +1601,7 @@ const Rooms = () => {
             onClick={handleBookClick}
             disabled={!isRoomAvailable(selectedRoom)}
             startIcon={<CheckCircle />}
-            fullWidth
+            fullWidth={!isSmUp}
             sx={{
               borderRadius: 2,
               px: { xs: 2, sm: 4 },

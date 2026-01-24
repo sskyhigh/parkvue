@@ -45,6 +45,17 @@ const SellerProfile = () => {
   const theme = useTheme();
   const { dispatch } = useValue();
 
+  const chipSx = {
+    maxWidth: '100%',
+    '& .MuiChip-label': {
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
+      maxWidth: '100%',
+      display: 'block',
+    },
+  };
+
   const [seller, setSeller] = useState(null);
   const [sellerRooms, setSellerRooms] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -296,11 +307,23 @@ const SellerProfile = () => {
                   </Stack>
                 )}
 
-                <Stack direction="row" spacing={2} flexWrap="wrap">
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  spacing={1.25}
+                  useFlexGap
+                  flexWrap="wrap"
+                  alignItems={{ xs: 'stretch', sm: 'center' }}
+                  sx={{
+                    width: '100%',
+                    '& .MuiChip-root': { maxWidth: '100%' },
+                  }}
+                >
                   <Chip
                     icon={<Store />}
                     label={`${sellerRooms.length} Listing${sellerRooms.length !== 1 ? "s" : ""}`}
                     sx={{
+                      ...chipSx,
+                      width: { xs: '100%', sm: 'auto' },
                       background: alpha(theme.palette.common.white, 0.2),
                       color: "white",
                       fontWeight: 600,
@@ -311,6 +334,8 @@ const SellerProfile = () => {
                     icon={<CheckCircle />}
                     label={`${availableCount} Available`}
                     sx={{
+                      ...chipSx,
+                      width: { xs: '100%', sm: 'auto' },
                       background: alpha(theme.palette.success.main, 0.3),
                       color: "white",
                       fontWeight: 600,
@@ -321,6 +346,8 @@ const SellerProfile = () => {
                     icon={<Cancel />}
                     label={`${reservedCount} Reserved`}
                     sx={{
+                      ...chipSx,
+                      width: { xs: '100%', sm: 'auto' },
                       background: alpha(theme.palette.error.main, 0.3),
                       color: "white",
                       fontWeight: 600,
@@ -437,6 +464,7 @@ const SellerProfile = () => {
                               )
                             }
                             sx={{
+                              ...chipSx,
                               position: "absolute",
                               top: 12,
                               right: 12,
@@ -495,6 +523,7 @@ const SellerProfile = () => {
                               size="small"
                               label="no ratings yet"
                               sx={{
+                                ...chipSx,
                                 height: 24,
                                 mb: 1,
                                 bgcolor: alpha(theme.palette.grey[300], 0.1),
